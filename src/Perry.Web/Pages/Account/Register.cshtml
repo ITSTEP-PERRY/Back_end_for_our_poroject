@@ -1,21 +1,114 @@
 @page
 @model Perry.Web.Pages.Account.RegisterModel
 @{
-    ViewData["Title"] = "Register";
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Create account";
+    var hasError = !string.IsNullOrEmpty(Model.Error);
 }
 
-<div class="page-wrap auth-box">
-    <h1>Create account</h1>
-    @if (!string.IsNullOrEmpty(Model.Error))
-    {
-        <div class="alert alert-error">@Model.Error</div>
-    }
-    <form method="post" class="admin-form">
-        <label>Name <input asp-for="Name" required /></label>
-        <label>Email <input asp-for="Email" type="email" required /></label>
-        <label>Login <input asp-for="Login" required /></label>
-        <label>Password <input asp-for="Password" type="password" required /></label>
-        <button class="btn btn-primary" type="submit">Sign up</button>
-    </form>
-    <p>Already have an account? <a asp-page="/Account/Login">Sign in</a></p>
+<a class="auth-back" asp-page="/Index">← Perry</a>
+
+<div class="auth-modal">
+    <div class="auth-modal__body">
+        <div class="auth-modal__form-col">
+            @if (hasError)
+            {
+                <div class="auth-alert">@Model.Error</div>
+            }
+
+            <form method="post" class="login-form" data-auth-form data-register-form novalidate>
+                <div class="login-form__titles">
+                    <h1>Create account</h1>
+                    <h2>Shop in the marketplace while traveling</h2>
+                </div>
+
+                <div class="login-form__fields">
+                    <div class="perry-field" data-field>
+                        <span class="perry-field__label">Email</span>
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="Email"
+                                   type="email"
+                                   placeholder="Enter your email"
+                                   autocomplete="email"
+                                   data-required-input
+                                   data-email-input
+                                   data-error-empty="Wrong or invalid email adress" />
+                        </div>
+                        <p class="perry-field__error" data-field-error hidden></p>
+                    </div>
+
+                    <div class="perry-field perry-field--password" data-field>
+                        <span class="perry-field__label">Password</span>
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="Password"
+                                   type="password"
+                                   placeholder="Enter your password"
+                                   autocomplete="new-password"
+                                   data-password-input
+                                   data-required-input
+                                   data-password-rules
+                                   data-error-empty="Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and be at least 8 characters long"
+                                   data-confirm-source />
+                            <button type="button"
+                                    class="perry-field__toggle"
+                                    data-password-toggle
+                                    data-icon-open="@Url.Content("~/icons/Eye_open.svg")"
+                                    data-icon-closed="@Url.Content("~/icons/Eye_closed.svg")"
+                                    aria-label="Show password">
+                                <img src="@Url.Content("~/icons/Eye_closed.svg")" alt="Show password" width="24" height="24" />
+                            </button>
+                        </div>
+                        <p class="perry-field__error" data-field-error hidden></p>
+                    </div>
+
+                    <div class="perry-field perry-field--password" data-field>
+                        <span class="perry-field__label">Confirm password</span>
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="ConfirmPassword"
+                                   type="password"
+                                   placeholder="Repeat your password"
+                                   autocomplete="new-password"
+                                   data-password-input
+                                   data-required-input
+                                   data-error-empty="Passwords must match"
+                                   data-error-mismatch="Passwords must match"
+                                   data-confirm-target />
+                            <button type="button"
+                                    class="perry-field__toggle"
+                                    data-password-toggle
+                                    data-icon-open="@Url.Content("~/icons/Eye_open.svg")"
+                                    data-icon-closed="@Url.Content("~/icons/Eye_closed.svg")"
+                                    aria-label="Show password">
+                                <img src="@Url.Content("~/icons/Eye_closed.svg")" alt="Show password" width="24" height="24" />
+                            </button>
+                        </div>
+                        <p class="perry-field__error" data-field-error hidden></p>
+                    </div>
+                </div>
+
+                <button type="submit" class="perry-btn">Continue</button>
+            </form>
+
+            <p class="auth-modal__signup">
+                Have an account?
+                <a asp-page="/Account/Login">Log in</a>
+            </p>
+
+            <p class="auth-modal__terms">
+                By clicking 'Continue', you agree with
+                <a href="#">PERRY Terms and Conditions</a>
+            </p>
+        </div>
+
+        <div class="auth-modal__image">
+            <img src="@Url.Content("~/images/SiginSignup.png")" alt="Create account" width="530" height="632" />
+        </div>
+    </div>
 </div>
+
+@section Scripts {
+    <script src="~/js/auth.js" asp-append-version="true"></script>
+}

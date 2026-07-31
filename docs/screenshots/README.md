@@ -123,3 +123,47 @@ UI из perry-front: «Welcome back», Email / Password, Stay signed in, кно�
 ![Full cart](./11-cart-full.png)
 
 Несколько товаров, итог Items / Total, checkout, Recently viewed под корзиной.
+
+---
+
+## 12. Welcome back (вход)
+
+**Файл:** [`12-auth-login.png`](./12-auth-login.png)  
+**URL:** `/Account/Login`
+
+![Welcome back](./12-auth-login.png)
+
+Отдельное окно входа: «Welcome back» / «Login into your account», Email + Password, Stay signed in, Forgot password?, кнопка Log in, ссылка Sign Up, иллюстрация справа.
+
+---
+
+## 13. Welcome back — ошибки валидации
+
+**Файл:** [`13-auth-login-errors.png`](./13-auth-login-errors.png)  
+**URL:** `/Account/Login` (пустой submit)
+
+![Login validation errors](./13-auth-login-errors.png)
+
+Красные лейблы и рамки. Под Email: «Wrong or invalid email address». Под Password: «Incorrect password».
+
+---
+
+## 14. Create account (регистрация)
+
+**Файл:** [`14-auth-register.png`](./14-auth-register.png)  
+**URL:** `/Account/Register`
+
+![Create account](./14-auth-register.png)
+
+Отдельное окно регистрации в том же дизайне: «Create account» / «Shop in the marketplace while traveling», Email, Password, Confirm password, Continue, Log in, PERRY Terms and Conditions.
+
+---
+
+## 15. Create account — ошибки валидации
+
+**Файл:** [`15-auth-register-errors.png`](./15-auth-register-errors.png)  
+**URL:** `/Account/Register` (пустой Continuе)
+
+![Register validation errors](./15-auth-register-errors.png)
+
+Email: «Wrong or invalid email adress». Password: правила сложности (8+ символов, upper/lower/digit). Confirm: «Passwords must match».

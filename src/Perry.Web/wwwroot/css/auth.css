@@ -110,7 +110,15 @@ body.auth-page {
 .perry-field {
   position: relative;
   width: 100%;
-  margin: 20px 0 10px;
+  margin: 28px 0 0;
+}
+
+.perry-field + .perry-field {
+  margin-top: 36px;
+}
+
+.perry-field__control {
+  position: relative;
 }
 
 .perry-field__label {
@@ -142,8 +150,20 @@ body.auth-page {
   border-color: var(--perry-secondary);
 }
 
+.perry-field__error {
+  margin: 8px 0 0 4px;
+  min-height: 1.25em;
+  font-size: 14px;
+  line-height: 1.25;
+  color: var(--perry-destructive);
+}
+
 .perry-field--error .perry-field__label {
   color: var(--perry-destructive);
+}
+
+.perry-field--error .perry-field__input {
+  border-color: var(--perry-destructive);
 }
 
 .perry-field--password .perry-field__input {
@@ -175,7 +195,7 @@ body.auth-page {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 8px 0 0;
+  margin: 28px 0 0;
   width: 100%;
   font-size: 14px;
 }
@@ -241,12 +261,31 @@ body.auth-page {
 }
 
 .auth-modal__signup a {
-  color: var(--perry-primary);
+  color: var(--perry-secondary);
   font-weight: 600;
   text-decoration: none;
 }
 
 .auth-modal__signup a:hover {
+  text-decoration: underline;
+}
+
+.auth-modal__terms {
+  margin: 0;
+  max-width: 440px;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--perry-dark-text);
+}
+
+.auth-modal__terms a {
+  color: var(--perry-secondary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.auth-modal__terms a:hover {
   text-decoration: underline;
 }
 

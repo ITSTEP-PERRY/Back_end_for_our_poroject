@@ -32,7 +32,7 @@ dotnet run --project src/Perry.Web --launch-profile http
 ## Что сделано недавно
 
 - Ребрендинг **DuSoleil → Perry** (solution, проекты, namespaces, БД, UI).
-- UI входа покупателя и админа по макету команды ([perry-front](https://github.com/ITSTEP-PERRY/perry-front.git)).
+- UI входа и регистрации по макету команды ([perry-front](https://github.com/ITSTEP-PERRY/perry-front.git)): Welcome back + Create account, валидация полей.
 - Подробности: [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) §11.
 
 ## Скриншоты
@@ -43,7 +43,11 @@ dotnet run --project src/Perry.Web --launch-profile http
 |-------|--------|
 | Главная | ![Home](./docs/screenshots/01-home.png) |
 | Каталог + фильтры | ![Catalog](./docs/screenshots/02-catalog.png) |
-| Sign in | ![Login](./docs/screenshots/03-login.png) |
+| Sign in (старый кадр) | ![Login](./docs/screenshots/03-login.png) |
+| **Welcome back** | ![Welcome back](./docs/screenshots/12-auth-login.png) |
+| Welcome back — ошибки | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
+| **Create account** | ![Create account](./docs/screenshots/14-auth-register.png) |
+| Create account — ошибки | ![Register errors](./docs/screenshots/15-auth-register-errors.png) |
 | Admin Dashboard | ![Admin](./docs/screenshots/04-admin-dashboard.png) |
 | Admin категории/товары | ![Admin tables](./docs/screenshots/05-admin-catalog.png) |
 | Admin Users | ![Users](./docs/screenshots/06-admin-users.png) |

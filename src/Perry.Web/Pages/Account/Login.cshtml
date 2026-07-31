@@ -16,7 +16,7 @@
                 <div class="auth-alert">@Model.Error</div>
             }
 
-            <form method="post" class="login-form" novalidate>
+            <form method="post" class="login-form" data-auth-form novalidate>
                 <input type="hidden" asp-for="ReturnUrl" />
 
                 <div class="login-form__titles">
@@ -25,33 +25,41 @@
                 </div>
 
                 <div class="login-form__fields">
-                    <div class="perry-field @(hasError ? "perry-field--error" : null)">
+                    <div class="perry-field @(hasError ? "perry-field--error" : null)" data-field>
                         <span class="perry-field__label">Email</span>
-                        <input class="perry-field__input"
-                               asp-for="Login"
-                               type="text"
-                               placeholder="Enter your email"
-                               autocomplete="username"
-                               required />
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="Login"
+                                   type="text"
+                                   placeholder="Enter your email"
+                                   autocomplete="username"
+                                   data-required-input
+                                   data-error-empty="Wrong or invalid email address" />
+                        </div>
+                        <p class="perry-field__error" data-field-error hidden></p>
                     </div>
 
-                    <div class="perry-field perry-field--password">
+                    <div class="perry-field perry-field--password @(hasError ? "perry-field--error" : null)" data-field>
                         <span class="perry-field__label">Password</span>
-                        <input class="perry-field__input"
-                               asp-for="Password"
-                               type="password"
-                               placeholder="Enter your password"
-                               autocomplete="current-password"
-                               data-password-input
-                               required />
-                        <button type="button"
-                                class="perry-field__toggle"
-                                data-password-toggle
-                                data-icon-open="@Url.Content("~/icons/Eye_open.svg")"
-                                data-icon-closed="@Url.Content("~/icons/Eye_closed.svg")"
-                                aria-label="Show password">
-                            <img src="@Url.Content("~/icons/Eye_closed.svg")" alt="Show password" width="24" height="24" />
-                        </button>
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="Password"
+                                   type="password"
+                                   placeholder="Enter your password"
+                                   autocomplete="current-password"
+                                   data-password-input
+                                   data-required-input
+                                   data-error-empty="Incorrect password" />
+                            <button type="button"
+                                    class="perry-field__toggle"
+                                    data-password-toggle
+                                    data-icon-open="@Url.Content("~/icons/Eye_open.svg")"
+                                    data-icon-closed="@Url.Content("~/icons/Eye_closed.svg")"
+                                    aria-label="Show password">
+                                <img src="@Url.Content("~/icons/Eye_closed.svg")" alt="Show password" width="24" height="24" />
+                            </button>
+                        </div>
+                        <p class="perry-field__error" data-field-error hidden></p>
                     </div>
 
                     <div class="login-form__row">
