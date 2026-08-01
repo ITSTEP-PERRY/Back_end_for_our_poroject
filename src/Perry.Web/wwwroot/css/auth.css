@@ -289,6 +289,95 @@ body.auth-page {
   text-decoration: underline;
 }
 
+.code-inputs {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  width: 100%;
+  margin: 8px 0 0;
+}
+
+.code-inputs--error .code-input {
+  border-color: var(--perry-destructive);
+}
+
+.code-input {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  font-family: inherit;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  color: var(--perry-dark-text);
+  background: #fff;
+  border: 1px solid var(--perry-input-border);
+  border-radius: 4px;
+  outline: none;
+}
+
+.code-input:focus {
+  border-color: var(--perry-secondary);
+}
+
+.code-error {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.3;
+  text-align: center;
+  color: var(--perry-destructive);
+}
+
+.resend-wrap {
+  margin-top: 16px;
+  text-align: center;
+  min-height: 24px;
+}
+
+.resend-form {
+  display: inline;
+}
+
+.resend-link {
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--perry-secondary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.resend-link:disabled {
+  display: none;
+}
+
+.resend-link:not(:disabled):hover {
+  text-decoration: underline;
+}
+
+.resend-timer {
+  font-size: 14px;
+  color: var(--perry-dark-text);
+}
+
+.resend-timer[hidden] {
+  display: none;
+}
+
+.dev-code-hint {
+  margin-top: 20px;
+  max-width: 440px;
+  padding: 10px 12px;
+  border-radius: 4px;
+  background: #e0ebff;
+  color: var(--perry-dark-text);
+  font-size: 13px;
+  text-align: center;
+}
+
 .auth-alert {
   width: 100%;
   max-width: 440px;
@@ -314,13 +403,15 @@ body.auth-page {
   color: var(--perry-secondary);
 }
 
-@media (max-width: 1100px) {
-  .auth-modal__image {
-    display: none;
+@media (max-width: 1200px) {
+  .auth-modal__image img {
+    width: 420px;
   }
+}
 
-  .login-form {
-    min-height: auto;
+@media (max-width: 960px) {
+  .auth-modal__image img {
+    width: 320px;
   }
 
   .login-form__titles h1 {
@@ -329,5 +420,20 @@ body.auth-page {
 
   .login-form__titles h2 {
     font-size: 20px;
+  }
+}
+
+/* Только на узком мобильном — форма без картинки */
+@media (max-width: 720px) {
+  .auth-modal__body {
+    flex-direction: column;
+  }
+
+  .auth-modal__image {
+    display: none;
+  }
+
+  .login-form {
+    min-height: auto;
   }
 }

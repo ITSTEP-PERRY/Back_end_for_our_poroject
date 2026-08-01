@@ -8,6 +8,20 @@
 
 <a class="auth-back" asp-page="/Index">← Perry</a>
 
+@if (!string.IsNullOrEmpty(Model.VerifyRedirectUrl))
+{
+    <p class="auth-alert" style="max-width:440px;margin:16px auto;text-align:center;">
+        Opening verification…
+        <a href="@Model.VerifyRedirectUrl">Continue</a>
+    </p>
+    <script>
+        window.location.replace(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.VerifyRedirectUrl)));
+    </script>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=@Model.VerifyRedirectUrl" />
+    </noscript>
+}
+
 <div class="auth-modal">
     <div class="auth-modal__body">
         <div class="auth-modal__form-col">

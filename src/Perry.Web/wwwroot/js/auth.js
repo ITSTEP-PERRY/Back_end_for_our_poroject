@@ -90,7 +90,6 @@
         }
 
         if (input.hasAttribute("data-confirm-target")) {
-          // handled after loop together with source
           return;
         }
 
@@ -107,10 +106,7 @@
         var confirmField = target.closest("[data-field]");
         var passwordValue = source ? source.value : "";
         var confirmValue = target.value;
-        if (
-          !confirmValue.trim() ||
-          passwordValue !== confirmValue
-        ) {
+        if (!confirmValue.trim() || passwordValue !== confirmValue) {
           valid = false;
           if (confirmField) {
             showFieldError(
@@ -127,8 +123,103 @@
     });
   }
 
+  function setupCodeInputs(container) {
+    var form = container.closest("form");
+    var inputs = Array.from(container.querySelectorAll("[data-code-digit]"));
+    var hidden = (form && form.querySelector("[data-code-hidden]")) || document.querySelector("[data-code-hidden]");
+    if (!inputs.length) return;
+
+    function updateHidden() {
+      if (!hidden) return;
+      hidden.value = inputs.map(function (i) { return (i.value || "").replace(/\D/g, ""); }).join("");
+    }
+
+    inputs.forEach(function (input, index) {
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Backspace" && !input.value && index > 0) {
+          inputs[index - 1].focus();
+        }
+        if (e.key === "ArrowLeft" && index > 0) {
+          inputs[index - 1].focus();
+        }
+        if (e.key === "ArrowRight" && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+
+      input.addEventListener("input", function () {
+        var val = input.value.replace(/\D/g, "");
+        // Автозаполнение OTP может вставить все 6 цифр в первое поле
+        if (val.length > 1) {
+          val.split("").slice(0, inputs.length).forEach(function (ch, i) {
+            if (inputs[i]) inputs[i].value = ch;
+          });
+          updateHidden();
+          container.classList.remove("code-inputs--error");
+          var focusIndex = Math.min(val.length, inputs.length) - 1;
+          if (focusIndex >= 0) inputs[focusIndex].focus();
+          return;
+        }
+        input.value = val;
+        updateHidden();
+        container.classList.remove("code-inputs--error");
+
+        if (val && index < inputs.length - 1) {
+          inputs[index + 1].focus();
+        }
+      });
+
+      input.addEventListener("paste", function (e) {
+        e.preventDefault();
+        var data = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "").slice(0, inputs.length);
+        data.split("").forEach(function (ch, i) {
+          if (inputs[i]) inputs[i].value = ch;
+        });
+        updateHidden();
+        var focusIndex = Math.min(data.length, inputs.length - 1);
+        inputs[focusIndex].focus();
+      });
+    });
+
+    if (form) {
+      form.addEventListener("submit", function (e) {
+        updateHidden();
+        if (!hidden || hidden.value.length !== inputs.length) {
+          e.preventDefault();
+          container.classList.add("code-inputs--error");
+        }
+      });
+    }
+  }
+
   document.querySelectorAll("[data-auth-form]").forEach(function (form) {
     form.querySelectorAll(".perry-field__control").forEach(setupPasswordToggle);
     setupFormValidation(form);
+  });
+
+  document.querySelectorAll("[data-code-inputs]").forEach(setupCodeInputs);
+
+  document.querySelectorAll("[data-resend-wrap]").forEach(function (wrap) {
+    var btn = wrap.querySelector("[data-resend-btn]");
+    var timerEl = wrap.querySelector("[data-resend-timer]");
+    var seconds = parseInt(wrap.getAttribute("data-resend-seconds") || "60", 10);
+    if (!btn || !timerEl) return;
+
+    function tick() {
+      if (seconds <= 0) {
+        timerEl.hidden = true;
+        btn.disabled = false;
+        return;
+      }
+      var m = Math.floor(seconds / 60);
+      var s = seconds % 60;
+      timerEl.textContent = "Resend code " + m + ":" + String(s).padStart(2, "0");
+      timerEl.hidden = false;
+      btn.disabled = true;
+      seconds -= 1;
+      setTimeout(tick, 1000);
+    }
+
+    tick();
   });
 })();
