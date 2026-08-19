@@ -36,6 +36,15 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IUserService, UserService>();
+        services.AddMemoryCache();
+        services.AddSingleton<IEmailCodeService, EmailCodeService>();
+
+        // Пока SMTP-заглушка (код в лог). Позже Smtp:UseStub=false + App Password.
+        var useStub = configuration.GetValue("Smtp:UseStub", true);
+        if (useStub)
+            services.AddScoped<IEmailSender, StubEmailSender>();
+        else
+            services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         return services;
     }

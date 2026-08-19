@@ -167,3 +167,36 @@ UI из perry-front: «Welcome back», Email / Password, Stay signed in, кно�
 ![Register validation errors](./15-auth-register-errors.png)
 
 Email: «Wrong or invalid email adress». Password: правила сложности (8+ символов, upper/lower/digit). Confirm: «Passwords must match».
+
+---
+
+## 16. Send code — пустые поля
+
+**Файл:** [`16-auth-verify-empty.png`](./16-auth-verify-empty.png)  
+**URL:** `/Account/VerifyCode?email=...` (после 3 неудачных Login)
+
+![Send code empty](./16-auth-verify-empty.png)
+
+Начальное состояние экрана подтверждения email: заголовок «Send code», подзаголовок «Enter the code to confirm your email», шесть пустых квадратных полей для цифр, ссылка **Send code** (повторная отправка), кнопка **Continue**, Back слева, иллюстрация справа (тот же Perry auth layout).
+
+---
+
+## 17. Send code — код введён, таймер Resend
+
+**Файл:** [`17-auth-verify-filled.png`](./17-auth-verify-filled.png)  
+**URL:** `/Account/VerifyCode`
+
+![Send code filled](./17-auth-verify-filled.png)
+
+В поля введён пример кода `123456`. Под полями таймер **Resend code 0:59** (повторная отправка недоступна до конца минуты). Кнопка Continue активна.
+
+---
+
+## 18. Send code — неверный код
+
+**Файл:** [`18-auth-verify-error.png`](./18-auth-verify-error.png)  
+**URL:** `/Account/VerifyCode` (неверный Continue)
+
+![Send code error](./18-auth-verify-error.png)
+
+После неверного кода: красное сообщение **Incorrect code, try again**, поля в состоянии ошибки, доступна ссылка **Resend code**. Поток и stub SMTP: [ПРОДЕЛАННАЯ-РАБОТА.md](../ПРОДЕЛАННАЯ-РАБОТА.md) §11 п.6.

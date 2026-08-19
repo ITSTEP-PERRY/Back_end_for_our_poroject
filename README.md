@@ -12,6 +12,7 @@
 |------|--------|
 | [docs/README.md](./docs/README.md) | Оглавление и быстрый старт |
 | [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, чеклист |
+| [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories: таблица, seed, JSON API, витрина |
 | [docs/КЛИЕНТСКАЯ-ЧАСТЬ.md](./docs/КЛИЕНТСКАЯ-ЧАСТЬ.md) | Дерево Account / Cart / Orders / Auth (покупатель) |
 | [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск, smoke-тесты, что доделать по желанию |
 | [docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md](./docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md) | Что перенесено из homework |
@@ -33,6 +34,7 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 - Ребрендинг **DuSoleil → Perry** (solution, проекты, namespaces, БД, UI).
 - UI входа и регистрации по макету команды ([perry-front](https://github.com/ITSTEP-PERRY/perry-front.git)): Welcome back + Create account, валидация полей.
+- **VerifyCode:** после 3 неудачных попыток входа — 6-значный код (stub SMTP / опционально Gmail), экран `/Account/VerifyCode`.
 - Подробности: [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) §11.
 
 ## Скриншоты
@@ -48,6 +50,9 @@ dotnet run --project src/Perry.Web --launch-profile http
 | Welcome back — ошибки | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
 | **Create account** | ![Create account](./docs/screenshots/14-auth-register.png) |
 | Create account — ошибки | ![Register errors](./docs/screenshots/15-auth-register-errors.png) |
+| **Send code** (пусто) | ![Send code](./docs/screenshots/16-auth-verify-empty.png) |
+| Send code — ввод + таймер | ![Send code filled](./docs/screenshots/17-auth-verify-filled.png) |
+| Send code — ошибка | ![Send code error](./docs/screenshots/18-auth-verify-error.png) |
 | Admin Dashboard | ![Admin](./docs/screenshots/04-admin-dashboard.png) |
 | Admin категории/товары | ![Admin tables](./docs/screenshots/05-admin-catalog.png) |
 | Admin Users | ![Users](./docs/screenshots/06-admin-users.png) |

@@ -1,0 +1,76 @@
+@page
+@model Perry.Web.Pages.Account.VerifyCodeModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Send code";
+    var hasError = !string.IsNullOrEmpty(Model.Error);
+}
+
+<a class="auth-back" asp-page="/Account/Login">← Back</a>
+
+<div class="auth-modal">
+    <div class="auth-modal__body">
+        <div class="auth-modal__form-col">
+            <form method="post" class="login-form" data-verify-form novalidate>
+                <input type="hidden" asp-for="Email" />
+                <input type="hidden" asp-for="ReturnUrl" />
+
+                <div class="login-form__titles">
+                    <h1>Send code</h1>
+                    <h2>Enter the code to confirm your email</h2>
+                </div>
+
+                <div class="login-form__fields">
+                    <div class="code-inputs @(hasError ? "code-inputs--error" : null)" data-code-inputs>
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" autocomplete="one-time-code" data-code-digit />
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-code-digit />
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-code-digit />
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-code-digit />
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-code-digit />
+                        <input type="text" inputmode="numeric" maxlength="1" class="code-input" data-code-digit />
+                    </div>
+                    <input type="hidden" asp-for="Code" data-code-hidden />
+
+                    @if (hasError)
+                    {
+                        <p class="code-error">@Model.Error</p>
+                    }
+                </div>
+
+                <button type="submit" class="perry-btn">Continue</button>
+            </form>
+
+            <div class="resend-wrap" data-resend-wrap data-resend-seconds="60">
+                <form method="post" asp-page-handler="Resend" class="resend-form">
+                    <input type="hidden" asp-for="Email" />
+                    <input type="hidden" asp-for="ReturnUrl" />
+                    <button type="submit" class="resend-link" data-resend-btn disabled>Resend code</button>
+                </form>
+                <span class="resend-timer" data-resend-timer>Resend code 1:00</span>
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.DevCodeHint))
+            {
+                <p class="dev-code-hint">Dev stub — code: <strong>@Model.DevCodeHint</strong></p>
+            }
+        </div>
+
+        <div class="auth-modal__image">
+            <img src="@Url.Content("~/images/SiginSignup.png")" alt="Send code" width="530" height="632" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/auth.js" asp-append-version="true"></script>
+    @if (!string.IsNullOrEmpty(Model.DevCodeHint))
+    {
+        <script>
+            (function () {
+                var code = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DevCodeHint));
+                // prompt — можно выделить и скопировать код
+                window.prompt("Perry verification code (copy and paste into the boxes):", code);
+            })();
+        </script>
+    }
+}
