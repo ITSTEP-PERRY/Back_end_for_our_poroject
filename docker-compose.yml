@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: perry-sql
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "Perry123!"
+    ports:
+      - "1433:1433"
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Perry.Api/Dockerfile
+    container_name: perry-api
+    depends_on:
+      - sqlserver
+    ports:
+      - "5001:8080"
+
+  web:
+    build:
+      context: .
+      dockerfile: src/Perry.Web/Dockerfile
+    container_name: perry-web
+    depends_on:
+      - api
+    ports:
+      - "5000:8080"
