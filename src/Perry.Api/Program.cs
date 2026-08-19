@@ -14,7 +14,7 @@ builder.Services.AddInfrastructure(builder.Configuration); // EF Core + SQL Serv
 
 var app = builder.Build();
 
-await DbSeeder.SeedAsync(app.Services);
+//await DbSeeder.SeedAsync(app.Services);
 
 // --- HTTP pipeline ---
 // В Development открываем Swagger, чтобы удобно тестировать endpoints
