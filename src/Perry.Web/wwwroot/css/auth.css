@@ -107,6 +107,14 @@ body.auth-page {
   width: 100%;
 }
 
+.login-form--success .perry-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  margin-top: 8px;
+}
+
 .perry-field {
   position: relative;
   width: 100%;

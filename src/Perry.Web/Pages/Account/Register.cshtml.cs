@@ -88,6 +88,8 @@ public class RegisterModel : PageModel
             Dk = _kdf.Dk(Password, salt)
         });
         await _db.SaveChangesAsync(ct);
-        return RedirectToPage("/Account/Login");
+
+        HttpContext.Session.SetString(FinishingTouchesModel.SessionUserIdKey, user.Id.ToString());
+        return RedirectToPage("/Account/FinishingTouches");
     }
 }

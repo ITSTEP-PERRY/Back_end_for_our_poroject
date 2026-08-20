@@ -6,6 +6,9 @@
 |------|------------|
 | [ПРОДЕЛАННАЯ-РАБОТА.md](./ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, админка, сервисы, миграции |
 | [КАТЕГОРИИ.md](./КАТЕГОРИИ.md) | Таблица Categories, seed-дерево, API JSON, витрина/админка |
+| [КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Дизайн БД большого каталога: Product + Variants + атрибуты |
+| [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / Reset / Finishing touches: сценарии для пользователя |
+| [СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md](./СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md) | Что добить до защиты vs что на потом |
 | [КЛИЕНТСКАЯ-ЧАСТЬ.md](./КЛИЕНТСКАЯ-ЧАСТЬ.md) | Дерево и зоны кода покупателя (Account / Cart / Orders / Auth) |
 | [КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Как запустить, сценарии проверки, что осталось по желанию |
 | [ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md](./ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md) | Что перенесено из homework → Perry |
@@ -57,3 +60,10 @@ dotnet run --project src/Perry.Web --launch-profile http
 | 16 | Send code (пусто) | [16-auth-verify-empty.png](./screenshots/16-auth-verify-empty.png) |
 | 17 | Send code — ввод + таймер | [17-auth-verify-filled.png](./screenshots/17-auth-verify-filled.png) |
 | 18 | Send code — ошибка | [18-auth-verify-error.png](./screenshots/18-auth-verify-error.png) |
+| 19 | Forgot password | [19-auth-forgot.png](./screenshots/19-auth-forgot.png) |
+| 20 | Forgot password — ошибка | [20-auth-forgot-error.png](./screenshots/20-auth-forgot-error.png) |
+| 21 | Reset password | [21-auth-reset.png](./screenshots/21-auth-reset.png) |
+| 22 | Reset password — ошибки | [22-auth-reset-error.png](./screenshots/22-auth-reset-error.png) |
+| 23 | Finishing touches | [23-auth-finishing.png](./screenshots/23-auth-finishing.png) |
+| 24 | Finishing touches — ошибки | [24-auth-finishing-error.png](./screenshots/24-auth-finishing-error.png) |
+| 25 | Congratulations | [25-auth-success.png](./screenshots/25-auth-success.png) |

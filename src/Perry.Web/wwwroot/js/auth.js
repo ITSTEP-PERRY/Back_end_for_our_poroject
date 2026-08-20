@@ -78,12 +78,20 @@
         }
 
         if (input.hasAttribute("data-password-rules")) {
-          if (!value || !isStrongPassword(value)) {
+          if (!value) {
             valid = false;
             showFieldError(
               field,
               input.getAttribute("data-error-empty") ||
-                "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and be at least 8 characters long"
+                "This field is necessary to continue!"
+            );
+            return;
+          }
+          if (!isStrongPassword(value)) {
+            valid = false;
+            showFieldError(
+              field,
+              "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, and be at least 8 characters long"
             );
           }
           return;
@@ -106,7 +114,15 @@
         var confirmField = target.closest("[data-field]");
         var passwordValue = source ? source.value : "";
         var confirmValue = target.value;
-        if (!confirmValue.trim() || passwordValue !== confirmValue) {
+        if (!confirmValue.trim()) {
+          valid = false;
+          if (confirmField) {
+            showFieldError(
+              confirmField,
+              target.getAttribute("data-error-empty") || "This field is necessary to continue!"
+            );
+          }
+        } else if (passwordValue !== confirmValue) {
           valid = false;
           if (confirmField) {
             showFieldError(

@@ -1,0 +1,65 @@
+@page
+@model Perry.Web.Pages.Account.FinishingTouchesModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = "Finishing touches";
+}
+
+<a class="auth-back" asp-page="/Account/Register">← Back</a>
+
+<div class="auth-modal">
+    <div class="auth-modal__body">
+        <div class="auth-modal__form-col">
+            <form method="post" class="login-form" data-auth-form data-finishing-form novalidate>
+                <div class="login-form__titles">
+                    <h1>Finishing touches</h1>
+                    <h2>Enter your first and last name</h2>
+                </div>
+
+                <div class="login-form__fields">
+                    <div class="perry-field @(Model.FirstNameMissing ? "perry-field--error" : null)" data-field>
+                        <span class="perry-field__label">First name</span>
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="FirstName"
+                                   type="text"
+                                   placeholder="Enter your first name"
+                                   autocomplete="given-name"
+                                   data-required-input
+                                   data-error-empty="First name is required" />
+                        </div>
+                        <p class="perry-field__error" data-field-error @(Model.FirstNameMissing ? null : "hidden")>
+                            @(Model.FirstNameMissing ? "First name is required" : "")
+                        </p>
+                    </div>
+
+                    <div class="perry-field @(Model.LastNameMissing ? "perry-field--error" : null)" data-field>
+                        <span class="perry-field__label">Last name</span>
+                        <div class="perry-field__control">
+                            <input class="perry-field__input"
+                                   asp-for="LastName"
+                                   type="text"
+                                   placeholder="Enter your last name"
+                                   autocomplete="family-name"
+                                   data-required-input
+                                   data-error-empty="Last name is required" />
+                        </div>
+                        <p class="perry-field__error" data-field-error @(Model.LastNameMissing ? null : "hidden")>
+                            @(Model.LastNameMissing ? "Last name is required" : "")
+                        </p>
+                    </div>
+                </div>
+
+                <button type="submit" class="perry-btn">Create account</button>
+            </form>
+        </div>
+
+        <div class="auth-modal__image">
+            <img src="@Url.Content("~/images/SiginSignup.png")" alt="Finishing touches" width="530" height="632" />
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/auth.js" asp-append-version="true"></script>
+}
