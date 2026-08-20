@@ -1,0 +1,24 @@
+@page
+@model Perry.Web.Pages.Account.AuthSuccessModel
+@{
+    Layout = "_AuthLayout";
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="auth-modal">
+    <div class="auth-modal__body">
+        <div class="auth-modal__form-col">
+            <div class="login-form login-form--success">
+                <div class="login-form__titles">
+                    <h1>@Model.Title</h1>
+                    <h2>@Model.Subtitle</h2>
+                </div>
+                <a class="perry-btn" asp-page="@Model.CtaPage">@Model.CtaText</a>
+            </div>
+        </div>
+
+        <div class="auth-modal__image">
+            <img src="@Url.Content("~/images/SiginSignup.png")" alt="@Model.Title" width="530" height="632" />
+        </div>
+    </div>
+</div>

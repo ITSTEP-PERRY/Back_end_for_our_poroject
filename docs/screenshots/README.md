@@ -200,3 +200,78 @@ Email: «Wrong or invalid email adress». Password: правила сложно�
 ![Send code error](./18-auth-verify-error.png)
 
 После неверного кода: красное сообщение **Incorrect code, try again**, поля в состоянии ошибки, доступна ссылка **Resend code**. Поток и stub SMTP: [ПРОДЕЛАННАЯ-РАБОТА.md](../ПРОДЕЛАННАЯ-РАБОТА.md) §11 п.6.
+
+---
+
+## 19. Forgot password
+
+**Файл:** [`19-auth-forgot.png`](./19-auth-forgot.png)  
+**URL:** `/Account/ForgotPassword`
+
+![Forgot password](./19-auth-forgot.png)
+
+Ввод email для сброса пароля, кнопка Continue. Сценарий: [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](../ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
+
+---
+
+## 20. Forgot password — ошибка
+
+**Файл:** [`20-auth-forgot-error.png`](./20-auth-forgot-error.png)
+
+![Forgot password error](./20-auth-forgot-error.png)
+
+«Wrong or invalid email address» под полем Email.
+
+---
+
+## 21. Reset password
+
+**Файл:** [`21-auth-reset.png`](./21-auth-reset.png)  
+**URL:** `/Account/ResetPassword?token=...`
+
+![Reset password](./21-auth-reset.png)
+
+New password + Repeat password, Continue.
+
+---
+
+## 22. Reset password — ошибки
+
+**Файл:** [`22-auth-reset-error.png`](./22-auth-reset-error.png)
+
+![Reset password error](./22-auth-reset-error.png)
+
+«This field is necessary to continue!» / «Passwords must match».
+
+---
+
+## 23. Finishing touches
+
+**Файл:** [`23-auth-finishing.png`](./23-auth-finishing.png)  
+**URL:** `/Account/FinishingTouches`
+
+![Finishing touches](./23-auth-finishing.png)
+
+First name + Last name, кнопка Create account (после Register).
+
+---
+
+## 24. Finishing touches — ошибки
+
+**Файл:** [`24-auth-finishing-error.png`](./24-auth-finishing-error.png)
+
+![Finishing touches error](./24-auth-finishing-error.png)
+
+«First name is required» / «Last name is required».
+
+---
+
+## 25. Congratulations!
+
+**Файл:** [`25-auth-success.png`](./25-auth-success.png)  
+**URL:** `/Account/AuthSuccess`
+
+![Congratulations](./25-auth-success.png)
+
+Успех регистрации («Let's start shopping») или сброса пароля («Log in») — см. [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](../ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
+
