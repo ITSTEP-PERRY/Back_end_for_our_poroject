@@ -9,6 +9,8 @@ services:
       SA_PASSWORD: "Perry123!"
     ports:
       - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
 
   api:
     build:
@@ -29,3 +31,6 @@ services:
       - api
     ports:
       - "5000:8080"
+
+volumes:
+  sqlserver_data:
