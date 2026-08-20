@@ -18,11 +18,9 @@ var app = builder.Build();
 
 // --- HTTP pipeline ---
 // В Development открываем Swagger, чтобы удобно тестировать endpoints
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+ app.UseSwagger();
+ app.UseSwaggerUI();
+
 
 app.UseHttpsRedirection(); // HTTP → HTTPS
 app.UseAuthorization();    // Позже сюда же подключится Auth (JWT и т.д.)
