@@ -40,6 +40,8 @@ dotnet run --project src/Perry.Web --launch-profile http
 - **VerifyCode:** после 3 неудачных попыток входа — 6-значный код (stub SMTP), экран `/Account/VerifyCode`.
 - **Forgot / Reset password:** `/Account/ForgotPassword` → `/Account/ResetPassword` → Congratulations.
 - **Finishing touches** после Register + экран **Congratulations!**
+- **Витрина по макету:** главная (hero-слайдер, категории, Trending deals, CTA), Product List с фильтрами, Product Page (галерея, About, buy-box, reviews, related).
+- **Legal pages:** `/Terms`, `/License`, `/Privacy` + sidebar Legal notice.
 - Документы: категории, архитектура каталога, восстановление пароля, советы к защите.
 - Подробности: [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md), [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
 
@@ -50,8 +52,16 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 | Экран | Описание | Превью |
 |-------|----------|--------|
-| Главная | Hero и категории на витрине | ![Home](./docs/screenshots/01-home.png) |
-| Каталог + фильтры | Product List с сайдбаром | ![Catalog](./docs/screenshots/02-catalog.png) |
+| **Главная (витрина)** | Hero Sale, категории, Trending deals | ![Home storefront](./docs/screenshots/26-home-storefront.png) |
+| **Product Page** | Галерея, About, buy-box, Product details | ![Product Page](./docs/screenshots/27-product-page.png) |
+| **Каталог + фильтры** | Material / Size / Color, grid | ![Catalog filters](./docs/screenshots/28-catalog-filters.png) |
+| **Customer reviews** | Сводка, tags, Helpful / Translate | ![Reviews](./docs/screenshots/29-product-reviews.png) |
+| **Related + footer** | Fashion: sale и подвал | ![Related footer](./docs/screenshots/32-product-related-footer.png) |
+| **Terms** | Terms and conditions | ![Terms](./docs/screenshots/33-terms.png) |
+| **License** | License agreement | ![License](./docs/screenshots/30-license.png) |
+| **Privacy** | Privacy policy | ![Privacy](./docs/screenshots/31-privacy.png) |
+| Главная (ранний кадр) | Hero и категории | ![Home](./docs/screenshots/01-home.png) |
+| Каталог (ранний кадр) | Product List с сайдбаром | ![Catalog](./docs/screenshots/02-catalog.png) |
 | Sign in (старый кадр) | Ранний кадр входа | ![Login](./docs/screenshots/03-login.png) |
 | **Welcome back** | Вход покупателя (Email / Password) | ![Welcome back](./docs/screenshots/12-auth-login.png) |
 | Welcome back — ошибки | Пустые поля: сообщения валидации | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
@@ -70,7 +80,7 @@ dotnet run --project src/Perry.Web --launch-profile http
 | Admin Dashboard | Статистика и формы создания | ![Admin](./docs/screenshots/04-admin-dashboard.png) |
 | Admin категории/товары | Таблицы категорий и товаров | ![Admin tables](./docs/screenshots/05-admin-catalog.png) |
 | Admin Users | Список пользователей | ![Users](./docs/screenshots/06-admin-users.png) |
-| Product Page + Add to cart | Карточка товара | ![PDP](./docs/screenshots/07-product-details.png) |
+| Product Page (ранний кадр) | Карточка товара | ![PDP](./docs/screenshots/07-product-details.png) |
 | Cart | Корзина | ![Cart](./docs/screenshots/08-cart-update.png) |
 | Profile | Профиль покупателя | ![Profile](./docs/screenshots/09-profile.png) |
 | Related / Best sellers | Похожие / бестселлеры | ![Related](./docs/screenshots/10-related-products.png) |

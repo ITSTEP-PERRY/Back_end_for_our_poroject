@@ -275,3 +275,91 @@ First name + Last name, кнопка Create account (после Register).
 
 Успех регистрации («Let's start shopping») или сброса пароля («Log in») — см. [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](../ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
 
+---
+
+## 26. Главная (витрина 2026-09)
+
+**Файл:** [26-home-storefront.png](./26-home-storefront.png)  
+**URL:** /
+
+![Главная витрина](./26-home-storefront.png)
+
+Шапка Perry (синий header, зелёный Search). Hero-слайдер «Upgrade kitchenware / Sale -50%» с рабочими стрелками. Карусель категорий и блок **Trending deals** с карточками, скидками и Out of stock.
+
+---
+
+## 27. Product Page (верх)
+
+**Файл:** [27-product-page.png](./27-product-page.png)  
+**URL:** /Products/Details/{slug}
+
+![Product Page](./27-product-page.png)
+
+Хлебные крошки, галерея с миниатюрами и скидкой, заголовок, рейтинг, Code/SKU, аккордеон **About product**, buy-box (цена, In stock, Quantity, Buy now / Add to cart / wish list), сетка **Product details**.
+
+---
+
+## 28. Product List (фильтры)
+
+**Файл:** [28-catalog-filters.png](./28-catalog-filters.png)  
+**URL:** /Products?categoryId=...
+
+![Каталог с фильтрами](./28-catalog-filters.png)
+
+Категория Casual Women's Clothing: сайдбар Material / Size / Color, «N filters applied», сортировка, grid/list, карточка товара со скидкой и пагинация.
+
+---
+
+## 29. Customer reviews
+
+**Файл:** [29-product-reviews.png](./29-product-reviews.png)  
+**URL:** /Products/Details/{slug}#reviews
+
+![Отзывы покупателей](./29-product-reviews.png)
+
+Сводка 4/5 и distribution bars, «All opinions confirmed by purchase», Frequent tags, фильтры All/5★…, Create review, список отзывов с Helpful / Translate, блок «More …».
+
+---
+
+## 30. License agreement
+
+**Файл:** [30-license.png](./30-license.png)  
+**URL:** /License
+
+![License agreement](./30-license.png)
+
+Legal notice sidebar + текст License grant / Marketplace services для https://perrymarket.pp.ua/, футер Support / Legal / Social.
+
+---
+
+## 31. Privacy policy
+
+**Файл:** [31-privacy.png](./31-privacy.png)  
+**URL:** /Privacy
+
+![Privacy policy](./31-privacy.png)
+
+Политика конфиденциальности: Information Collection and Use, Personal / Payment Information. Активный пункт Privacy в боковом меню.
+
+---
+
+## 32. Product Page (related + footer)
+
+**Файл:** [32-product-related-footer.png](./32-product-related-footer.png)  
+**URL:** /Products/Details/{slug} (низ)
+
+![Related и footer](./32-product-related-footer.png)
+
+Карусели похожих товаров и **Fashion: sale**, кнопка Back to top, футер Perry © 2024.
+
+---
+
+## 33. Terms and conditions
+
+**Файл:** [33-terms.png](./33-terms.png)  
+**URL:** /Terms
+
+![Terms and conditions](./33-terms.png)
+
+Условия использования: Eligibility, Account registration, Prohibited activities. Сайдбар Legal notice с активным Terms.
+

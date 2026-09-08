@@ -67,3 +67,11 @@ dotnet run --project src/Perry.Web --launch-profile http
 | 23 | Finishing touches | [23-auth-finishing.png](./screenshots/23-auth-finishing.png) |
 | 24 | Finishing touches — ошибки | [24-auth-finishing-error.png](./screenshots/24-auth-finishing-error.png) |
 | 25 | Congratulations | [25-auth-success.png](./screenshots/25-auth-success.png) |
+| 26 | Главная (витрина 2026-09) | [26-home-storefront.png](./screenshots/26-home-storefront.png) |
+| 27 | Product Page | [27-product-page.png](./screenshots/27-product-page.png) |
+| 28 | Каталог + фильтры V2 | [28-catalog-filters.png](./screenshots/28-catalog-filters.png) |
+| 29 | Customer reviews | [29-product-reviews.png](./screenshots/29-product-reviews.png) |
+| 30 | License agreement | [30-license.png](./screenshots/30-license.png) |
+| 31 | Privacy policy | [31-privacy.png](./screenshots/31-privacy.png) |
+| 32 | Related + footer | [32-product-related-footer.png](./screenshots/32-product-related-footer.png) |
+| 33 | Terms and conditions | [33-terms.png](./screenshots/33-terms.png) |
