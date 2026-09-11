@@ -1,0 +1,62 @@
+name: Perry CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore Perry.sln
+
+      - name: Build solution
+        run: dotnet build Perry.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test Perry.sln --configuration Release --no-build --verbosity normal
+
+      - name: Validate Docker Compose
+        run: docker compose config
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start Docker environment
+        run: docker compose up -d
+
+      - name: Check running containers
+        run: docker compose ps
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5001/swagger/index.html > /dev/null; then
+              echo "API is available"
+              exit 0
+            fi
+            echo "Waiting for API..."
+            sleep 5
+          done
+          echo "API did not become available"
+          docker compose logs
+          exit 1
+
+      - name: Stop Docker environment
+        if: always()
+        run: docker compose down
