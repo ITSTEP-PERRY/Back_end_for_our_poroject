@@ -9,6 +9,10 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
@@ -53,9 +57,11 @@ jobs:
               echo "API is available"
               exit 0
             fi
+
             echo "Waiting for API..."
             sleep 5
           done
+
           echo "API did not become available"
           docker compose logs
           exit 1
@@ -63,3 +69,44 @@ jobs:
       - name: Stop Docker environment
         if: always()
         run: docker compose down
+
+  publish-images:
+    name: Publish Docker images to GHCR
+    needs: build-and-test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/Perry.Api/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/itstep-perry/perry-api:latest
+            ghcr.io/itstep-perry/perry-api:${{ github.sha }}
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/Perry.Web/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/itstep-perry/perry-web:latest
+            ghcr.io/itstep-perry/perry-web:${{ github.sha }}
