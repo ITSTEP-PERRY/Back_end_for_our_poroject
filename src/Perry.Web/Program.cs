@@ -21,7 +21,7 @@ builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 
-await DbSeeder.SeedAsync(app.Services);
+// await DbSeeder.SeedAsync(app.Services);
 
 if (!app.Environment.IsDevelopment())
 {
