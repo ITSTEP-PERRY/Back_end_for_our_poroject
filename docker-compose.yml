@@ -6,7 +6,7 @@ services:
     container_name: perry-sql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "Perry123!"
+      SA_PASSWORD: "${SA_PASSWORD}"
     ports:
       - "1433:1433"
     volumes:
