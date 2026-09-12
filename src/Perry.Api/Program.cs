@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
 
@@ -13,6 +14,13 @@ builder.Services.AddSwaggerGen();           // UI документации API (
 builder.Services.AddInfrastructure(builder.Configuration); // EF Core + SQL Server
 
 var app = builder.Build();
+
+
+using (var scope = app.Services.CreateScope())
+{
+  var db =  scope.ServiceProvider.GetRequiredService<AppDbContext>();
+  await db.Database.MigrateAsync();
+}
 
 //await DbSeeder.SeedAsync(app.Services);
 
