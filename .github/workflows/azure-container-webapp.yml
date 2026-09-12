@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore ./Perry.sln
 
       - name: Build
-        run: dotnet build ./src/Perry.Api/Perry.Api.csproj --no-restore
+        run: dotnet build ./src/Perry.Api/Perry.Api.csproj --configuration Debug --no-restore
 
       - name: Publish
-        run: dotnet publish ./src/Perry.Api/Perry.Api.csproj --no-build
+        run: dotnet publish ./src/Perry.Api/Perry.Api.csproj --configuration Debug --no-build
