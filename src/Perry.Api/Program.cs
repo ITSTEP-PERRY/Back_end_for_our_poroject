@@ -8,6 +8,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // --- Регистрация сервисов (DI) ---
 builder.Services.AddControllers();          // Controllers + маршрутизация API
+builder.Services.AddHealthChecks();         // HealthCheck endpoint (/health)
 builder.Services.AddEndpointsApiExplorer(); // Нужно для Swagger
 builder.Services.AddSwaggerGen();           // UI документации API (/swagger)
 builder.Services.AddInfrastructure(builder.Configuration); // EF Core + SQL Server
@@ -25,5 +26,6 @@ var app = builder.Build();
 app.UseHttpsRedirection(); // HTTP → HTTPS
 app.UseAuthorization();    // Позже сюда же подключится Auth (JWT и т.д.)
 app.MapControllers();      // Подключает все [ApiController]
+app.MapHealthChecks("/health"); // Endpoint для HealthCheck
 
 app.Run();
