@@ -66,10 +66,30 @@ jobs:
           docker compose logs
           exit 1
 
+      - name: Integration test API and database
+        run: |
+          for i in {1..30}; do
+            response=$(curl -fsS "http://localhost:5001/api/products?page=1&pageSize=1" 2>/dev/null) && {
+              echo "API successfully returned data from database"
+              echo "$response"
+
+              echo "$response" | jq -e '.items != null and .total != null' > /dev/null && {
+                echo "Integration test passed"
+                exit 0
+              }
+            }
+
+            echo "Waiting for API and database..."
+            sleep 5
+          done
+
+          echo "Integration test failed"
+          docker compose logs
+          exit 1
+
       - name: Stop Docker environment
         if: always()
         run: docker compose down
-
   publish-images:
     name: Publish Docker images to GHCR
     needs: build-and-test
