@@ -213,3 +213,4 @@ Docker Build
 Health Check
      ↓
 GHCR
+<!-- CI security check configured -->
