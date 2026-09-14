@@ -114,6 +114,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set Docker image version tag
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build and push API image
         uses: docker/build-push-action@v6
         with:
@@ -123,6 +132,7 @@ jobs:
           tags: |
             ghcr.io/itstep-perry/perry-api:latest
             ghcr.io/itstep-perry/perry-api:${{ github.sha }}
+            ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-api:{0}', steps.version.outputs.tag) || '' }}
 
       - name: Build and push Web image
         uses: docker/build-push-action@v6
@@ -133,6 +143,7 @@ jobs:
           tags: |
             ghcr.io/itstep-perry/perry-web:latest
             ghcr.io/itstep-perry/perry-web:${{ github.sha }}
+            ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-web:{0}', steps.version.outputs.tag) || '' }}
 
   security-check:
     name: Security Check
