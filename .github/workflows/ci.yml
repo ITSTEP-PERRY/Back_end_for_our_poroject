@@ -120,7 +120,6 @@ jobs:
           tags: |
             ghcr.io/itstep-perry/perry-api:latest
             ghcr.io/itstep-perry/perry-api:${{ github.sha }}
-
       - name: Build and push Web image
         uses: docker/build-push-action@v6
         with:
@@ -130,3 +129,18 @@ jobs:
           tags: |
             ghcr.io/itstep-perry/perry-web:latest
             ghcr.io/itstep-perry/perry-web:${{ github.sha }}
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan repository for secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
