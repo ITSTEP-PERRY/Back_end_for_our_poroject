@@ -44,6 +44,9 @@ dotnet run --project src/Perry.Web --launch-profile http
 - API: /api/wishlist, /api/auth/me, /api/auth/me/password, /api/auth/me/email, /api/orders
 
 ![Account settings](./docs/screenshots/account/07-account-settings.png)
+| **Change password** | Модалка смены пароля | ![Change password](./docs/screenshots/account/09-change-password-modal.png) |
+| **Change email** | Email + OTP | ![Change email](./docs/screenshots/account/11-change-email-modal.png) |
+| **Delete account** | Подтверждение удаления | ![Delete](./docs/screenshots/account/14-delete-account-confirm.png) |
 
 ![Wishlist](./docs/screenshots/account/01-wishlist.png)
 
@@ -115,8 +118,6 @@ dotnet run --project src/Perry.Web --launch-profile http
 | **Terms** | Terms and conditions | ![Terms](./docs/screenshots/33-terms.png) |
 | **License** | License agreement | ![License](./docs/screenshots/30-license.png) |
 | **Privacy** | Privacy policy | ![Privacy](./docs/screenshots/31-privacy.png) |
-| Главная (ранний кадр) | Hero и категории | ![Home](./docs/screenshots/01-home.png) |
-| Каталог (ранний кадр) | Product List с сайдбаром | ![Catalog](./docs/screenshots/02-catalog.png) |
 | Sign in (старый кадр) | Ранний кадр входа | ![Login](./docs/screenshots/03-login.png) |
 | **Welcome back** | Вход покупателя (Email / Password) | ![Welcome back](./docs/screenshots/12-auth-login.png) |
 | Welcome back — ошибки | Пустые поля: сообщения валидации | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
@@ -132,11 +133,5 @@ dotnet run --project src/Perry.Web --launch-profile http
 | **Finishing touches** | First name + Last name после Register | ![Finishing](./docs/screenshots/23-auth-finishing.png) |
 | Finishing touches — ошибки | First/Last name is required | ![Finishing error](./docs/screenshots/24-auth-finishing-error.png) |
 | **Congratulations!** | Успех регистрации или сброса пароля | ![Success](./docs/screenshots/25-auth-success.png) |
-| Admin Dashboard | Статистика и формы создания | ![Admin](./docs/screenshots/04-admin-dashboard.png) |
-| Admin категории/товары | Таблицы категорий и товаров | ![Admin tables](./docs/screenshots/05-admin-catalog.png) |
-| Admin Users | Список пользователей | ![Users](./docs/screenshots/06-admin-users.png) |
 | Product Page (ранний кадр) | Карточка товара | ![PDP](./docs/screenshots/07-product-details.png) |
 | Cart | Корзина | ![Cart](./docs/screenshots/08-cart-update.png) |
-| Profile | Профиль покупателя | ![Profile](./docs/screenshots/09-profile.png) |
-| Related / Best sellers | Похожие / бестселлеры | ![Related](./docs/screenshots/10-related-products.png) |
-| Cart (несколько позиций) | Полная корзина | ![Cart full](./docs/screenshots/11-cart-full.png) |
