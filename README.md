@@ -49,7 +49,7 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 ![My orders](./docs/screenshots/account/03-my-orders.png)
 
-Старые скрины docs/screenshots/01–33 удалены как неактуальные.
+Скрины `01`–`33` сохранены; добавлен блок Account (14 шт.) в `docs/screenshots/account/`.
 
 ---
 
