@@ -35,6 +35,24 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
 
+## Account (17.09.2026)
+
+Личный кабинет покупателя (Wishlist / My orders / Account settings) — FE+BE по макетным скринам.
+
+- Документ: [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md)
+- Скриншоты (14 шт.): [docs/screenshots/README.md](./docs/screenshots/README.md)
+- API: /api/wishlist, /api/auth/me, /api/auth/me/password, /api/auth/me/email, /api/orders
+
+![Account settings](./docs/screenshots/account/07-account-settings.png)
+
+![Wishlist](./docs/screenshots/account/01-wishlist.png)
+
+![My orders](./docs/screenshots/account/03-my-orders.png)
+
+Старые скрины docs/screenshots/01–33 удалены как неактуальные.
+
+---
+
 ## Что сделано недавно
 
 Полный текст: **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:

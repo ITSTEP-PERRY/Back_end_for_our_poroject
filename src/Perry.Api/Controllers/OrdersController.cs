@@ -100,12 +100,18 @@ public class OrdersController : ControllerBase
         totalAmount = o.TotalAmount,
         itemsCount = o.ItemsCount > 0 ? o.ItemsCount : o.Items.Count,
         userName = o.User?.Name,
+        recipientName = o.RecipientName ?? o.User?.Name,
+        shippingAddress = o.ShippingAddress,
+        paymentType = o.PaymentType ?? "Cash",
         items = o.Items.Select(i => new
         {
             i.ProductId,
             productName = i.ProductName,
+            productDescription = i.ProductDescription,
             i.Quantity,
-            unitPrice = i.ProductPrice
+            unitPrice = i.ProductPrice,
+            lineTotal = i.TotalPrice,
+            imageUrl = i.ProductImageUrl
         })
     };
 

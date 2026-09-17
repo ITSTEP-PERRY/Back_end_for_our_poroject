@@ -1,365 +1,150 @@
-# Скриншоты Perry (для README)
+# Скриншоты: личный кабинет (Account)
 
-Скриншоты рабочей витрины и админки (`http://localhost:5122`).  
-Картинки товаров в seed — placeholder с picsum.photos (для демо бэкенда).
+Актуальный набор из **14** макетных экранов для раздела Account (Wishlist / My orders / Account settings).  
+Старые скрины витрины/auth/admin (`01`–`33`) удалены как неактуальные для этой поставки.
 
----
-
-## 1. Главная страница
-
-**Файл:** [`01-home.png`](./01-home.png)  
-**URL:** `/`
-
-![Главная](./01-home.png)
-
-Hero «Everything you love, delivered», блок Shop by category, Trending deals. Шапка: поиск, Catalog, Sign in, Register, Cart.
+Путь: `docs/screenshots/account/`
 
 ---
 
-## 2. Каталог (Product List)
+## 01. Wishlist
 
-**Файл:** [`02-catalog.png`](./02-catalog.png)  
-**URL:** `/Products`
+**Файл:** [`account/01-wishlist.png`](./account/01-wishlist.png)  
+**URL:** `/account/wishlist`
 
-![Каталог](./02-catalog.png)
+![Wishlist](./account/01-wishlist.png)
 
-Сайдбар фильтров: Category, Brand, Price, Customer reviews. Сетка товаров со скидками, рейтингом, бейджами Best seller / Out of stock.
-
----
-
-## 3. Вход покупателя
-
-**Файл:** [`03-login.png`](./03-login.png)  
-**URL:** `/Account/Login`
-
-![Sign in](./03-login.png)
-
-UI из perry-front: «Welcome back», Email / Password, Stay signed in, кнопка Log in, иллюстрация справа. Layout `_AuthLayout` (без старой Amazon-шапки).
+Сайдбар аккаунта (аватар, My orders / Wishlist / Account settings), сетка избранного, кнопка **Remove**, поиск по wishlist.
 
 ---
 
-## 4. Админ — Dashboard
+## 02. Wishlist — подтверждение удаления
 
-**Файл:** [`04-admin-dashboard.png`](./04-admin-dashboard.png)  
-**URL:** `/Admin`
+**Файл:** [`account/02-wishlist-remove-modal.png`](./account/02-wishlist-remove-modal.png)
 
-![Admin Dashboard](./04-admin-dashboard.png)
+![Remove from wishlist](./account/02-wishlist-remove-modal.png)
 
-Статистика (товары, категории, out of stock, отзывы). Формы «Создать категорию» и «Создать товар». Ссылки: Заказы, Пользователи, В магазин, Выход.
-
----
-
-## 5. Админ — списки категорий и товаров
-
-**Файл:** [`05-admin-catalog.png`](./05-admin-catalog.png)  
-**URL:** `/Admin` (нижняя часть)
-
-![Admin catalog tables](./05-admin-catalog.png)
-
-Таблица категорий (Deactivate) и товаров (Edit / Archive).
+Модалка **Are you sure?** → Cancel / Remove.
 
 ---
 
-## 6. Админ — пользователи
+## 03. My orders
 
-**Файл:** [`06-admin-users.png`](./06-admin-users.png)  
-**URL:** `/Admin/Users`
+**Файл:** [`account/03-my-orders.png`](./account/03-my-orders.png)  
+**URL:** `/account/orders`
 
-![Admin Users](./06-admin-users.png)
+![My orders](./account/03-my-orders.png)
 
-Список пользователей: Name, Email, Login, Role, Registered (seed Admin).
-
----
-
-## 7. Карточка товара (PDP)
-
-**Файл:** [`07-product-details.png`](./07-product-details.png)  
-**URL:** `/Products/Details/{id}`
-
-![Product details](./07-product-details.png)
-
-Галерея, About product, цена/скидка, Add to cart («Added to cart»), specs (Brand, Color, Weight). Корзина в шапке с бейджем.
+Список заказов со статусами (Received / Ready for pickup / Shipped / Ordered / Cancelled), дата, сумма, кнопка **Details**.
 
 ---
 
-## 8. Корзина (обновление количества)
+## 04. Account settings — tip к фото
 
-**Файл:** [`08-cart-update.png`](./08-cart-update.png)  
-**URL:** `/Cart`
+**Файл:** [`account/04-account-settings-photo-tip.png`](./account/04-account-settings-photo-tip.png)  
+**URL:** `/account/settings`
 
-![Cart update](./08-cart-update.png)
+![Account settings photo tip](./account/04-account-settings-photo-tip.png)
 
-Сообщение «Количество обновлено», Qty / Update / Remove, Order summary, Proceed to checkout, блок Recently viewed.
-
----
-
-## 9. Профиль
-
-**Файл:** [`09-profile.png`](./09-profile.png)  
-**URL:** `/Account/Profile`
-
-![Profile](./09-profile.png)
-
-Данные аккаунта, правка Name/Email, Save changes, Delete account, Recent orders.
+Подсказка требований к фото (JPEG/PNG, max 5 MB).
 
 ---
 
-## 10. Рекомендации на PDP
+## 05. Order details (Ordered)
 
-**Файл:** [`10-related-products.png`](./10-related-products.png)  
-**URL:** `/Products/Details/...` (блоки внизу)
+**Файл:** [`account/05-order-details-modal.png`](./account/05-order-details-modal.png)
 
-![Related products](./10-related-products.png)
+![Order details Ordered](./account/05-order-details-modal.png)
 
-Секции «You may also like» и «Best sellers in …» с бейджами скидки / Out of stock.
-
----
-
-## 11. Корзина (несколько позиций)
-
-**Файл:** [`11-cart-full.png`](./11-cart-full.png)  
-**URL:** `/Cart`
-
-![Full cart](./11-cart-full.png)
-
-Несколько товаров, итог Items / Total, checkout, Recently viewed под корзиной.
+Модалка деталей заказа: позиции, Total, Additional information, **How to cancel order?**.
 
 ---
 
-## 12. Welcome back (вход)
+## 06. Order details (Received)
 
-**Файл:** [`12-auth-login.png`](./12-auth-login.png)  
-**URL:** `/Account/Login`
+**Файл:** [`account/06-order-details-received.png`](./account/06-order-details-received.png)
 
-![Welcome back](./12-auth-login.png)
+![Order details Received](./account/06-order-details-received.png)
 
-Отдельное окно входа: «Welcome back» / «Login into your account», Email + Password, Stay signed in, Forgot password?, кнопка Log in, ссылка Sign Up, иллюстрация справа.
-
----
-
-## 13. Welcome back — ошибки валидации
-
-**Файл:** [`13-auth-login-errors.png`](./13-auth-login-errors.png)  
-**URL:** `/Account/Login` (пустой submit)
-
-![Login validation errors](./13-auth-login-errors.png)
-
-Красные лейблы и рамки. Под Email: «Wrong or invalid email address». Под Password: «Incorrect password».
+Тот же модал со статусом **Received**.
 
 ---
 
-## 14. Create account (регистрация)
+## 07. Account settings
 
-**Файл:** [`14-auth-register.png`](./14-auth-register.png)  
-**URL:** `/Account/Register`
+**Файл:** [`account/07-account-settings.png`](./account/07-account-settings.png)  
+**URL:** `/account/settings`
 
-![Create account](./14-auth-register.png)
+![Account settings](./account/07-account-settings.png)
 
-Отдельное окно регистрации в том же дизайне: «Create account» / «Shop in the marketplace while traveling», Email, Password, Confirm password, Continue, Log in, PERRY Terms and Conditions.
-
----
-
-## 15. Create account — ошибки валидации
-
-**Файл:** [`15-auth-register-errors.png`](./15-auth-register-errors.png)  
-**URL:** `/Account/Register` (пустой Continuе)
-
-![Register validation errors](./15-auth-register-errors.png)
-
-Email: «Wrong or invalid email adress». Password: правила сложности (8+ символов, upper/lower/digit). Confirm: «Passwords must match».
+Строки: Profile photo, Name, Email, Password, Log out, Delete account.
 
 ---
 
-## 16. Send code — пустые поля
+## 08. Change name
 
-**Файл:** [`16-auth-verify-empty.png`](./16-auth-verify-empty.png)  
-**URL:** `/Account/VerifyCode?email=...` (после 3 неудачных Login)
+**Файл:** [`account/08-change-name-modal.png`](./account/08-change-name-modal.png)
 
-![Send code empty](./16-auth-verify-empty.png)
+![Change name](./account/08-change-name-modal.png)
 
-Начальное состояние экрана подтверждения email: заголовок «Send code», подзаголовок «Enter the code to confirm your email», шесть пустых квадратных полей для цифр, ссылка **Send code** (повторная отправка), кнопка **Continue**, Back слева, иллюстрация справа (тот же Perry auth layout).
-
----
-
-## 17. Send code — код введён, таймер Resend
-
-**Файл:** [`17-auth-verify-filled.png`](./17-auth-verify-filled.png)  
-**URL:** `/Account/VerifyCode`
-
-![Send code filled](./17-auth-verify-filled.png)
-
-В поля введён пример кода `123456`. Под полями таймер **Resend code 0:59** (повторная отправка недоступна до конца минуты). Кнопка Continue активна.
+First name / Last name, Cancel / Confirm.
 
 ---
 
-## 18. Send code — неверный код
+## 09. Change password
 
-**Файл:** [`18-auth-verify-error.png`](./18-auth-verify-error.png)  
-**URL:** `/Account/VerifyCode` (неверный Continue)
+**Файл:** [`account/09-change-password-modal.png`](./account/09-change-password-modal.png)
 
-![Send code error](./18-auth-verify-error.png)
+![Change password](./account/09-change-password-modal.png)
 
-После неверного кода: красное сообщение **Incorrect code, try again**, поля в состоянии ошибки, доступна ссылка **Resend code**. Поток и stub SMTP: [ПРОДЕЛАННАЯ-РАБОТА.md](../ПРОДЕЛАННАЯ-РАБОТА.md) §11 п.6.
-
----
-
-## 19. Forgot password
-
-**Файл:** [`19-auth-forgot.png`](./19-auth-forgot.png)  
-**URL:** `/Account/ForgotPassword`
-
-![Forgot password](./19-auth-forgot.png)
-
-Ввод email для сброса пароля, кнопка Continue. Сценарий: [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](../ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
+Текущий пароль + новый + повтор, иконки показать/скрыть.
 
 ---
 
-## 20. Forgot password — ошибка
+## 10. Change password — валидация
 
-**Файл:** [`20-auth-forgot-error.png`](./20-auth-forgot-error.png)
+**Файл:** [`account/10-change-password-validation.png`](./account/10-change-password-validation.png)
 
-![Forgot password error](./20-auth-forgot-error.png)
+![Change password validation](./account/10-change-password-validation.png)
 
-«Wrong or invalid email address» под полем Email.
-
----
-
-## 21. Reset password
-
-**Файл:** [`21-auth-reset.png`](./21-auth-reset.png)  
-**URL:** `/Account/ResetPassword?token=...`
-
-![Reset password](./21-auth-reset.png)
-
-New password + Repeat password, Continue.
+Ошибки: обязательное поле, сложность пароля (8+ / upper / lower / digit), несовпадение.
 
 ---
 
-## 22. Reset password — ошибки
+## 11. Change email
 
-**Файл:** [`22-auth-reset-error.png`](./22-auth-reset-error.png)
+**Файл:** [`account/11-change-email-modal.png`](./account/11-change-email-modal.png)
 
-![Reset password error](./22-auth-reset-error.png)
+![Change email](./account/11-change-email-modal.png)
 
-«This field is necessary to continue!» / «Passwords must match».
-
----
-
-## 23. Finishing touches
-
-**Файл:** [`23-auth-finishing.png`](./23-auth-finishing.png)  
-**URL:** `/Account/FinishingTouches`
-
-![Finishing touches](./23-auth-finishing.png)
-
-First name + Last name, кнопка Create account (после Register).
+Новый email, пароль, 6-значный код, **Send code**, Cancel / Confirm.
 
 ---
 
-## 24. Finishing touches — ошибки
+## 12. Change email — валидация
 
-**Файл:** [`24-auth-finishing-error.png`](./24-auth-finishing-error.png)
+**Файл:** [`account/12-change-email-validation.png`](./account/12-change-email-validation.png)
 
-![Finishing touches error](./24-auth-finishing-error.png)
+![Change email validation](./account/12-change-email-validation.png)
 
-«First name is required» / «Last name is required».
-
----
-
-## 25. Congratulations!
-
-**Файл:** [`25-auth-success.png`](./25-auth-success.png)  
-**URL:** `/Account/AuthSuccess`
-
-![Congratulations](./25-auth-success.png)
-
-Успех регистрации («Let's start shopping») или сброса пароля («Log in») — см. [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](../ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
+Ошибки пароля/кода, таймер **Resend code**.
 
 ---
 
-## 26. Главная (витрина 2026-09)
+## 13. Log out?
 
-**Файл:** [26-home-storefront.png](./26-home-storefront.png)  
-**URL:** /
+**Файл:** [`account/13-logout-confirm.png`](./account/13-logout-confirm.png)
 
-![Главная витрина](./26-home-storefront.png)
+![Log out confirm](./account/13-logout-confirm.png)
 
-Шапка Perry (синий header, зелёный Search). Hero-слайдер «Upgrade kitchenware / Sale -50%» с рабочими стрелками. Карусель категорий и блок **Trending deals** с карточками, скидками и Out of stock.
-
----
-
-## 27. Product Page (верх)
-
-**Файл:** [27-product-page.png](./27-product-page.png)  
-**URL:** /Products/Details/{slug}
-
-![Product Page](./27-product-page.png)
-
-Хлебные крошки, галерея с миниатюрами и скидкой, заголовок, рейтинг, Code/SKU, аккордеон **About product**, buy-box (цена, In stock, Quantity, Buy now / Add to cart / wish list), сетка **Product details**.
+Подтверждение выхода с устройства.
 
 ---
 
-## 28. Product List (фильтры)
+## 14. Delete account?
 
-**Файл:** [28-catalog-filters.png](./28-catalog-filters.png)  
-**URL:** /Products?categoryId=...
+**Файл:** [`account/14-delete-account-confirm.png`](./account/14-delete-account-confirm.png)
 
-![Каталог с фильтрами](./28-catalog-filters.png)
+![Delete account](./account/14-delete-account-confirm.png)
 
-Категория Casual Women's Clothing: сайдбар Material / Size / Color, «N filters applied», сортировка, grid/list, карточка товара со скидкой и пагинация.
-
----
-
-## 29. Customer reviews
-
-**Файл:** [29-product-reviews.png](./29-product-reviews.png)  
-**URL:** /Products/Details/{slug}#reviews
-
-![Отзывы покупателей](./29-product-reviews.png)
-
-Сводка 4/5 и distribution bars, «All opinions confirmed by purchase», Frequent tags, фильтры All/5★…, Create review, список отзывов с Helpful / Translate, блок «More …».
-
----
-
-## 30. License agreement
-
-**Файл:** [30-license.png](./30-license.png)  
-**URL:** /License
-
-![License agreement](./30-license.png)
-
-Legal notice sidebar + текст License grant / Marketplace services для https://perrymarket.pp.ua/, футер Support / Legal / Social.
-
----
-
-## 31. Privacy policy
-
-**Файл:** [31-privacy.png](./31-privacy.png)  
-**URL:** /Privacy
-
-![Privacy policy](./31-privacy.png)
-
-Политика конфиденциальности: Information Collection and Use, Personal / Payment Information. Активный пункт Privacy в боковом меню.
-
----
-
-## 32. Product Page (related + footer)
-
-**Файл:** [32-product-related-footer.png](./32-product-related-footer.png)  
-**URL:** /Products/Details/{slug} (низ)
-
-![Related и footer](./32-product-related-footer.png)
-
-Карусели похожих товаров и **Fashion: sale**, кнопка Back to top, футер Perry © 2024.
-
----
-
-## 33. Terms and conditions
-
-**Файл:** [33-terms.png](./33-terms.png)  
-**URL:** /Terms
-
-![Terms and conditions](./33-terms.png)
-
-Условия использования: Eligibility, Account registration, Prohibited activities. Сайдбар Legal notice с активным Terms.
-
+Предупреждение о безвозвратном удалении; Cancel (зелёный) / Delete account (красный outline).

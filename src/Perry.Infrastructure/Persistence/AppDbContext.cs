@@ -34,6 +34,9 @@ public class AppDbContext : DbContext
     public DbSet<Order> Orders => Set<Order>();
     public DbSet<OrderItem> OrderItems => Set<OrderItem>();
 
+    // --- Избранное ---
+    public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
+
     // --- Пользователи / админка (из homework ASP-421) ---
     public DbSet<User> Users => Set<User>();
     public DbSet<UserAccess> UserAccesses => Set<UserAccess>();

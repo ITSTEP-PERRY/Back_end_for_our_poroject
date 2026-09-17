@@ -12,6 +12,6 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Email).HasMaxLength(256).IsRequired();
-        builder.Property(x => x.Avatar).HasMaxLength(500);
+        builder.Property(x => x.Avatar).HasColumnType("nvarchar(max)");
     }
 }
