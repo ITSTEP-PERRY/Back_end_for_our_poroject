@@ -10,7 +10,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Perry.Web.Pages.Admin;
 
-/// <summary>Редактирование товара — homework Shop/AdminEdit под Figma Admin Product.</summary>
+/// <summary>
+/// Создание / редактирование карточки товара: базовые поля + About + Specs (Figma / PDP).
+/// </summary>
 [AdminOnly]
 public class EditModel : PageModel
 {
@@ -26,18 +28,43 @@ public class EditModel : PageModel
     [BindProperty(SupportsGet = true)]
     public Guid Id { get; set; }
 
+    [BindProperty(SupportsGet = true)]
+    public bool Create { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public Guid? CategoryId { get; set; }
+
     [BindProperty]
     public ProductEditForm Form { get; set; } = new();
 
     public List<Category> Categories { get; private set; } = [];
+    public List<ProductsModel.CategoryNodeVm> CategoryTree { get; private set; } = [];
     public string? Message { get; set; }
     public string? Error { get; set; }
-    public string? CurrentImageUrl { get; set; }
+    public List<string> CurrentImageUrls { get; private set; } = [];
+    public bool IsCreate => Create || Id == Guid.Empty;
 
     public async Task<IActionResult> OnGetAsync(CancellationToken ct)
     {
+        await LoadCategoriesAsync(ct);
+
+        if (IsCreate)
+        {
+            Form = new ProductEditForm
+            {
+                CategoryId = CategoryId ?? Guid.Empty,
+                StockQuantity = 1,
+                Status = ProductStatus.Active,
+                AboutItems = [new AboutFormItem()],
+                Attributes = [new AttrFormItem()]
+            };
+            return Page();
+        }
+
         var product = await _db.Products
             .Include(p => p.Images)
+            .Include(p => p.AboutItems)
+            .Include(p => p.Attributes)
             .FirstOrDefaultAsync(p => p.Id == Id, ct);
 
         if (product is null)
@@ -55,45 +82,75 @@ public class EditModel : PageModel
             StockQuantity = product.StockQuantity,
             CategoryId = product.CategoryId,
             Status = product.Status,
-            IsBestSeller = product.IsBestSeller
+            IsBestSeller = product.IsBestSeller,
+            AboutItems = product.AboutItems.OrderBy(a => a.SortOrder)
+                .Select(a => new AboutFormItem { Title = a.Title, Description = a.Description })
+                .ToList(),
+            Attributes = product.Attributes.OrderBy(a => a.SortOrder)
+                .Select(a => new AttrFormItem { Name = a.Name, Value = a.Value, IsFilterable = a.IsFilterable })
+                .ToList()
         };
-        CurrentImageUrl = product.Images.FirstOrDefault(i => i.IsPrimary)?.Url
-            ?? product.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url;
 
-        Categories = await _db.Categories.AsNoTracking()
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.Name)
-            .ToListAsync(ct);
+        if (Form.AboutItems.Count == 0)
+            Form.AboutItems.Add(new AboutFormItem());
+        if (Form.Attributes.Count == 0)
+            Form.Attributes.Add(new AttrFormItem());
 
+        CurrentImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList();
         return Page();
     }
 
     public async Task<IActionResult> OnPostAsync(CancellationToken ct)
     {
-        Categories = await _db.Categories.AsNoTracking()
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.Name)
-            .ToListAsync(ct);
-
-        var product = await _db.Products
-            .Include(p => p.Images)
-            .FirstOrDefaultAsync(p => p.Id == Id, ct);
-
-        if (product is null)
-            return NotFound();
+        await LoadCategoriesAsync(ct);
 
         if (string.IsNullOrWhiteSpace(Form.Name) || Form.CategoryId == Guid.Empty)
         {
             Error = "Название и категория обязательны.";
-            CurrentImageUrl = product.Images.FirstOrDefault(i => i.IsPrimary)?.Url;
             return Page();
+        }
+
+        Product product;
+        if (IsCreate)
+        {
+            var sku = string.IsNullOrWhiteSpace(Form.Sku)
+                ? "SKU-" + Guid.NewGuid().ToString("N")[..8].ToUpperInvariant()
+                : Form.Sku.Trim();
+
+            if (await _db.Products.AnyAsync(p => p.Sku == sku, ct))
+            {
+                Error = "SKU уже занят.";
+                return Page();
+            }
+
+            product = new Product
+            {
+                Id = Guid.NewGuid(),
+                Sku = sku,
+                CreatedAtUtc = DateTime.UtcNow
+            };
+            _db.Products.Add(product);
+            Id = product.Id;
+            Create = false;
+        }
+        else
+        {
+            product = await _db.Products
+                .Include(p => p.Images)
+                .Include(p => p.AboutItems)
+                .Include(p => p.Attributes)
+                .FirstOrDefaultAsync(p => p.Id == Id, ct);
+
+            if (product is null)
+                return NotFound();
         }
 
         product.Name = Form.Name.Trim();
         product.Description = Form.Description?.Trim() ?? string.Empty;
-        product.Sku = Form.Sku?.Trim() ?? product.Sku;
+        if (!string.IsNullOrWhiteSpace(Form.Sku))
+            product.Sku = Form.Sku.Trim();
         product.Slug = string.IsNullOrWhiteSpace(Form.Slug)
-            ? SlugHelper.FromName(product.Name)
+            ? SlugHelper.Unique(SlugHelper.FromName(product.Name), s => _db.Products.Any(p => p.Slug == s && p.Id != product.Id))
             : Form.Slug.Trim().ToLowerInvariant();
         product.Brand = Form.Brand?.Trim() ?? string.Empty;
         product.Price = Form.Price;
@@ -110,8 +167,7 @@ public class EditModel : PageModel
         {
             try
             {
-                var file = _storage.Save(Form.Image);
-                var url = "/uploads/" + file;
+                var url = "/uploads/" + _storage.Save(Form.Image);
                 var primary = product.Images.FirstOrDefault(i => i.IsPrimary);
                 if (primary is null)
                 {
@@ -132,15 +188,71 @@ public class EditModel : PageModel
             catch (Exception ex)
             {
                 Error = "Ошибка загрузки изображения: " + ex.Message;
-                CurrentImageUrl = product.Images.FirstOrDefault(i => i.IsPrimary)?.Url;
+                CurrentImageUrls = product.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).ToList();
                 return Page();
             }
         }
 
+        // About items — полная замена
+        _db.ProductAboutItems.RemoveRange(product.AboutItems);
+        var aboutOrder = 0;
+        foreach (var item in Form.AboutItems ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(item.Title) && string.IsNullOrWhiteSpace(item.Description))
+                continue;
+            _db.ProductAboutItems.Add(new ProductAboutItem
+            {
+                Id = Guid.NewGuid(),
+                ProductId = product.Id,
+                Title = item.Title?.Trim() ?? string.Empty,
+                Description = item.Description?.Trim() ?? string.Empty,
+                SortOrder = aboutOrder++
+            });
+        }
+
+        // Attributes — полная замена
+        _db.ProductAttributes.RemoveRange(product.Attributes);
+        var attrOrder = 0;
+        foreach (var item in Form.Attributes ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(item.Name) && string.IsNullOrWhiteSpace(item.Value))
+                continue;
+            _db.ProductAttributes.Add(new ProductAttribute
+            {
+                Id = Guid.NewGuid(),
+                ProductId = product.Id,
+                Name = item.Name?.Trim() ?? string.Empty,
+                Value = item.Value?.Trim() ?? string.Empty,
+                IsFilterable = item.IsFilterable,
+                SortOrder = attrOrder++
+            });
+        }
+
         await _db.SaveChangesAsync(ct);
-        Message = "Товар сохранён.";
-        return RedirectToPage(new { id = Id });
+        return RedirectToPage(new { id = product.Id, create = false });
     }
+
+    private async Task LoadCategoriesAsync(CancellationToken ct)
+    {
+        Categories = await _db.Categories.AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
+            .ToListAsync(ct);
+
+        CategoryTree = BuildTree(Categories, null, 0);
+    }
+
+    private static List<ProductsModel.CategoryNodeVm> BuildTree(List<Category> all, Guid? parentId, int depth) =>
+        all.Where(c => c.ParentCategoryId == parentId)
+            .Select(c => new ProductsModel.CategoryNodeVm
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Depth = depth,
+                Children = BuildTree(all, c.Id, depth + 1)
+            })
+            .ToList();
 
     public class ProductEditForm
     {
@@ -156,5 +268,20 @@ public class EditModel : PageModel
         public ProductStatus Status { get; set; }
         public bool IsBestSeller { get; set; }
         public IFormFile? Image { get; set; }
+        public List<AboutFormItem> AboutItems { get; set; } = [];
+        public List<AttrFormItem> Attributes { get; set; } = [];
+    }
+
+    public class AboutFormItem
+    {
+        public string? Title { get; set; }
+        public string? Description { get; set; }
+    }
+
+    public class AttrFormItem
+    {
+        public string? Name { get; set; }
+        public string? Value { get; set; }
+        public bool IsFilterable { get; set; }
     }
 }

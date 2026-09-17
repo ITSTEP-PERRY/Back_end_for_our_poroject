@@ -14,8 +14,14 @@ public class Category
     /// <summary>URL-friendly код (например clothes-women-tshirts). Уникален.</summary>
     public string Slug { get; set; } = string.Empty;
 
-    /// <summary>Картинка категории на главной / в меню.</summary>
+    /// <summary>Текстовое описание категории (для фронта / SEO).</summary>
+    public string? Description { get; set; }
+
+    /// <summary>Картинка категории на главной / в меню (URL в JSON).</summary>
     public string? ImageUrl { get; set; }
+
+    /// <summary>Иконка категории в меню / фильтрах (URL в JSON).</summary>
+    public string? IconUrl { get; set; }
 
     /// <summary>Порядок сортировки в списке (меньше — выше).</summary>
     public int SortOrder { get; set; }

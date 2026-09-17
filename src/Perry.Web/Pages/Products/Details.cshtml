@@ -1,32 +1,43 @@
 @page "{id}"
 @model Perry.Web.Pages.Products.DetailsModel
 @{
-    // Карточка товара — Desktop - Product Page (Figma)
-    // id = Guid или slug (homework Product by slug)
     ViewData["Title"] = Model.Product!.Name;
     var p = Model.Product;
     var mainImage = p.Images.FirstOrDefault(i => i.IsPrimary)?.Url ?? p.Images.FirstOrDefault()?.Url;
+    var priceWhole = Math.Floor(p.Price);
+    var priceCents = ((int)Math.Round((p.Price - priceWhole) * 100)).ToString("00");
+    var ratingRounded = (int)Math.Round(p.AverageRating);
 }
 
-<div class="page-wrap">
-    <nav class="breadcrumbs">
-        <a asp-page="/Index">Home</a>
-        @if (!string.IsNullOrEmpty(p.ParentCategoryName))
+<div class="page-wrap pdp-page">
+    <nav class="breadcrumbs breadcrumbs--pdp" aria-label="Breadcrumb">
+        <a asp-page="/Index" class="breadcrumbs__home" aria-label="Home">
+            <img src="~/icons/home.svg" alt="" width="16" height="16" />
+        </a>
+        @foreach (var crumb in p.Breadcrumbs)
         {
-            <span>/</span>
-            <span>@p.ParentCategoryName</span>
+            <span class="breadcrumbs__sep">/</span>
+            @if (crumb.Id.HasValue)
+            {
+                <a asp-page="/Products/Index" asp-route-categoryId="@crumb.Id">@crumb.Name</a>
+            }
+            else
+            {
+                <span>@crumb.Name</span>
+            }
         }
-        <span>/</span>
-        <a asp-page="/Products/Index" asp-route-categoryId="@p.CategoryId">@p.CategoryName</a>
     </nav>
 
     <div class="pdp">
-        <div class="pdp-gallery">
+        <div class="pdp-gallery" data-pdp-gallery>
             <div class="pdp-gallery__main">
                 @if (p.DiscountPercent is > 0)
                 {
-                    <span class="badge badge-discount">-@p.DiscountPercent%</span>
+                    <span class="badge badge-discount pdp-gallery__badge">-@p.DiscountPercent%</span>
                 }
+                <button type="button" class="pdp-gallery__nav pdp-gallery__nav--prev" data-gallery-prev aria-label="Previous image">
+                    <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+                </button>
                 @if (!string.IsNullOrEmpty(mainImage))
                 {
                     <img id="mainImage" src="@mainImage" alt="@p.Name" />
@@ -35,11 +46,18 @@
                 {
                     <div class="img-placeholder large"></div>
                 }
+                <button type="button" class="pdp-gallery__nav pdp-gallery__nav--next" data-gallery-next aria-label="Next image">
+                    <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+                </button>
             </div>
             <div class="pdp-gallery__thumbs">
-                @foreach (var img in p.Images)
+                @foreach (var (img, idx) in p.Images.Select((img, i) => (img, i)))
                 {
-                    <button type="button" class="thumb @(img.IsPrimary ? "active" : null)" data-url="@img.Url" onclick="document.getElementById('mainImage').src=this.dataset.url">
+                    <button type="button"
+                            class="thumb @(img.IsPrimary || (idx == 0 && !p.Images.Any(x => x.IsPrimary)) ? "active" : null)"
+                            data-gallery-index="@idx"
+                            data-url="@img.Url"
+                            aria-label="Image @(idx + 1)">
                         <img src="@img.Url" alt="" />
                     </button>
                 }
@@ -49,25 +67,46 @@
         <div class="pdp-info">
             <h1>@p.Name</h1>
             <div class="pdp-meta">
-                <span class="stars">★ @p.AverageRating.ToString("0.0")</span>
-                <span>@p.ReviewCount.ToString("N0") reviews</span>
-                <span class="sku">SKU: @p.Sku</span>
+                <div class="pdp-meta__rating">
+                    <span class="stars-row" aria-label="@p.AverageRating out of 5">
+                        @for (var s = 1; s <= 5; s++)
+                        {
+                            <span class="@(s <= ratingRounded ? "on" : "off")">★</span>
+                        }
+                    </span>
+                    <strong>@ratingRounded</strong>
+                    <span>@p.ReviewCount.ToString("N0") reviews</span>
+                </div>
+                <span class="pdp-meta__code">Code: @p.Sku</span>
             </div>
 
             <div class="about-list">
-                <h3>About product</h3>
+                <h2 class="about-list__title">About product</h2>
                 @if (p.AboutItems.Count == 0)
                 {
-                    <p>@p.Description</p>
+                    <details class="about-item" open>
+                        <summary>Description</summary>
+                        <p>@p.Description</p>
+                    </details>
                 }
                 else
                 {
-                    @foreach (var item in p.AboutItems)
+                    @foreach (var (item, i) in p.AboutItems.Select((x, i) => (x, i)))
                     {
-                        <details class="about-item" open>
-                            <summary>@item.Title</summary>
-                            <p>@item.Description</p>
-                        </details>
+                        if (i < 2)
+                        {
+                            <details class="about-item" open>
+                                <summary>@item.Title</summary>
+                                <p>@item.Description</p>
+                            </details>
+                        }
+                        else
+                        {
+                            <details class="about-item">
+                                <summary>@item.Title</summary>
+                                <p>@item.Description</p>
+                            </details>
+                        }
                     }
                 }
             </div>
@@ -82,131 +121,273 @@
             {
                 <div class="alert alert-error">@ferr</div>
             }
-            <div class="price-block">
-                <strong>$@p.Price.ToString("0.00")</strong>
+
+            <div class="pdp-buy__price">
+                <span class="pdp-price">$ @priceWhole<sup>@priceCents</sup></span>
                 @if (p.OldPrice is > 0)
                 {
                     <s>$@p.OldPrice.Value.ToString("0.00")</s>
                 }
             </div>
-            <div class="buy-row"><span>Status</span><span>@(p.Status == ProductStatus.OutOfStock ? "Out of stock" : "In stock")</span></div>
-            <div class="buy-row"><span>Brand</span><span>@p.Brand</span></div>
-            <div class="buy-row"><span>Qty available</span><span>@p.StockQuantity</span></div>
+
+            <div class="buy-row">
+                <span>Status</span>
+                <span class="@(p.Status == ProductStatus.OutOfStock ? "status-oos" : "status-ok")">
+                    @(p.Status == ProductStatus.OutOfStock ? "Out of stock" : "In stock")
+                </span>
+            </div>
+
+            <a class="buy-link" href="#payment">Payment methods <span aria-hidden="true">›</span></a>
+            <a class="buy-link" href="#security">Security <span aria-hidden="true">›</span></a>
 
             @if (p.Status == ProductStatus.OutOfStock)
             {
-                <button class="btn btn-primary" type="button" disabled>Notify when available</button>
+                <button class="btn btn-primary pdp-buy__btn" type="button" disabled>Notify when available</button>
             }
             else
             {
-                <form method="post" asp-page-handler="AddToCart">
+                <form method="post" asp-page-handler="AddToCart" class="pdp-buy__form" data-pdp-qty>
                     <input type="hidden" name="id" value="@p.Id" />
-                    <label class="qty-label">Qty
-                        <input asp-for="AddQuantity" type="number" min="1" max="@p.StockQuantity" value="1" />
-                    </label>
-                    <button class="btn btn-primary" type="submit" style="width:100%;margin-top:8px">Add to cart</button>
+                    <div class="qty-row">
+                        <span>Quantity</span>
+                        <div class="qty-control">
+                            <button type="button" data-qty-minus aria-label="Decrease">−</button>
+                            <input asp-for="AddQuantity" type="number" min="1" max="@Math.Max(1, p.StockQuantity)" value="1" />
+                            <button type="button" data-qty-plus aria-label="Increase">+</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-buy-now pdp-buy__btn" type="submit" name="buyNow" value="1">Buy now</button>
+                    <button class="btn btn-add-cart pdp-buy__btn" type="submit">Add to cart</button>
                 </form>
-                <a class="btn btn-ghost" asp-page="/Cart/Index" style="width:100%;margin-top:8px;text-align:center">Buy now / Cart</a>
+                <a class="pdp-wishlist" href="#">Add to wish list</a>
             }
         </aside>
     </div>
 
     @if (p.Attributes.Count > 0)
     {
-        <section class="section">
+        <section class="pdp-section pdp-details">
             <h2>Product details</h2>
-            <table class="specs-table">
+            <div class="pdp-details__grid">
                 @foreach (var a in p.Attributes)
                 {
-                    <tr>
-                        <th>@a.Name</th>
-                        <td>@a.Value</td>
-                    </tr>
+                    <div class="pdp-details__item">
+                        <strong>@a.Name</strong>
+                        <span>@a.Value</span>
+                    </div>
                 }
-            </table>
+            </div>
         </section>
     }
 
-    <section class="section reviews">
+    <section class="pdp-section pdp-reviews" id="reviews">
         <h2>Customer reviews</h2>
-        <div class="reviews-summary">
-            <div class="reviews-score">
-                <strong>@p.AverageRating.ToString("0.0")</strong>
-                <span>out of 5 · @p.ReviewCount.ToString("N0") reviews</span>
-            </div>
-            <div class="review-tags">
-                @foreach (var tag in p.Reviews.SelectMany(r => r.Tags).Distinct())
-                {
-                    <span class="tag">@tag</span>
-                }
-            </div>
-        </div>
-
-        <form method="post" asp-page-handler="CreateReview" class="admin-form review-form">
-            <h3>Create review</h3>
-            <input type="hidden" name="id" value="@p.Id" />
-            <div class="form-row">
-                <label>Your name <input asp-for="ReviewAuthor" /></label>
-                <label>Rating
-                    <select asp-for="ReviewRating">
-                        @for (var s = 5; s >= 1; s--)
+        <div class="pdp-reviews__layout">
+            <aside class="pdp-reviews__aside">
+                <div class="reviews-score-card">
+                    <div class="reviews-score-card__top">
+                        <strong>@ratingRounded/5</strong>
+                        <span class="stars-row">
+                            @for (var s = 1; s <= 5; s++)
+                            {
+                                <span class="@(s <= ratingRounded ? "on" : "off")">★</span>
+                            }
+                        </span>
+                        <span class="reviews-score-card__count">@p.ReviewCount.ToString("N0") reviews</span>
+                    </div>
+                    <ul class="rating-bars" aria-label="Rating distribution">
+                        @for (var star = 5; star >= 1; star--)
                         {
-                            <option value="@s">@s stars</option>
+                            var pct = Model.RatingDistribution.GetValueOrDefault(star);
+                            <li>
+                                <span>@star</span>
+                                <span class="rating-bars__track"><span class="rating-bars__fill" style="width:@pct%"></span></span>
+                                <span>@pct%</span>
+                            </li>
                         }
-                    </select>
-                </label>
-            </div>
-            <label>Title <input asp-for="ReviewTitle" /></label>
-            <label>Review <textarea asp-for="ReviewBody" rows="3" required></textarea></label>
-            <button class="btn btn-primary" type="submit">Submit review</button>
-        </form>
+                    </ul>
+                    <p class="reviews-confirmed">
+                        <span aria-hidden="true">✓</span>
+                        All opinions confirmed by purchase
+                        <a href="#">Learn more ›</a>
+                    </p>
+                </div>
 
-        @if (p.Reviews.Count == 0)
-        {
-            <p class="empty-state">No reviews yet.</p>
-        }
-        else
-        {
-            <div class="review-list">
-                @foreach (var r in p.Reviews)
+                @if (Model.FrequentTags.Count > 0)
                 {
-                    <article class="review-card">
-                        <div class="review-card__head">
-                            <strong>@r.AuthorName</strong>
-                            <span>★ @r.Rating</span>
-                            <time>@r.CreatedAtUtc.ToString("yyyy-MM-dd")</time>
+                    <div class="frequent-tags">
+                        <h3>Frequent tags</h3>
+                        <div class="frequent-tags__list">
+                            @foreach (var tag in Model.FrequentTags)
+                            {
+                                <span class="tag tag--soft">@tag</span>
+                            }
                         </div>
-                        <h3>@r.Title</h3>
-                        <p>@r.Body</p>
-                    </article>
+                    </div>
+                }
+            </aside>
+
+            <div class="pdp-reviews__main">
+                <div class="reviews-toolbar">
+                    <div class="reviews-filters">
+                        <a class="chip @(Model.RatingFilter is null ? "is-active" : null)"
+                           asp-page="/Products/Details" asp-route-id="@p.Slug" asp-fragment="reviews">All</a>
+                        @for (var star = 5; star >= 1; star--)
+                        {
+                            <a class="chip @(Model.RatingFilter == star ? "is-active" : null)"
+                               asp-page="/Products/Details"
+                               asp-route-id="@p.Slug"
+                               asp-route-rating="@star"
+                               asp-fragment="reviews">@star ★</a>
+                        }
+                    </div>
+                    <label class="reviews-sort">
+                        <select name="sort" disabled aria-label="Sort reviews">
+                            <option>Most recent</option>
+                        </select>
+                    </label>
+                </div>
+
+                <button type="button" class="btn btn-create-review" data-open-review>+ Create review</button>
+
+                <form method="post" asp-page-handler="CreateReview" class="review-form" id="createReview" hidden>
+                    <h3>Create review</h3>
+                    <input type="hidden" name="id" value="@p.Id" />
+                    <div class="form-row">
+                        <label>Your name <input asp-for="ReviewAuthor" /></label>
+                        <label>Rating
+                            <select asp-for="ReviewRating">
+                                @for (var s = 5; s >= 1; s--)
+                                {
+                                    <option value="@s">@s stars</option>
+                                }
+                            </select>
+                        </label>
+                    </div>
+                    <label>Title <input asp-for="ReviewTitle" /></label>
+                    <label>Review <textarea asp-for="ReviewBody" rows="3" required></textarea></label>
+                    <button class="btn btn-primary" type="submit">Submit review</button>
+                </form>
+
+                @if (Model.FilteredReviews.Count == 0)
+                {
+                    <p class="empty-state">No reviews yet.</p>
+                }
+                else
+                {
+                    <div class="review-list">
+                        @foreach (var r in Model.FilteredReviews)
+                        {
+                            var rStars = r.Rating;
+                            <article class="review-card">
+                                <div class="review-card__head">
+                                    <div class="review-card__author">
+                                        <span class="review-avatar" aria-hidden="true">@(r.AuthorName.FirstOrDefault())</span>
+                                        <strong>@r.AuthorName</strong>
+                                    </div>
+                                    <time>@r.CreatedAtUtc.ToString("MMMM d, yyyy")</time>
+                                </div>
+                                <div class="stars-row" aria-label="@r.Rating of 5">
+                                    @for (var s = 1; s <= 5; s++)
+                                    {
+                                        <span class="@(s <= rStars ? "on" : "off")">★</span>
+                                    }
+                                </div>
+                                <h3>@r.Title</h3>
+                                <p>@r.Body</p>
+                                @if (r.Images.Count > 0)
+                                {
+                                    <div class="review-card__photos">
+                                        @foreach (var url in r.Images)
+                                        {
+                                            <img src="@url" alt="" loading="lazy" />
+                                        }
+                                    </div>
+                                }
+                                @if (r.Tags.Count > 0)
+                                {
+                                    <div class="review-card__tags">
+                                        @foreach (var tag in r.Tags)
+                                        {
+                                            <span class="tag tag--soft">@tag</span>
+                                        }
+                                    </div>
+                                }
+                                <div class="review-card__actions">
+                                    <div class="review-card__btns">
+                                        <button type="button" class="btn btn-helpful">Helpful</button>
+                                        <button type="button" class="btn btn-translate">Translate</button>
+                                    </div>
+                                    @if (r.HelpfulCount > 0)
+                                    {
+                                        <span class="review-card__helpful-note">
+                                            @(r.HelpfulCount == 1 ? "1 person found this helpful" : $"{r.HelpfulCount} people found this helpful")
+                                        </span>
+                                    }
+                                </div>
+                            </article>
+                        }
+                    </div>
+                    <div class="reviews-more">
+                        <button type="button" class="btn btn-see-more">See more</button>
+                    </div>
                 }
             </div>
-        }
+        </div>
     </section>
 
-    <section class="section">
+    <section class="pdp-section">
         <div class="section-head">
-            <h2>You may also like</h2>
+            <h2>More @p.CategoryName.ToLowerInvariant()</h2>
+            <a asp-page="/Products/Index" asp-route-categoryId="@p.CategoryId">See all ›</a>
         </div>
-        <div class="product-row">
-            @foreach (var item in Model.Related)
-            {
-                <partial name="_ProductCard" model="item" />
-            }
+        <div class="carousel" data-carousel-root>
+            <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="related" aria-label="Previous">
+                <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+            </button>
+            <div class="carousel__viewport">
+                <div class="carousel__track product-track" data-carousel="related">
+                    @foreach (var item in Model.Related)
+                    {
+                        <partial name="_ProductCard" model="item" />
+                    }
+                </div>
+            </div>
+            <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="related" aria-label="Next">
+                <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+            </button>
         </div>
     </section>
 
-    <section class="section">
+    <section class="pdp-section">
         <div class="section-head">
-            <h2>Best sellers in @p.CategoryName</h2>
+            <h2>Fashion: sale</h2>
+            <a asp-page="/Products/Index">See all ›</a>
         </div>
-        <div class="product-row">
-            @foreach (var item in Model.BestInCategory)
-            {
-                <partial name="_ProductCard" model="item" />
-            }
+        <div class="carousel" data-carousel-root>
+            <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="sale" aria-label="Previous">
+                <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+            </button>
+            <div class="carousel__viewport">
+                <div class="carousel__track product-track" data-carousel="sale">
+                    @foreach (var item in Model.SaleRelated)
+                    {
+                        <partial name="_ProductCard" model="item" />
+                    }
+                </div>
+            </div>
+            <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="sale" aria-label="Next">
+                <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+            </button>
         </div>
     </section>
 
-    <partial name="_ViewedProducts" model="Model.ViewedProducts" />
+    <button type="button" class="to-top" id="toTop" aria-label="Back to top" hidden>
+        <span aria-hidden="true">⌃</span>
+    </button>
 </div>
+
+@section Scripts {
+    <script src="~/js/home.js" asp-append-version="true"></script>
+    <script src="~/js/pdp.js" asp-append-version="true"></script>
+}

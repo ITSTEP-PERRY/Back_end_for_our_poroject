@@ -1,0 +1,259 @@
+@page
+@model Perry.Web.Pages.Admin.ProductsModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Products";
+    var pageNumbers = BuildPageNumbers(Model.PageNumber, Model.TotalPages);
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-ok">@Model.Message</div>
+}
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-error">@Model.Error</div>
+}
+
+@{
+    ViewData["SelectedId"] = Model.CategoryId;
+    ViewData["Query"] = Model.Q;
+    ViewData["BasePage"] = "/Admin/Products";
+}
+<div class="ap-toolbar">
+    <span class="ap-toolbar__label">Category</span>
+    <div class="ap-cat" data-cat-dropdown>
+        <button type="button" class="ap-cat__trigger" data-cat-trigger aria-expanded="false">
+            <span class="ap-cat__value @(Model.CategoryId is null ? "is-placeholder" : null)">
+                @Model.SelectedCategoryName
+            </span>
+            <span class="ap-cat__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="ap-cat__menu" data-cat-menu hidden>
+            <a class="ap-cat__item @(Model.CategoryId is null ? "is-selected" : null)"
+               asp-page="/Admin/Products"
+               asp-route-q="@Model.Q">
+                All
+            </a>
+            @foreach (var node in Model.CategoryTree)
+            {
+                @await Html.PartialAsync("_CategoryTreeItem", node, ViewData)
+            }
+        </div>
+    </div>
+
+    <form method="get" class="ap-search" role="search">
+        @if (Model.CategoryId is Guid cid)
+        {
+            <input type="hidden" name="CategoryId" value="@cid" />
+        }
+        <img class="ap-search__icon" src="~/icons/search.svg" alt="" width="20" height="16" />
+        <input class="ap-search__input" type="search" name="Q" value="@Model.Q" placeholder="Search..." />
+    </form>
+</div>
+
+<div class="ap-layout">
+    <section class="ap-list">
+        @if (Model.Products.Count == 0)
+        {
+            <div class="ap-empty">
+                <div class="ap-empty__ph" aria-hidden="true"></div>
+                @if (Model.CategoryId is Guid emptyCat)
+                {
+                    <p class="ap-empty__text">No products in the selected category</p>
+                    <a class="ap-create-card"
+                       asp-page="/Admin/Edit"
+                       asp-route-id="@Guid.Empty"
+                       asp-route-categoryId="@emptyCat"
+                       asp-route-create="1">
+                        <span class="ap-create-card__plus">+</span>
+                        <span>Create product</span>
+                    </a>
+                }
+                else if (!string.IsNullOrWhiteSpace(Model.Q))
+                {
+                    <p class="ap-empty__text">Nothing found for “@Model.Q”</p>
+                }
+                else
+                {
+                    <p class="ap-empty__text">No products yet</p>
+                    <a class="ap-create-card" asp-page="/Admin/Edit" asp-route-id="@Guid.Empty" asp-route-create="1">
+                        <span class="ap-create-card__plus">+</span>
+                        <span>Create product</span>
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="ap-table">
+                <div class="ap-table__head">
+                    <span class="ap-table__cb" aria-hidden="true"></span>
+                    <span class="ap-table__name">Product name</span>
+                    <span class="ap-table__rating">Rating</span>
+                    <span class="ap-table__price">Price</span>
+                    <a class="ap-table__add"
+                       asp-page="/Admin/Edit"
+                       asp-route-id="@Guid.Empty"
+                       asp-route-create="1"
+                       asp-route-categoryId="@Model.CategoryId"
+                       title="Create product">+</a>
+                </div>
+
+                @foreach (var p in Model.Products)
+                {
+                    var isSelected = Model.SelectedId == p.Id;
+                    <a class="ap-table__row @(isSelected ? "is-selected" : null)"
+                       asp-page="/Admin/Products"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-q="@Model.Q"
+                       asp-route-pageNumber="@Model.PageNumber"
+                       asp-route-selectedId="@p.Id">
+                        <span class="ap-table__cb">
+                            <span class="ap-check @(isSelected ? "is-on" : null)"></span>
+                        </span>
+                        <span class="ap-table__thumb">
+                            @if (!string.IsNullOrEmpty(p.ImageUrl))
+                            {
+                                <img src="@p.ImageUrl" alt="" />
+                            }
+                        </span>
+                        <span class="ap-table__name">@p.Name</span>
+                        <span class="ap-table__rating">
+                            <img src="~/icons/star.svg" alt="" width="20" height="20" />
+                            <span>@p.AverageRating.ToString("0.0")</span>
+                        </span>
+                        <span class="ap-table__price">
+                            <span class="ap-price">$@p.Price.ToString("0.00")</span>
+                            @if (p.OldPrice is > 0 && p.OldPrice > p.Price)
+                            {
+                                <span class="ap-price ap-price--old">$@p.OldPrice.Value.ToString("0.00")</span>
+                            }
+                        </span>
+                    </a>
+                }
+            </div>
+
+            @if (Model.TotalPages > 1)
+            {
+                <nav class="ap-pager" aria-label="Pagination">
+                    <a class="ap-pager__btn @(Model.PageNumber <= 1 ? "is-disabled" : null)"
+                       asp-page="/Admin/Products"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-q="@Model.Q"
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-selectedId="@Model.SelectedId">‹</a>
+                    @foreach (var n in pageNumbers)
+                    {
+                        if (n < 0)
+                        {
+                            <span class="ap-pager__btn ap-pager__ellipsis">…</span>
+                        }
+                        else
+                        {
+                            <a class="ap-pager__btn @(n == Model.PageNumber ? "is-current" : null)"
+                               asp-page="/Admin/Products"
+                               asp-route-categoryId="@Model.CategoryId"
+                               asp-route-q="@Model.Q"
+                               asp-route-pageNumber="@n"
+                               asp-route-selectedId="@Model.SelectedId">@n</a>
+                        }
+                    }
+                    <a class="ap-pager__btn @(Model.PageNumber >= Model.TotalPages ? "is-disabled" : null)"
+                       asp-page="/Admin/Products"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-q="@Model.Q"
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-selectedId="@Model.SelectedId">›</a>
+                </nav>
+            }
+        }
+    </section>
+
+    <aside class="ap-panel">
+        @if (Model.SelectedProduct is null)
+        {
+            <div class="ap-panel__empty">
+                <p>Select a product to see its information</p>
+            </div>
+        }
+        else
+        {
+            var sp = Model.SelectedProduct;
+            var mainImg = sp.ImageUrls.FirstOrDefault();
+            var thumbs = sp.ImageUrls.Take(3).ToList();
+            var extra = Math.Max(0, sp.ImageUrls.Count - 3);
+
+            <div class="ap-panel__preview">
+                <div class="ap-panel__hero @(string.IsNullOrEmpty(mainImg) ? "is-ph" : null)">
+                    @if (!string.IsNullOrEmpty(mainImg))
+                    {
+                        <img src="@mainImg" alt="@sp.Name" />
+                    }
+                </div>
+                <div class="ap-panel__thumbs">
+                    @for (var i = 0; i < 3; i++)
+                    {
+                        var url = i < thumbs.Count ? thumbs[i] : null;
+                        <div class="ap-panel__thumb @(string.IsNullOrEmpty(url) ? "is-ph" : null)">
+                            @if (!string.IsNullOrEmpty(url))
+                            {
+                                <img src="@url" alt="" />
+                            }
+                            @if (i == 2 && extra > 0)
+                            {
+                                <span class="ap-panel__more">+@extra</span>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <h2 class="ap-panel__title">@sp.Name</h2>
+                <p class="ap-panel__meta">
+                    <span>@sp.CategoryName</span>
+                    <span>·</span>
+                    <span>@sp.Brand</span>
+                    <span>·</span>
+                    <span>$@sp.Price.ToString("0.00")</span>
+                </p>
+                <p class="ap-panel__meta">
+                    About: @sp.AboutCount · Specs: @sp.AttributeCount · Stock: @sp.StockQuantity
+                </p>
+                <a class="ap-panel__reviews"
+                   asp-page="/Products/Details"
+                   asp-route-id="@sp.Id">See all customer reviews (@sp.ReviewCount)</a>
+
+                <div class="ap-panel__actions">
+                    <a class="ap-panel__btn" asp-page="/Admin/Edit" asp-route-id="@sp.Id">
+                        <span>Edit</span>
+                    </a>
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@sp.Id" class="ap-panel__btn-form">
+                        <button type="submit" class="ap-panel__btn ap-panel__btn--danger"
+                                onclick="return confirm('Архивировать товар?')">Delete</button>
+                    </form>
+                </div>
+            </div>
+        }
+    </aside>
+</div>
+
+@functions {
+    static IEnumerable<int> BuildPageNumbers(int current, int total)
+    {
+        if (total <= 7)
+        {
+            for (var i = 1; i <= total; i++) yield return i;
+            yield break;
+        }
+
+        yield return 1;
+        if (current > 3) yield return -1;
+
+        var start = Math.Max(2, current - 1);
+        var end = Math.Min(total - 1, current + 1);
+        for (var i = start; i <= end; i++) yield return i;
+
+        if (current < total - 2) yield return -1;
+        yield return total;
+    }
+}

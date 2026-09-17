@@ -1,8 +1,6 @@
 using Perry.Domain.Entities;
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Persistence;
-using Perry.Infrastructure.Services;
-using Perry.Web.Extensions;
 using Perry.Web.ViewModels;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.EntityFrameworkCore;
@@ -10,32 +8,29 @@ using Microsoft.EntityFrameworkCore;
 namespace Perry.Web.Pages;
 
 /// <summary>
-/// Главная страница (Desktop - Main в Figma):
-/// hero, категории, Trending deals, Best sellers, Recently viewed.
+/// Главная (Desktop - Main): hero, 2 карусели категорий, Trending deals, Sale, CTA.
 /// </summary>
 public class IndexModel : PageModel
 {
     private readonly AppDbContext _db;
-    private readonly IViewedProductsService _viewed;
 
-    public IndexModel(AppDbContext db, IViewedProductsService viewed)
+    public IndexModel(AppDbContext db)
     {
         _db = db;
-        _viewed = viewed;
     }
 
-    public List<CategorySpotVm> CategorySpots { get; private set; } = [];
+    public List<CategorySpotVm> CategoryRow1 { get; private set; } = [];
+    public List<CategorySpotVm> CategoryRow2 { get; private set; } = [];
     public List<ProductCardVm> TrendingDeals { get; private set; } = [];
-    public List<ProductCardVm> BestSellers { get; private set; } = [];
-    public List<ProductCardVm> ViewedProducts { get; private set; } = [];
+    public List<ProductCardVm> SaleProducts { get; private set; } = [];
 
     public async Task OnGetAsync(CancellationToken cancellationToken)
     {
-        CategorySpots = await _db.Categories
+        var categories = await _db.Categories
             .AsNoTracking()
-            .Where(c => c.IsActive && c.ParentCategoryId == null)
+            .Where(c => c.IsActive)
             .OrderBy(c => c.SortOrder)
-            .Take(6)
+            .ThenBy(c => c.Name)
             .Select(c => new CategorySpotVm
             {
                 Id = c.Id,
@@ -44,20 +39,16 @@ public class IndexModel : PageModel
             })
             .ToListAsync(cancellationToken);
 
-        if (CategorySpots.Count < 4)
+        if (categories.Count == 0)
         {
-            CategorySpots = await _db.Categories
-                .AsNoTracking()
-                .Where(c => c.IsActive)
-                .OrderBy(c => c.SortOrder)
-                .Take(6)
-                .Select(c => new CategorySpotVm
-                {
-                    Id = c.Id,
-                    Name = c.Name,
-                    ImageUrl = c.ImageUrl
-                })
-                .ToListAsync(cancellationToken);
+            CategoryRow1 = [];
+            CategoryRow2 = [];
+        }
+        else
+        {
+            // Две визуальные карусели; если категорий мало — циклически дополняем.
+            CategoryRow1 = TakeCycled(categories, 0, 8);
+            CategoryRow2 = TakeCycled(categories, Math.Min(6, categories.Count), 8);
         }
 
         var visible = _db.Products
@@ -65,20 +56,26 @@ public class IndexModel : PageModel
             .Where(p => p.Status == ProductStatus.Active || p.Status == ProductStatus.OutOfStock);
 
         TrendingDeals = await MapCards(
-            visible.Where(p => p.OldPrice != null).OrderByDescending(p => p.ReviewCount).Take(8),
+            visible.OrderByDescending(p => p.ReviewCount).ThenByDescending(p => p.AverageRating).Take(12),
             cancellationToken);
 
-        BestSellers = await MapCards(
-            visible.Where(p => p.IsBestSeller).OrderByDescending(p => p.AverageRating).Take(8),
+        SaleProducts = await MapCards(
+            visible.Where(p => p.OldPrice != null && p.OldPrice > p.Price)
+                .OrderByDescending(p => (p.OldPrice!.Value - p.Price) / p.OldPrice.Value)
+                .Take(12),
             cancellationToken);
 
-        if (TrendingDeals.Count == 0)
-            TrendingDeals = await MapCards(visible.OrderByDescending(p => p.CreatedAtUtc).Take(8), cancellationToken);
+        if (SaleProducts.Count == 0)
+            SaleProducts = TrendingDeals.Take(8).ToList();
+    }
 
-        if (BestSellers.Count == 0)
-            BestSellers = await MapCards(visible.OrderByDescending(p => p.AverageRating).Take(8), cancellationToken);
-
-        ViewedProducts = (await _viewed.GetViewedProductsAsync(8, cancellationToken)).ToCardVms();
+    private static List<CategorySpotVm> TakeCycled(List<CategorySpotVm> source, int start, int count)
+    {
+        var result = new List<CategorySpotVm>(count);
+        if (source.Count == 0) return result;
+        for (var i = 0; i < count; i++)
+            result.Add(source[(start + i) % source.Count]);
+        return result;
     }
 
     private static async Task<List<ProductCardVm>> MapCards(

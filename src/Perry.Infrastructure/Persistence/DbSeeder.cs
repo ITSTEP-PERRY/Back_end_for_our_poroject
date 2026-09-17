@@ -12,6 +12,14 @@ namespace Perry.Infrastructure.Persistence;
 /// </summary>
 public static class DbSeeder
 {
+    /// <summary>Только применить EF-миграции (для API / Azure при старте).</summary>
+    public static async Task MigrateAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.MigrateAsync();
+    }
+
     public static async Task SeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
@@ -20,9 +28,105 @@ public static class DbSeeder
         await db.Database.MigrateAsync();
         await EnsureProductSlugsAsync(db);
 
-        if (await db.Products.AnyAsync())
-            return;
+        if (!await db.Products.AnyAsync())
+        {
+            await SeedDemoCatalogAsync(db);
+        }
 
+        await EnsureCatalogFilterAttributesAsync(db);
+        await EnsureProductPageDemoAsync(db);
+    }
+
+    /// <summary>Дополняет dress демо-данными Product Page (about / reviews), если БД уже была.</summary>
+    private static async Task EnsureProductPageDemoAsync(AppDbContext db)
+    {
+        var dress = await db.Products
+            .Include(p => p.AboutItems)
+            .Include(p => p.Reviews).ThenInclude(r => r.Tags)
+            .Include(p => p.Attributes)
+            .FirstOrDefaultAsync(p => p.Name.Contains("Dress") || p.Sku == "DKT-DR-2024" || p.Sku == "5498209487628");
+        if (dress is null) return;
+
+        var changed = false;
+        if (!dress.AboutItems.Any())
+        {
+            db.ProductAboutItems.AddRange(
+                About(dress.Id, "Soft fabric", "Made of 49% rayon, 34% polyester and 17% nylon. Soft, lightweight and breathable fabric keeps you cool on warm days.", 1),
+                About(dress.Id, "Unique design", "Button down shirt dress. Long sleeve shirt dresses, knee-length, side slit and two side pockets.", 2),
+                About(dress.Id, "Fashion matching", "Perfect with casual shoes, sandals, slippers, sneakers or boots. You can wear a belt to create a different look.", 3),
+                About(dress.Id, "Various occasions", "Great for all occasions — casual, vacation, party, working, shopping, dating or daily wear. Also perfect as a beach cover-up.", 4));
+            changed = true;
+        }
+
+        if (!dress.Attributes.Any(a => a.Name == "Care instructions"))
+        {
+            db.ProductAttributes.AddRange(
+                Attr(dress.Id, "Fabric type", "49% rayon, 34% polyester, 17% nylon", 10),
+                Attr(dress.Id, "Care instructions", "Machine wash", 11),
+                Attr(dress.Id, "Origin", "Imported", 12),
+                Attr(dress.Id, "Closure type", "Button", 13));
+            changed = true;
+        }
+
+        if (!dress.Reviews.Any())
+        {
+            var r1 = new ProductReview
+            {
+                Id = Guid.NewGuid(),
+                ProductId = dress.Id,
+                AuthorName = "Louisa Hines",
+                Rating = 5,
+                Title = "It's true to size and has pockets",
+                Body = "I absolutely adore this dress. I've gotten numerous compliments. It's incredibly comfortable!",
+                IsApproved = true,
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-40)
+            };
+            var r2 = new ProductReview
+            {
+                Id = Guid.NewGuid(),
+                ProductId = dress.Id,
+                AuthorName = "Sylvia Kennedy",
+                Rating = 5,
+                Title = "Elegant",
+                Body = "The fabric feels like a cotton-linen blend. It fits the shoulders well and hangs loosely on the chest and waist.",
+                IsApproved = true,
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-70)
+            };
+            var r3 = new ProductReview
+            {
+                Id = Guid.NewGuid(),
+                ProductId = dress.Id,
+                AuthorName = "Cecilia Small",
+                Rating = 3,
+                Title = "Shift dress",
+                Body = "I loved the look and color, but it was way too big. Size L felt like XL.",
+                IsApproved = true,
+                CreatedAtUtc = DateTime.UtcNow.AddDays(-90)
+            };
+            db.ProductReviews.AddRange(r1, r2, r3);
+            db.ProductReviewTags.AddRange(
+                new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r1.Id, Name = "High quality" },
+                new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r1.Id, Name = "Actual price" },
+                new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r1.Id, Name = "Worth the price" },
+                new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r2.Id, Name = "Fits the description" },
+                new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r2.Id, Name = "Matches the photos" });
+            db.ProductReviewImages.Add(new ProductReviewImage
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = r2.Id,
+                Url = "https://picsum.photos/seed/dress-review/160/160"
+            });
+            dress.AverageRating = 4m;
+            dress.ReviewCount = Math.Max(dress.ReviewCount, 3);
+            changed = true;
+        }
+
+        if (changed)
+            await db.SaveChangesAsync();
+    }
+
+    private static async Task SeedDemoCatalogAsync(AppDbContext db)
+    {
         // --- Категории (дерево как в макете) ---
         var electronics = Cat("Electronics", "electronics", 1);
         var streaming = Cat("Streaming devices", "streaming-devices", 1, electronics.Id);
@@ -30,9 +134,10 @@ public static class DbSeeder
         var women = Cat("Women's fashion", "womens-fashion", 1, fashion.Id);
         var casual = Cat("Casual Women's Clothing", "casual-womens-clothing", 1, women.Id);
         var tops = Cat("Tops, Tees & Blouses", "tops-tees-blouses", 1, casual.Id);
+        var tshirts = Cat("T-Shirts", "t-shirts", 1, tops.Id);
         var pcs = Cat("PCs & Accessories", "pcs-accessories", 2, electronics.Id);
 
-        db.Categories.AddRange(electronics, streaming, fashion, women, casual, tops, pcs);
+        db.Categories.AddRange(electronics, streaming, fashion, women, casual, tops, tshirts, pcs);
         await db.SaveChangesAsync();
 
         // --- Товары ---
@@ -53,7 +158,7 @@ public static class DbSeeder
             name: "PUMIEY Women's Long Sleeve T-Shirt Soft Lightweight Tee",
             sku: "PUM-LS-001",
             brand: "PUMIEY",
-            categoryId: tops.Id,
+            categoryId: tshirts.Id,
             price: 19.99m,
             oldPrice: 32.99m,
             stock: 120,
@@ -66,7 +171,7 @@ public static class DbSeeder
             name: "Abardsion Women's Classic Crew Neck Tee",
             sku: "ABR-CR-014",
             brand: "Abardsion",
-            categoryId: tops.Id,
+            categoryId: tshirts.Id,
             price: 14.50m,
             oldPrice: 24.00m,
             stock: 80,
@@ -74,6 +179,32 @@ public static class DbSeeder
             reviews: 312,
             bestSeller: false,
             description: "Breathable cotton blend crew neck tee for daily wear.");
+
+        var tee3 = Product(
+            name: "Trendy Queen Women's Crop Top Casual Tee",
+            sku: "TQ-CR-022",
+            brand: "Trendy Queen",
+            categoryId: tshirts.Id,
+            price: 22.00m,
+            oldPrice: 29.99m,
+            stock: 55,
+            rating: 4.2m,
+            reviews: 210,
+            bestSeller: false,
+            description: "Cropped casual tee for everyday outfits.");
+
+        var tee4 = Product(
+            name: "ANRABESS Women's Oversized T-Shirt",
+            sku: "ANR-OV-008",
+            brand: "ANRABESS",
+            categoryId: tshirts.Id,
+            price: 18.99m,
+            oldPrice: 27.00m,
+            stock: 90,
+            rating: 4.4m,
+            reviews: 633,
+            bestSeller: true,
+            description: "Oversized soft cotton tee.");
 
         var dress = Product(
             name: "Dokotoo Womens Dresses 2024 Summer Casual Midi Dress",
@@ -141,39 +272,44 @@ public static class DbSeeder
             bestSeller: false,
             description: "Stylish wide-brim hat for sunny days.");
 
-        db.Products.AddRange(roku, tee1, tee2, dress, shoes, headset, keyboard, hat);
+        db.Products.AddRange(roku, tee1, tee2, tee3, tee4, dress, shoes, headset, keyboard, hat);
         await db.SaveChangesAsync();
 
-        // --- Картинки (placeholder-сервис, стабильные URL) ---
         AddImages(db, roku.Id, "roku");
         AddImages(db, tee1.Id, "tshirt");
         AddImages(db, tee2.Id, "tee");
+        AddImages(db, tee3.Id, "croptee");
+        AddImages(db, tee4.Id, "oversize");
         AddImages(db, dress.Id, "dress");
         AddImages(db, shoes.Id, "shoes");
         AddImages(db, headset.Id, "headphones");
         AddImages(db, keyboard.Id, "keyboard");
         AddImages(db, hat.Id, "hat");
 
-        // --- Характеристики Roku (как в макете Product Page) ---
         db.ProductAttributes.AddRange(
             Attr(roku.Id, "Brand", "Roku", 1),
             Attr(roku.Id, "Color", "Black", 2),
             Attr(roku.Id, "Item weight", "1.6 ounces", 3),
             Attr(roku.Id, "Product dimensions", "3 x 1.5 x 0.83 inches", 4),
             Attr(roku.Id, "Batteries", "2 AAA batteries required", 5),
-            Attr(roku.Id, "Item model number", "3941R2", 6),
-            Attr(tee1.Id, "Brand", "PUMIEY", 1, true),
-            Attr(tee1.Id, "Fabric type", "Polyamide, Elastane", 2, true),
-            Attr(tee1.Id, "Color", "Black", 3, true),
-            Attr(tee1.Id, "Size", "M", 4, true));
+            Attr(roku.Id, "Item model number", "3941R2", 6));
 
         db.ProductAboutItems.AddRange(
             About(roku.Id, "Brilliant 4K picture quality", "Enjoy sharp 4K HDR streaming on compatible TVs.", 1),
             About(roku.Id, "Seamless streaming", "Launch your favorite channels in seconds from the home screen.", 2),
             About(roku.Id, "Voice search & control", "Use the Roku Voice Remote to find shows hands-free.", 3),
-            About(roku.Id, "Free & Live TV", "Access free live channels and popular streaming apps.", 4));
+            About(roku.Id, "Free & Live TV", "Access free live channels and popular streaming apps.", 4),
+            About(dress.Id, "Soft fabric", "Made of 49% rayon, 34% polyester and 17% nylon. Soft, lightweight and breathable fabric keeps you cool on warm days.", 1),
+            About(dress.Id, "Unique design", "Button down shirt dress. Long sleeve shirt dresses, knee-length, side slit and two side pockets.", 2),
+            About(dress.Id, "Fashion matching", "Perfect with casual shoes, sandals, slippers, sneakers or boots. You can wear a belt to create a different look.", 3),
+            About(dress.Id, "Various occasions", "Great for all occasions — casual, vacation, party, working, shopping, dating or daily wear. Also perfect as a beach cover-up.", 4));
 
-        // --- Отзывы ---
+        db.ProductAttributes.AddRange(
+            Attr(dress.Id, "Fabric type", "49% rayon, 34% polyester, 17% nylon", 1),
+            Attr(dress.Id, "Care instructions", "Machine wash", 2),
+            Attr(dress.Id, "Origin", "Imported", 3),
+            Attr(dress.Id, "Closure type", "Button", 4));
+
         var review1 = new ProductReview
         {
             Id = Guid.NewGuid(),
@@ -197,13 +333,123 @@ public static class DbSeeder
             CreatedAtUtc = DateTime.UtcNow.AddDays(-5)
         };
 
-        db.ProductReviews.AddRange(review1, review2);
+        var dressReview1 = new ProductReview
+        {
+            Id = Guid.NewGuid(),
+            ProductId = dress.Id,
+            AuthorName = "Louisa Hines",
+            Rating = 5,
+            Title = "It's true to size and has pockets",
+            Body = "I absolutely adore this dress. I've gotten numerous compliments, with people saying I look stylish. It's incredibly comfortable!",
+            IsApproved = true,
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-40)
+        };
+        var dressReview2 = new ProductReview
+        {
+            Id = Guid.NewGuid(),
+            ProductId = dress.Id,
+            AuthorName = "Sylvia Kennedy",
+            Rating = 5,
+            Title = "Elegant",
+            Body = "The fabric feels like a cotton-linen blend. It fits the shoulders well and hangs loosely on the chest and waist.",
+            IsApproved = true,
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-70)
+        };
+        var dressReview3 = new ProductReview
+        {
+            Id = Guid.NewGuid(),
+            ProductId = dress.Id,
+            AuthorName = "Cecilia Small",
+            Rating = 3,
+            Title = "Shift dress",
+            Body = "I loved the look and color of the dress, but it was way too big. I usually order a size L, but this dress felt like an XL.",
+            IsApproved = true,
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-90)
+        };
+
+        db.ProductReviews.AddRange(review1, review2, dressReview1, dressReview2, dressReview3);
         db.ProductReviewTags.AddRange(
             new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = review1.Id, Name = "easy to use" },
             new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = review1.Id, Name = "remote control" },
-            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = review2.Id, Name = "great value" });
+            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = review2.Id, Name = "great value" },
+            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = dressReview1.Id, Name = "High quality" },
+            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = dressReview1.Id, Name = "Actual price" },
+            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = dressReview1.Id, Name = "Worth the price" },
+            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = dressReview2.Id, Name = "Fits the description" },
+            new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = dressReview2.Id, Name = "Matches the photos" });
+
+        db.ProductReviewImages.Add(new ProductReviewImage
+        {
+            Id = Guid.NewGuid(),
+            ReviewId = dressReview2.Id,
+            Url = $"https://picsum.photos/seed/dress-review/160/160"
+        });
+
+        // Align dress card numbers with Product Page mockup vibe.
+        dress.Sku = "5498209487628";
+        dress.Name = "Zeagoo Women's Casual Summer Shirt Dress with Long Sleeves, Button Down Front, Pockets - Beach Cover-Up";
+        dress.Price = 38.74m;
+        dress.OldPrice = null;
+        dress.AverageRating = 4m;
+        dress.ReviewCount = 242;
+        dress.Slug = "zeagoo-womens-casual-summer-shirt-dress";
 
         await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Гарантирует filterable Color / Size / Fabric type на товарах (для сайдбара Product List).
+    /// </summary>
+    private static async Task EnsureCatalogFilterAttributesAsync(AppDbContext db)
+    {
+        var products = await db.Products
+            .Include(p => p.Attributes)
+            .ToListAsync();
+        if (products.Count == 0) return;
+
+        var colors = new[] { "White", "Black", "Red", "Blue", "Green", "Pink", "Grey", "Beige", "Navy", "Cream" };
+        var sizes = new[] { "XS", "S", "M", "L", "XL", "2XL", "3XL" };
+        var fabrics = new[] { "Cotton", "Polyamide", "Elastane", "Polyester", "Linen", "Viscose" };
+        var changed = false;
+        var i = 0;
+
+        foreach (var p in products)
+        {
+            void Ensure(string name, string value)
+            {
+                if (p.Attributes.Any(a => a.Name == name && a.Value == value)) return;
+                var attr = Attr(p.Id, name, value, p.Attributes.Count + 1, true);
+                p.Attributes.Add(attr);
+                db.ProductAttributes.Add(attr);
+                changed = true;
+            }
+
+            // По одному значению каждого типа на товар — чтобы фильтры работали.
+            Ensure("Color", colors[i % colors.Length]);
+            Ensure("Size", sizes[i % sizes.Length]);
+            Ensure("Fabric type", fabrics[i % fabrics.Length]);
+            if (i % 3 == 0)
+                Ensure("Fabric type", fabrics[(i + 1) % fabrics.Length]);
+            i++;
+        }
+
+        // Отдельная категория T-Shirts, если её ещё нет (старые БД).
+        if (!await db.Categories.AnyAsync(c => c.Slug == "t-shirts"))
+        {
+            var tops = await db.Categories.FirstOrDefaultAsync(c => c.Slug == "tops-tees-blouses");
+            var tshirts = Cat("T-Shirts", "t-shirts", 1, tops?.Id);
+            db.Categories.Add(tshirts);
+            changed = true;
+
+            var teeProducts = products.Where(p =>
+                p.Name.Contains("T-Shirt", StringComparison.OrdinalIgnoreCase)
+                || p.Name.Contains("Tee", StringComparison.OrdinalIgnoreCase)).ToList();
+            foreach (var p in teeProducts)
+                p.CategoryId = tshirts.Id;
+        }
+
+        if (changed)
+            await db.SaveChangesAsync();
     }
 
     /// <summary>Backfill Slug для уже существующих товаров после миграции.</summary>

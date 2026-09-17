@@ -11,6 +11,7 @@
 | Файл | О чём |
 |------|--------|
 | [docs/README.md](./docs/README.md) | Оглавление и быстрый старт |
+| [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Полная сводка изменений API / категорий / каталога / PDP / auth / React |
 | [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, чеклист |
 | [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Нумерация задач по макету Figma для доски Trello |
 | [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories: таблица, seed, JSON API, витрина |
@@ -36,6 +37,40 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 ## Что сделано недавно
 
+Полный текст: **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:
+
+### Категории (закрыт пробел Create/Update)
+- В entity и БД: `Description`, `ImageUrl`, `IconUrl`, `IsActive`.
+- Миграция `AddCategoryDescriptionAndIconUrl`.
+- `POST/PUT /api/categories` принимают `description`, `imageUrl`, `iconUrl`, `isActive` (+ name, slug, parent, sortOrder).
+- Дерево/список отдают эти поля в JSON.
+- Админка Razor: `Admin/Categories` + `_CategoryTreeItem`.
+
+### Каталог API (Figma Product List V2)
+- Фильтры: `brands`, `fabrics`, `sizes`, `colors`, `minPrice`/`maxPrice`, `minRating`.
+- Ответ списка: блок **`facets`** (опции для сайдбара).
+- Fabric / Size / Color — из атрибутов товара.
+
+### PDP API
+- `GET /api/products/{id}`: reviews, related, saleRelated, about, attributes, images, discount.
+
+### Auth / Orders / Users API
+- JWT (`JwtTokenService`), `AuthController` (login / register / forgot).
+- `OrdersController`, `UsersController`, JwtBearer + CORS в `Program.cs`.
+
+### Razor-витрина (эталон под Figma)
+- Home (hero, категории, Trending, Sale, CTA Abundance of goods).
+- Product List с фильтрами Brand / Fabric / Size / Color / Price / reviews.
+- Product Page: галерея, buy-box (Delivery / Payment / Security / Returns), reviews, «You may also like», «Best sellers in …».
+- Legal: `/Terms`, `/License`, `/Privacy` + `_LegalNav`.
+- `site.css`, иконки, home images, `catalog.js` / `home.js` / `pdp.js`, расширенный DbSeeder.
+
+### React-порт
+- Витрина в [perry-front](https://github.com/ITSTEP-PERRY/perry-front) ветка `feature/figma-storefront-port` — те же экраны и стили.
+
+### Ранее в проекте
+- Ребрендинг **DuSoleil → Perry**.
+- Auth UX: Welcome back, Create account, VerifyCode, Forgot/Reset, Finishing touches, Congratulations.
 - Ребрендинг **DuSoleil → Perry** (solution, проекты, namespaces, БД, UI).
 - UI входа и регистрации по макету команды ([perry-front](https://github.com/ITSTEP-PERRY/perry-front.git)): Welcome back + Create account, валидация полей.
 - **VerifyCode:** после 3 неудачных попыток входа — 6-значный код (stub SMTP), экран `/Account/VerifyCode`.
@@ -44,7 +79,8 @@ dotnet run --project src/Perry.Web --launch-profile http
 - **Витрина по макету:** главная (hero-слайдер, категории, Trending deals, CTA), Product List с фильтрами, Product Page (галерея, About, buy-box, reviews, related).
 - **Legal pages:** `/Terms`, `/License`, `/Privacy` + sidebar Legal notice.
 - Документы: категории, архитектура каталога, восстановление пароля, советы к защите.
-- Подробности: [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md), [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md).
+
+---
 
 ## Скриншоты
 
