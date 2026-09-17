@@ -1,0 +1,163 @@
+name: Perry CI
+
+on:
+  push:
+    branches:
+      - main
+      - "feature/**"
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore dependencies
+        run: dotnet restore Perry.sln
+
+      - name: Build solution
+        run: dotnet build Perry.sln --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test Perry.sln --configuration Release --no-build --verbosity normal
+
+      - name: Validate Docker Compose
+        run: docker compose config > /dev/null
+
+      - name: Build Docker images
+        run: docker compose build
+
+      - name: Start Docker environment
+        run: docker compose up -d
+
+      - name: Check running containers
+        run: docker compose ps
+
+      - name: Wait for API
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://localhost:5001/health > /dev/null; then
+              echo "API is available"
+              exit 0
+            fi
+
+            echo "Waiting for API..."
+            sleep 5
+          done
+
+          echo "API did not become available"
+          docker compose logs
+          exit 1
+
+      - name: Integration test API and database
+        run: |
+          for i in {1..30}; do
+            response=$(curl -fsS "http://localhost:5001/api/products?page=1&pageSize=1" 2>/dev/null) && {
+              echo "API successfully returned data from database"
+              echo "$response"
+
+              echo "$response" | jq -e '.items != null and .total != null' > /dev/null && {
+                echo "Integration test passed"
+                exit 0
+              }
+            }
+
+            echo "Waiting for API and database..."
+            sleep 5
+          done
+
+          echo "Integration test failed"
+          docker compose logs
+          exit 1
+
+      - name: Stop Docker environment
+        if: always()
+        run: docker compose down
+
+  publish-images:
+    name: Publish Docker images to GHCR
+    needs: build-and-test
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set Docker image version tag
+        id: version
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            echo "tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build and push API image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/Perry.Api/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/itstep-perry/perry-api:latest
+            ghcr.io/itstep-perry/perry-api:${{ github.sha }}
+            ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-api:{0}', steps.version.outputs.tag) || '' }}
+
+      - name: Build and push Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./src/Perry.Web/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/itstep-perry/perry-web:latest
+            ghcr.io/itstep-perry/perry-web:${{ github.sha }}
+            ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-web:{0}', steps.version.outputs.tag) || '' }}
+
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Scan repository for secrets
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/repo" \
+            ghcr.io/gitleaks/gitleaks:latest \
+            git /repo --redact

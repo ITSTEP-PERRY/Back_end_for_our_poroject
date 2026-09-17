@@ -71,6 +71,13 @@ dotnet run --project src/Perry.Web --launch-profile http
 ### Ранее в проекте
 - Ребрендинг **DuSoleil → Perry**.
 - Auth UX: Welcome back, Create account, VerifyCode, Forgot/Reset, Finishing touches, Congratulations.
+- Ребрендинг **DuSoleil → Perry** (solution, проекты, namespaces, БД, UI).
+- UI входа и регистрации по макету команды ([perry-front](https://github.com/ITSTEP-PERRY/perry-front.git)): Welcome back + Create account, валидация полей.
+- **VerifyCode:** после 3 неудачных попыток входа — 6-значный код (stub SMTP), экран `/Account/VerifyCode`.
+- **Forgot / Reset password:** `/Account/ForgotPassword` → `/Account/ResetPassword` → Congratulations.
+- **Finishing touches** после Register + экран **Congratulations!**
+- **Витрина по макету:** главная (hero-слайдер, категории, Trending deals, CTA), Product List с фильтрами, Product Page (галерея, About, buy-box, reviews, related).
+- **Legal pages:** `/Terms`, `/License`, `/Privacy` + sidebar Legal notice.
 - Документы: категории, архитектура каталога, восстановление пароля, советы к защите.
 
 ---

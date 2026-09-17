@@ -6,7 +6,7 @@ services:
     container_name: perry-sql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "Perry123!"
+      SA_PASSWORD: "${SA_PASSWORD}"
     ports:
       - "1433:1433"
     volumes:
@@ -19,6 +19,8 @@ services:
     container_name: perry-api
     depends_on:
       - sqlserver
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "5001:8080"
 
@@ -29,6 +31,8 @@ services:
     container_name: perry-web
     depends_on:
       - api
+    environment:
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
     ports:
       - "5000:8080"
 
