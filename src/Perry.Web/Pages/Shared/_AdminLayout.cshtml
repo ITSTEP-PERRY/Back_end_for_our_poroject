@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
-@* Layout админки (Dashboard) — отдельный от витрины *@
+@* Layout админки — шапка по Figma Admin panel + навигация *@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,9 +8,46 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
 </head>
+@{
+    var path = ViewContext.HttpContext.Request.Path.Value ?? "";
+    bool IsActive(string segment) =>
+        path.Contains(segment, StringComparison.OrdinalIgnoreCase);
+}
 <body class="admin-body">
+    <header class="admin-header">
+        <div class="admin-header__inner">
+            <button type="button" class="admin-header__icon-btn" id="admin-nav-toggle" aria-label="Menu" aria-expanded="false" aria-controls="admin-nav">
+                <img src="~/icons/menu.svg" alt="" width="24" height="24" />
+            </button>
+            <a class="admin-header__logo" asp-page="/Admin/Index">Perry</a>
+            <nav class="admin-header__nav" id="admin-nav">
+                <a class="admin-header__link @(IsActive("/Admin/Products") || IsActive("/Admin/Edit") ? "is-active" : null)"
+                   asp-page="/Admin/Products">Products</a>
+                <a class="admin-header__link @(IsActive("/Admin/Categories") ? "is-active" : null)"
+                   asp-page="/Admin/Categories">Categories</a>
+                <a class="admin-header__link @(IsActive("/Admin/Orders") ? "is-active" : null)"
+                   asp-page="/Admin/Orders">Orders</a>
+                <a class="admin-header__link @(IsActive("/Admin/Users") ? "is-active" : null)"
+                   asp-page="/Admin/Users">Users</a>
+                <a class="admin-header__link @(path.Equals("/Admin", StringComparison.OrdinalIgnoreCase) || path.Equals("/Admin/Index", StringComparison.OrdinalIgnoreCase) ? "is-active" : null)"
+                   asp-page="/Admin/Index">Dashboard</a>
+            </nav>
+            <div class="admin-header__right">
+                <a class="admin-header__icon-btn" asp-page="/Index" title="В магазин">
+                    <img src="~/icons/home.svg" alt="" width="22" height="22" />
+                </a>
+                <a class="admin-header__icon-btn" href="/Admin/Index?logout=1" title="Выход">
+                    <img src="~/icons/account.svg" alt="" width="24" height="24" />
+                </a>
+            </div>
+        </div>
+    </header>
+
     <main class="admin-main">
         @RenderBody()
     </main>
+
+    <script src="~/js/admin-panel.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

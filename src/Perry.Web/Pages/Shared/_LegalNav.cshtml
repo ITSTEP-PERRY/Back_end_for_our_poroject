@@ -1,0 +1,14 @@
+@*
+  Боковое меню Legal notice (Terms / License / Privacy).
+*@
+@{
+    var active = (ViewData["LegalActive"] as string) ?? "";
+}
+<aside class="legal-nav">
+    <h2 class="legal-nav__title">Legal notice</h2>
+    <nav class="legal-nav__list" aria-label="Legal notice">
+        <a class="legal-nav__link@(active == "terms" ? " is-active" : "")" asp-page="/Terms">Terms and conditions</a>
+        <a class="legal-nav__link@(active == "license" ? " is-active" : "")" asp-page="/License">License agreement</a>
+        <a class="legal-nav__link@(active == "privacy" ? " is-active" : "")" asp-page="/Privacy">Privacy policy</a>
+    </nav>
+</aside>

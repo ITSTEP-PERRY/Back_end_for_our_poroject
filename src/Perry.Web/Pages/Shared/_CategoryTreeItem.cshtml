@@ -1,0 +1,34 @@
+@using Perry.Web.Pages.Admin
+@model ProductsModel.CategoryNodeVm
+@{
+    var selectedId = ViewData["SelectedId"] as Guid?;
+    var query = ViewData["Query"] as string;
+    var basePage = ViewData["BasePage"] as string ?? "/Admin/Products";
+    var pad = 16 + Model.Depth * 16;
+    var hasChildren = Model.Children.Count > 0;
+}
+<div class="ap-cat__node" data-depth="@Model.Depth">
+    <div class="ap-cat__row" style="padding-left: @(pad)px">
+        <a class="ap-cat__item @(selectedId == Model.Id ? "is-selected" : null)"
+           asp-page="@basePage"
+           asp-route-categoryId="@Model.Id"
+           asp-route-q="@query">
+            @Model.Name
+        </a>
+        @if (hasChildren)
+        {
+            <button type="button" class="ap-cat__expand" data-cat-expand aria-expanded="true" title="Toggle">
+                <span class="ap-cat__chevron"></span>
+            </button>
+        }
+    </div>
+    @if (hasChildren)
+    {
+        <div class="ap-cat__children" data-cat-children>
+            @foreach (var child in Model.Children)
+            {
+                @await Html.PartialAsync("_CategoryTreeItem", child, ViewData)
+            }
+        </div>
+    }
+</div>

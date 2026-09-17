@@ -1,0 +1,180 @@
+@page
+@model Perry.Web.Pages.Admin.CategoriesModel
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Categories";
+    ViewData["SelectedId"] = Model.CategoryId;
+    ViewData["Query"] = Model.Q;
+    ViewData["BasePage"] = "/Admin/Categories";
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-ok">@Model.Message</div>
+}
+@if (!string.IsNullOrEmpty(Model.Error))
+{
+    <div class="alert alert-error">@Model.Error</div>
+}
+
+<div class="ap-toolbar">
+    <span class="ap-toolbar__label">Category</span>
+    <div class="ap-cat" data-cat-dropdown>
+        <button type="button" class="ap-cat__trigger" data-cat-trigger aria-expanded="false">
+            <span class="ap-cat__value @(!Model.HasCategoryFilter ? "is-placeholder" : null)">
+                @Model.SelectedCategoryName
+            </span>
+            <span class="ap-cat__chevron" aria-hidden="true"></span>
+        </button>
+        <div class="ap-cat__menu" data-cat-menu hidden>
+            <a class="ap-cat__item @(!Model.HasCategoryFilter ? "is-selected" : null)"
+               asp-page="/Admin/Categories">
+                All roots
+            </a>
+            @foreach (var node in Model.CategoryTree)
+            {
+                @await Html.PartialAsync("_CategoryTreeItem", node, ViewData)
+            }
+        </div>
+    </div>
+
+    <form method="get" class="ap-search" role="search">
+        @if (Model.CategoryId is Guid cid)
+        {
+            <input type="hidden" name="CategoryId" value="@cid" />
+        }
+        <img class="ap-search__icon" src="~/icons/search.svg" alt="" width="20" height="16" />
+        <input class="ap-search__input" type="search" name="Q" value="@Model.Q" placeholder="Search..." />
+    </form>
+</div>
+
+<div class="ap-layout">
+    <section class="ap-list">
+        @if (!Model.HasCategoryFilter)
+        {
+            <div class="ap-empty">
+                <div class="ap-empty__ph" aria-hidden="true"></div>
+                <p class="ap-empty__text">Choose a category to see its subcategories</p>
+            </div>
+        }
+        else if (Model.Subcategories.Count == 0)
+        {
+            <div class="ap-empty">
+                <div class="ap-empty__ph" aria-hidden="true"></div>
+                <p class="ap-empty__text">No subcategories in the selected category</p>
+                <button type="button" class="ap-create-card" data-focus-form>
+                    <span class="ap-create-card__plus">+</span>
+                    <span>Create subcategory</span>
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="ap-table ap-table--cats">
+                <div class="ap-table__head">
+                    <span class="ap-table__name">Subcategory</span>
+                    <span class="ap-table__price">Products</span>
+                    <a class="ap-table__add" asp-page="/Admin/Categories"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-selectedId=""
+                       title="Create subcategory">+</a>
+                </div>
+                @foreach (var s in Model.Subcategories)
+                {
+                    var isSelected = Model.SelectedId == s.Id;
+                    <a class="ap-table__row @(isSelected ? "is-selected" : null)"
+                       asp-page="/Admin/Categories"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-q="@Model.Q"
+                       asp-route-selectedId="@s.Id">
+                        <span class="ap-table__thumb">
+                            @if (!string.IsNullOrEmpty(s.ImageUrl))
+                            {
+                                <img src="@s.ImageUrl" alt="" />
+                            }
+                        </span>
+                        <span class="ap-table__name">
+                            <strong>@s.Name</strong>
+                            <code class="ap-slug">@s.Slug</code>
+                        </span>
+                        <span class="ap-table__price">@s.ProductCount</span>
+                    </a>
+                }
+            </div>
+        }
+    </section>
+
+    <aside class="ap-panel">
+        @if (Model.SelectedCategory is null && !Model.HasCategoryFilter)
+        {
+            <div class="ap-panel__empty">
+                <p>Select a category to see its information</p>
+            </div>
+        }
+        else
+        {
+            <form method="post" asp-page-handler="Save" enctype="multipart/form-data" class="ap-panel__form admin-form" id="category-form">
+                <input type="hidden" asp-for="Form.Id" />
+                <h2 class="ap-panel__form-title">
+                    @(Model.Form.Id is null ? "New category" : "Category information")
+                </h2>
+
+                @if (Model.SelectedCategory is not null && Model.Form.Id is not null)
+                {
+                    <div class="ap-panel__hero @(string.IsNullOrEmpty(Model.SelectedCategory.ImageUrl) ? "is-ph" : null) ap-panel__hero--sm">
+                        @if (!string.IsNullOrEmpty(Model.SelectedCategory.ImageUrl))
+                        {
+                            <img src="@Model.SelectedCategory.ImageUrl" alt="" />
+                        }
+                    </div>
+                    <p class="ap-panel__meta">
+                        Subcategories: @Model.SelectedCategory.SubCount · Products: @Model.SelectedCategory.ProductCount
+                        @if (!string.IsNullOrEmpty(Model.SelectedCategory.ParentName))
+                        {
+                            <span>· Parent: @Model.SelectedCategory.ParentName</span>
+                        }
+                    </p>
+                }
+
+                <label>Name *
+                    <input asp-for="Form.Name" required />
+                </label>
+                <label>Slug
+                    <input asp-for="Form.Slug" placeholder="auto from name" />
+                </label>
+                <label>Parent category
+                    <select asp-for="Form.ParentCategoryId">
+                        <option value="">— root —</option>
+                        @foreach (var c in Model.AllCategories.Where(x => x.IsActive))
+                        {
+                            <option value="@c.Id">@c.Name</option>
+                        }
+                    </select>
+                </label>
+                <div class="form-row form-row--2">
+                    <label>Sort order
+                        <input asp-for="Form.SortOrder" type="number" />
+                    </label>
+                    <label class="checkbox-row">
+                        <input asp-for="Form.IsActive" /> Active
+                    </label>
+                </div>
+                <label>Image
+                    <input asp-for="Form.Image" type="file" accept="image/*" />
+                </label>
+
+                <div class="ap-panel__actions">
+                    <button type="submit" class="ap-panel__btn">Save</button>
+                    @if (Model.Form.Id is Guid delId)
+                    {
+                        <button type="submit"
+                                class="ap-panel__btn ap-panel__btn--danger"
+                                formaction="?handler=Deactivate&amp;id=@delId"
+                                formmethod="post"
+                                onclick="return confirm('Деактивировать категорию?')">Delete</button>
+                    }
+                </div>
+            </form>
+        }
+    </aside>
+</div>

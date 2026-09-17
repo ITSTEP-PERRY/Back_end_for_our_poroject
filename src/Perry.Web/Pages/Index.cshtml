@@ -1,76 +1,154 @@
 ﻿@page
 @model IndexModel
 @{
-    // Главная витрина — Desktop - Main (Figma)
     ViewData["Title"] = "Home";
 }
 
-<section class="hero">
-    <div class="hero__content">
-        <p class="hero__eyebrow">Perry marketplace</p>
-        <h1>Everything you love, delivered</h1>
-        <p class="hero__text">Browse deals, bestsellers and everyday essentials — built for testing the product backend.</p>
-        <a class="btn btn-primary" asp-page="/Products/Index">Shop catalog</a>
-    </div>
-</section>
+<div class="home">
+    <section class="home-hero" aria-label="Promotions">
+        <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="hero" aria-label="Previous slide">
+            <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+        </button>
+        <div class="home-hero__track" data-carousel="hero">
+            <article class="home-hero__slide is-active">
+                <img src="~/images/home/hero-slide-1.png" alt="Upgrade kitchenware today. Sale -50%" />
+            </article>
+            <article class="home-hero__slide">
+                <img src="~/images/home/hero-slide-2.png" alt="Beach ready. Sale on swimsuits" />
+            </article>
+        </div>
+        <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="hero" aria-label="Next slide">
+            <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+        </button>
+    </section>
 
-<section class="section">
-    <div class="section-head">
-        <h2>Shop by category</h2>
-        <a asp-page="/Products/Index">See all →</a>
-    </div>
-    <div class="category-grid">
-        @foreach (var cat in Model.CategorySpots)
-        {
-            <a class="category-card" asp-page="/Products/Index" asp-route-categoryId="@cat.Id">
-                <div class="category-card__img">
-                    @if (!string.IsNullOrEmpty(cat.ImageUrl))
+    <section class="home-section">
+        <div class="carousel" data-carousel-root>
+            <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="cats1" aria-label="Previous categories">
+                <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+            </button>
+            <div class="carousel__viewport">
+                <div class="carousel__track category-track" data-carousel="cats1">
+                    @foreach (var cat in Model.CategoryRow1)
                     {
-                        <img src="@cat.ImageUrl" alt="@cat.Name" />
+                        <a class="category-card" asp-page="/Products/Index" asp-route-categoryId="@cat.Id">
+                            <div class="category-card__img">
+                                @if (!string.IsNullOrEmpty(cat.ImageUrl))
+                                {
+                                    <img src="@cat.ImageUrl" alt="@cat.Name" loading="lazy" />
+                                }
+                            </div>
+                            <div class="category-card__title">@cat.Name</div>
+                            <span class="category-card__link">See all &gt;</span>
+                        </a>
                     }
                 </div>
-                <div class="category-card__title">@cat.Name</div>
-                <span class="category-card__link">See all →</span>
-            </a>
-        }
-    </div>
-</section>
-
-<section class="section">
-    <div class="section-head">
-        <h2>Trending deals</h2>
-        <a asp-page="/Products/Index">See all →</a>
-    </div>
-    <div class="product-row">
-        @foreach (var p in Model.TrendingDeals)
-        {
-            <partial name="_ProductCard" model="p" />
-        }
-    </div>
-</section>
-
-<section class="section">
-    <div class="section-head">
-        <h2>Best sellers</h2>
-        <a asp-page="/Products/Index">See all →</a>
-    </div>
-    <div class="product-row">
-        @foreach (var p in Model.BestSellers)
-        {
-            <partial name="_ProductCard" model="p" />
-        }
-    </div>
-</section>
-
-<partial name="_ViewedProducts" model="Model.ViewedProducts" />
-
-<section class="cta-banner">
-    <div>
-        <h2>Be aware of the variety</h2>
-        <p>Join, choose and buy with confidence!</p>
-        <div class="cta-actions">
-            <a class="btn btn-primary" asp-page="/Account/Register">Sign up</a>
-            <a class="btn btn-ghost" asp-page="/Account/Login">Log in</a>
+            </div>
+            <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="cats1" aria-label="Next categories">
+                <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+            </button>
         </div>
-    </div>
-</section>
+    </section>
+
+    <hr class="home-divider" />
+
+    <section class="home-section">
+        <div class="section-head">
+            <h2>Trending deals</h2>
+            <a asp-page="/Products/Index">See all &gt;</a>
+        </div>
+        <div class="carousel" data-carousel-root>
+            <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="trend" aria-label="Previous deals">
+                <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+            </button>
+            <div class="carousel__viewport">
+                <div class="carousel__track product-track" data-carousel="trend">
+                    @foreach (var p in Model.TrendingDeals)
+                    {
+                        <partial name="_ProductCard" model="p" />
+                    }
+                </div>
+            </div>
+            <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="trend" aria-label="Next deals">
+                <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+            </button>
+        </div>
+    </section>
+
+    <hr class="home-divider" />
+
+    <section class="home-section">
+        <div class="carousel" data-carousel-root>
+            <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="cats2" aria-label="Previous categories">
+                <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+            </button>
+            <div class="carousel__viewport">
+                <div class="carousel__track category-track" data-carousel="cats2">
+                    @foreach (var cat in Model.CategoryRow2)
+                    {
+                        <a class="category-card" asp-page="/Products/Index" asp-route-categoryId="@cat.Id">
+                            <div class="category-card__img">
+                                @if (!string.IsNullOrEmpty(cat.ImageUrl))
+                                {
+                                    <img src="@cat.ImageUrl" alt="@cat.Name" loading="lazy" />
+                                }
+                            </div>
+                            <div class="category-card__title">@cat.Name</div>
+                            <span class="category-card__link">See all &gt;</span>
+                        </a>
+                    }
+                </div>
+            </div>
+            <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="cats2" aria-label="Next categories">
+                <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+            </button>
+        </div>
+    </section>
+
+    <hr class="home-divider" />
+
+    <section class="home-section">
+        <div class="section-head">
+            <h2>Sale</h2>
+            <a asp-page="/Products/Index" asp-route-sort="discount">See all &gt;</a>
+        </div>
+        <div class="carousel" data-carousel-root>
+            <button type="button" class="carousel-btn carousel-btn--prev" data-carousel-prev="sale" aria-label="Previous sale items">
+                <img src="~/icons/carousel-prev.svg" alt="" width="24" height="24" />
+            </button>
+            <div class="carousel__viewport">
+                <div class="carousel__track product-track" data-carousel="sale">
+                    @foreach (var p in Model.SaleProducts)
+                    {
+                        <partial name="_ProductCard" model="p" />
+                    }
+                </div>
+            </div>
+            <button type="button" class="carousel-btn carousel-btn--next" data-carousel-next="sale" aria-label="Next sale items">
+                <img src="~/icons/carousel-next.svg" alt="" width="24" height="24" />
+            </button>
+        </div>
+    </section>
+
+    <section class="home-cta">
+        <div class="home-cta__inner">
+            <img class="home-cta__bg" src="~/images/home/cta-banner.png" alt="" />
+            <div class="home-cta__copy">
+                <h2>Abundance of goods</h2>
+                <p>Join, choose and buy with confidence!</p>
+                <div class="home-cta__actions">
+                    <a class="btn btn-primary" asp-page="/Account/Register">Sign up</a>
+                    <a class="btn btn-cta-ghost" asp-page="/Account/Login">Log in</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <button type="button" class="to-top" id="toTop" aria-label="Back to top" hidden>
+        <span aria-hidden="true">⌃</span>
+    </button>
+</div>
+
+@section Scripts {
+    <script src="~/js/home.js" asp-append-version="true"></script>
+}
