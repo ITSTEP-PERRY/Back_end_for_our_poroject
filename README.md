@@ -52,7 +52,7 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 ![My orders](./docs/screenshots/account/03-my-orders.png)
 
-Скрины `01`–`33` сохранены; добавлен блок Account (14 шт.) в `docs/screenshots/account/`.
+Актуальная галерея: витрина/auth/legal + **14 Account** в `docs/screenshots/account/`.
 
 ---
 
@@ -133,5 +133,38 @@ dotnet run --project src/Perry.Web --launch-profile http
 | **Finishing touches** | First name + Last name после Register | ![Finishing](./docs/screenshots/23-auth-finishing.png) |
 | Finishing touches — ошибки | First/Last name is required | ![Finishing error](./docs/screenshots/24-auth-finishing-error.png) |
 | **Congratulations!** | Успех регистрации или сброса пароля | ![Success](./docs/screenshots/25-auth-success.png) |
-| Product Page (ранний кадр) | Карточка товара | ![PDP](./docs/screenshots/07-product-details.png) |
-| Cart | Корзина | ![Cart](./docs/screenshots/08-cart-update.png) |
+
+
+## Скриншоты Account (14 новых)
+
+Полные описания и превью: **[docs/screenshots/README.md](./docs/screenshots/README.md)** (секция Account).
+
+| # | Экран | Файл |
+|---|--------|------|
+| A01 | Wishlist | [01-wishlist.png](./docs/screenshots/account/01-wishlist.png) |
+| A02 | Wishlist — Remove confirm | [02-wishlist-remove-modal.png](./docs/screenshots/account/02-wishlist-remove-modal.png) |
+| A03 | My orders | [03-my-orders.png](./docs/screenshots/account/03-my-orders.png) |
+| A04 | Account settings — photo tip | [04-account-settings-photo-tip.png](./docs/screenshots/account/04-account-settings-photo-tip.png) |
+| A05 | Order details (Ordered) | [05-order-details-modal.png](./docs/screenshots/account/05-order-details-modal.png) |
+| A06 | Order details (Received) | [06-order-details-received.png](./docs/screenshots/account/06-order-details-received.png) |
+| A07 | Account settings | [07-account-settings.png](./docs/screenshots/account/07-account-settings.png) |
+| A08 | Change name | [08-change-name-modal.png](./docs/screenshots/account/08-change-name-modal.png) |
+| A09 | Change password | [09-change-password-modal.png](./docs/screenshots/account/09-change-password-modal.png) |
+| A10 | Change password — validation | [10-change-password-validation.png](./docs/screenshots/account/10-change-password-validation.png) |
+| A11 | Change email | [11-change-email-modal.png](./docs/screenshots/account/11-change-email-modal.png) |
+| A12 | Change email — validation | [12-change-email-validation.png](./docs/screenshots/account/12-change-email-validation.png) |
+| A13 | Log out? | [13-logout-confirm.png](./docs/screenshots/account/13-logout-confirm.png) |
+| A14 | Delete account? | [14-delete-account-confirm.png](./docs/screenshots/account/14-delete-account-confirm.png) |
+
+![Wishlist](./docs/screenshots/account/01-wishlist.png)
+
+![My orders](./docs/screenshots/account/03-my-orders.png)
+
+![Account settings](./docs/screenshots/account/07-account-settings.png)
+
+![Change password](./docs/screenshots/account/09-change-password-modal.png)
+
+![Change email](./docs/screenshots/account/11-change-email-modal.png)
+
+![Delete account](./docs/screenshots/account/14-delete-account-confirm.png)
+
