@@ -41,19 +41,111 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 ## Спринт к защите (19.09.2026)
 
-Закрыты карточки To Do: React-админка (Categories / Products / Reviews / Users), PDP reviews + инфо-модалки, Notify when available, Docker compose, Swagger JWT, SMTP-гайд.
+Закрыты карточки To Do: React-админка (Categories / Products / Reviews / Users / Orders), PDP reviews + инфо-модалки, Notify when available, Docker compose, Swagger JWT, SMTP-гайд.
 
-- Документ: [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md)
-- Скриншоты (**17** шт.): [docs/screenshots/sprint-2026-09-19/README.md](./docs/screenshots/sprint-2026-09-19/README.md)
-- Порядок задач: [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md)
+Текстовая сводка: [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) · порядок: [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md)
+
+### 01 · 404 Product not found
+
+![404 Product not found](./docs/screenshots/sprint-2026-09-19/01-404-product-not-found.png)
+
+Товар не найден — Browse catalog / Go to home.
+
+### 02 · Admin Products
 
 ![Admin Products](./docs/screenshots/sprint-2026-09-19/02-admin-products.png)
 
+Список товаров + фильтр Category / Search.
+
+### 03 · Admin Categories
+
+![Admin Categories](./docs/screenshots/sprint-2026-09-19/03-admin-categories.png)
+
+Корневые категории, Active, создание «+».
+
+### 04 · Admin Reviews
+
 ![Admin Reviews](./docs/screenshots/sprint-2026-09-19/04-admin-reviews.png)
+
+Модерация: All / Hidden / Visible.
+
+### 05 · Admin Orders
+
+![Admin Orders](./docs/screenshots/sprint-2026-09-19/05-admin-orders.png)
+
+Список заказов Date / Customer / Status / Total.
+
+### 06 · Admin Users
 
 ![Admin Users](./docs/screenshots/sprint-2026-09-19/06-admin-users.png)
 
-![404 Product not found](./docs/screenshots/sprint-2026-09-19/01-404-product-not-found.png)
+Фильтры Active / Deleted / All + role.
+
+### 07 · Admin Products — category dropdown
+
+![Admin Products category dropdown](./docs/screenshots/sprint-2026-09-19/07-admin-products-category-dropdown.png)
+
+Иерархия категорий в тулбаре.
+
+### 08 · Admin Products — фильтр Streaming
+
+![Admin Products filtered](./docs/screenshots/sprint-2026-09-19/08-admin-products-filter-streaming.png)
+
+Отфильтрованный список (Roku Express 4K+).
+
+### 09 · Admin Users — Active
+
+![Admin Users Active](./docs/screenshots/sprint-2026-09-19/09-admin-users-filters.png)
+
+Активные пользователи, ellipsis на длинных email.
+
+### 10 · Admin Orders — детали
+
+![Admin Order details](./docs/screenshots/sprint-2026-09-19/10-admin-orders-details.png)
+
+Состав заказа + смена Status.
+
+### 11 · Admin Reviews — Hide
+
+![Admin Review Hide](./docs/screenshots/sprint-2026-09-19/11-admin-reviews-moderate-hide.png)
+
+Скрыть отзыв с витрины (Hide / Delete).
+
+### 12 · Account — My orders
+
+![My orders](./docs/screenshots/sprint-2026-09-19/12-account-my-orders.png)
+
+Кабинет: заказы Ordered / Ready for pickup.
+
+### 13 · Admin Reviews — Approve
+
+![Admin Review Approve](./docs/screenshots/sprint-2026-09-19/13-admin-reviews-approve.png)
+
+Вернуть скрытый отзыв (Approve / Delete).
+
+### 14 · Account — Order details
+
+![Order details modal](./docs/screenshots/sprint-2026-09-19/14-account-order-details-modal.png)
+
+Модалка: позиции, Total, How to cancel.
+
+### 15 · Account — Order details #2
+
+![Order details modal 2](./docs/screenshots/sprint-2026-09-19/15-account-order-details-modal-2.png)
+
+Второй заказ (#918320), Total $178.
+
+### 16 · Account — shell
+
+![Account shell](./docs/screenshots/sprint-2026-09-19/16-account-shell.png)
+
+Header PERRY + сайдбар Account / My orders.
+
+### 17 · Account — Change email
+
+![Change email modal](./docs/screenshots/sprint-2026-09-19/17-account-change-email-modal.png)
+
+Смена email: пароль + 6-digit code + Send code.
 
 ---
 
