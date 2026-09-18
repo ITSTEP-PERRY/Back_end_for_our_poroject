@@ -135,13 +135,7 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 Второй заказ (#918320), Total $178.
 
-### 16 · Account — shell
-
-![Account shell](./docs/screenshots/sprint-2026-09-19/16-account-shell.png)
-
-Header PERRY + сайдбар Account / My orders.
-
-### 17 · Account — Change email
+### 16 · Account — Change email
 
 ![Change email modal](./docs/screenshots/sprint-2026-09-19/17-account-change-email-modal.png)
 

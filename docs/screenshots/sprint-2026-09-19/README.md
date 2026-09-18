@@ -171,18 +171,7 @@
 
 ---
 
-## S16. Account — shell (шапка / сайдбар)
-
-**Файл:** [`16-account-shell.png`](./16-account-shell.png)  
-**URL:** `/account/*`
-
-![Account shell](./16-account-shell.png)
-
-Header PERRY + breadcrumbs Account + аватар Administrator / Admin + пункт My orders.
-
----
-
-## S17. Account — Change email
+## S16. Account — Change email
 
 **Файл:** [`17-account-change-email-modal.png`](./17-account-change-email-modal.png)  
 **URL:** `/account/settings` → Change email
