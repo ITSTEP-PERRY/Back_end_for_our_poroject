@@ -28,15 +28,7 @@ public class CategoriesController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetTree(CancellationToken cancellationToken)
     {
-        var all = await _db.Categories
-            .AsNoTracking()
-            .Where(c => c.IsActive)
-            .OrderBy(c => c.SortOrder)
-            .ThenBy(c => c.Name)
-            .Select(c => new CategoryNode(
-                c.Id, c.Name, c.Slug, c.Description, c.ImageUrl, c.IconUrl,
-                c.IsActive, c.SortOrder, c.ParentCategoryId))
-            .ToListAsync(cancellationToken);
+        var all = await GetAllCategoryNodes(cancellationToken);
 
         return Ok(BuildTree(all, null));
     }
@@ -45,6 +37,19 @@ public class CategoriesController : ControllerBase
         Guid Id, string Name, string Slug, string? Description, string? ImageUrl, string? IconUrl,
         bool IsActive, int SortOrder, Guid? ParentCategoryId);
 
+    private async Task<List<CategoryNode>> GetAllCategoryNodes(CancellationToken cancellationToken)
+    {
+        return await _db.Categories
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
+            .Select(c => new CategoryNode(
+                c.Id, c.Name, c.Slug, c.Description, c.ImageUrl, c.IconUrl,
+                c.IsActive, c.SortOrder, c.ParentCategoryId))
+            .ToListAsync(cancellationToken);
+    }
+    
     private static object BuildTree(List<CategoryNode> all, Guid? parentId) =>
         all.Where(c => c.ParentCategoryId == parentId)
             .Select(c => new
@@ -67,6 +72,7 @@ public class CategoriesController : ControllerBase
     {
         var category = await _db.Categories.AsNoTracking()
             .Where(c => c.Slug == slug)
+            .Include(c => c)
             .Select(c => new
             {
                 c.Id,
@@ -77,12 +83,36 @@ public class CategoriesController : ControllerBase
                 c.IconUrl,
                 c.IsActive,
                 c.SortOrder,
-                c.ParentCategoryId
+                c.ParentCategoryId,
             })
             .FirstOrDefaultAsync(cancellationToken);
         return category is null ? NotFound() : Ok(category);
     }
-
+    
+    [HttpGet("id/{id}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+       var all = await GetAllCategoryNodes(cancellationToken);
+        
+        var category = await _db.Categories.AsNoTracking()
+            .Where(c => c.Id == id)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Slug,
+                c.Description,
+                c.ImageUrl,
+                c.IconUrl,
+                c.IsActive,
+                c.SortOrder,
+                c.ParentCategoryId,
+                SubCategories = BuildTree(all, c.Id)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        return category is null ? NotFound() : Ok(category);
+    }
+    
     /// <summary>
     /// Тело создания/обновления категории.
     /// Картинки и иконка передаются URL-ами в JSON (без multipart).

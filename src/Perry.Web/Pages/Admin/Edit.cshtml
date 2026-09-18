@@ -45,7 +45,7 @@
                         <option value="">— выберите —</option>
                         @foreach (var root in Model.CategoryTree)
                         {
-                            @RenderCatOptions(root)
+                            @* @RenderCatOptions(root) *@
                         }
                     </select>
                 </label>
@@ -161,60 +161,60 @@
     </div>
 </template>
 
-@functions {
-    void RenderCatOptions(Perry.Web.Pages.Admin.ProductsModel.CategoryNodeVm node)
-    {
-        var pad = new string('\u00A0', node.Depth * 3);
-        var prefix = node.Depth > 0 ? pad + "↳ " : "";
-        <option value="@node.Id">@prefix@node.Name</option>
-        foreach (var child in node.Children)
-        {
-            RenderCatOptions(child);
-        }
-    }
-}
-
-@section Scripts {
-<script>
-(function () {
-  function reindex(list, prefix) {
-    list.querySelectorAll('[data-dyn-item]').forEach(function (item, i) {
-      item.querySelectorAll('[data-name], input, textarea').forEach(function (el) {
-        var key = el.getAttribute('data-name');
-        if (!key) {
-          var m = (el.getAttribute('name') || '').match(/\.(\w+)$/);
-          key = m && m[1];
-        }
-        if (!key) return;
-        el.setAttribute('name', prefix + '[' + i + '].' + key);
-      });
-    });
-  }
-
-  document.querySelectorAll('[data-dyn-add]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var kind = btn.getAttribute('data-dyn-add');
-      var root = btn.closest('[data-dyn]');
-      var list = root.querySelector('[data-dyn-list]');
-      var tpl = document.getElementById('tpl-' + (kind === 'about' ? 'about' : 'attrs'));
-      if (!tpl || !list) return;
-      list.appendChild(tpl.content.cloneNode(true));
-      var prefix = kind === 'about' ? 'Form.AboutItems' : 'Form.Attributes';
-      reindex(list, prefix);
-    });
-  });
-
-  document.addEventListener('click', function (e) {
-    var rm = e.target.closest('[data-dyn-remove]');
-    if (!rm) return;
-    var item = rm.closest('[data-dyn-item]');
-    var list = rm.closest('[data-dyn-list]');
-    var root = rm.closest('[data-dyn]');
-    if (!item || !list || list.children.length <= 1) return;
-    item.remove();
-    var kind = root.getAttribute('data-dyn');
-    reindex(list, kind === 'about' ? 'Form.AboutItems' : 'Form.Attributes');
-  });
-})();
-</script>
+@* @functions { *@
+@*     void RenderCatOptions(Perry.Web.Pages.Admin.ProductsModel.CategoryNodeVm node) *@
+@*     { *@
+@*         var pad = new string('\u00A0', node.Depth * 3); *@
+@*         var prefix = node.Depth > 0 ? pad + "↳ " : ""; *@
+@*         <option value="@node.Id">@prefix@node.Name</option> *@
+@*         foreach (var child in node.Children) *@
+@*         { *@
+@*             RenderCatOptions(child); *@
+@*         } *@
+@*     } *@
+@* } *@
+@* *@
+@* @section Scripts { *@
+@* <script> *@
+@* (function () { *@
+@*   function reindex(list, prefix) { *@
+@*     list.querySelectorAll('[data-dyn-item]').forEach(function (item, i) { *@
+@*       item.querySelectorAll('[data-name], input, textarea').forEach(function (el) { *@
+@*         var key = el.getAttribute('data-name'); *@
+@*         if (!key) { *@
+@*           var m = (el.getAttribute('name') || '').match(/\.(\w+)$/); *@
+@*           key = m && m[1]; *@
+@*         } *@
+@*         if (!key) return; *@
+@*         el.setAttribute('name', prefix + '[' + i + '].' + key); *@
+@*       }); *@
+@*     }); *@
+@*   } *@
+@* *@
+@*   document.querySelectorAll('[data-dyn-add]').forEach(function (btn) { *@
+@*     btn.addEventListener('click', function () { *@
+@*       var kind = btn.getAttribute('data-dyn-add'); *@
+@*       var root = btn.closest('[data-dyn]'); *@
+@*       var list = root.querySelector('[data-dyn-list]'); *@
+@*       var tpl = document.getElementById('tpl-' + (kind === 'about' ? 'about' : 'attrs')); *@
+@*       if (!tpl || !list) return; *@
+@*       list.appendChild(tpl.content.cloneNode(true)); *@
+@*       var prefix = kind === 'about' ? 'Form.AboutItems' : 'Form.Attributes'; *@
+@*       reindex(list, prefix); *@
+@*     }); *@
+@*   }); *@
+@* *@
+@*   document.addEventListener('click', function (e) { *@
+@*     var rm = e.target.closest('[data-dyn-remove]'); *@
+@*     if (!rm) return; *@
+@*     var item = rm.closest('[data-dyn-item]'); *@
+@*     var list = rm.closest('[data-dyn-list]'); *@
+@*     var root = rm.closest('[data-dyn]'); *@
+@*     if (!item || !list || list.children.length <= 1) return; *@
+@*     item.remove(); *@
+@*     var kind = root.getAttribute('data-dyn'); *@
+@*     reindex(list, kind === 'about' ? 'Form.AboutItems' : 'Form.Attributes'); *@
+@*   }); *@
+@* })(); *@
+@* </script> *@
 }
