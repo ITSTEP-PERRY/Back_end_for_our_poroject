@@ -6,25 +6,25 @@
 
 ## Документация
 
-Этот README — краткий обзор. **Подробности по архитектуре, клиентской части, запуску и интеграциям** лежат в папке **[docs/](./docs/)** (начни с [docs/README.md](./docs/README.md)).
+**Единая хроника работы:** [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)  
+Оглавление: [docs/README.md](./docs/README.md)
 
 | Файл | О чём |
 |------|--------|
-| [docs/README.md](./docs/README.md) | Оглавление и быстрый старт |
-| [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Спринт к защите 19.09: админка React, PDP reviews/модалки, notify, Docker, Swagger |
-| [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Полная сводка изменений API / категорий / каталога / PDP / auth / React |
-| [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, чеклист |
-| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Нумерация задач по макету Figma для доски Trello |
-| [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md) | Последовательность задач; сейчас топ-5 к защите |
-| [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories: таблица, seed, JSON API, витрина |
-| [docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Дизайн каталога: Product + Variants + атрибуты |
-| [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / Reset / Finishing touches: сценарии пользователя |
-| [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Account: Wishlist / Orders / Settings по 14 скринам |
+| [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) | Последовательность всей работы + запуск + бэклог |
+| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Карточки #1–#88 с доски Trello (как вели задачи) |
+| [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Инструкция: Wishlist / Orders / Settings |
+| [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Инструкция: Forgot / Reset / Finishing |
 | [docs/SMTP-НАСТРОЙКА.md](./docs/SMTP-НАСТРОЙКА.md) | Stub → Gmail App Password |
-| [docs/docker.md](./docs/docker.md) | docker compose + env для команды |
-| [docs/КЛИЕНТСКАЯ-ЧАСТЬ.md](./docs/КЛИЕНТСКАЯ-ЧАСТЬ.md) | Дерево Account / Cart / Orders / Auth (покупатель) |
-| [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск, smoke-тесты, что доделать по желанию |
-| [docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md](./docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md) | Что перенесено из homework |
+| [docs/РЕЧЬ-SMTP-ДЕМО.md](./docs/РЕЧЬ-SMTP-ДЕМО.md) | Речь на защиту (~1 мин) |
+| [docs/SMOKE-ЗАЩИТА.md](./docs/SMOKE-ЗАЩИТА.md) | Чеклист демо |
+| [docs/docker.md](./docs/docker.md) | docker compose + env |
+| [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
+| [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
+| [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
+| [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories API / seed |
+| [docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Product + Variants |
+| [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск и разбор кода |
 
 ## Запуск
 
