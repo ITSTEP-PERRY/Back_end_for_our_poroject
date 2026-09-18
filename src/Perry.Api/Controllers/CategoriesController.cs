@@ -24,13 +24,21 @@ public class CategoriesController : ControllerBase
     /// <summary>
     /// Полное дерево категорий (все уровни).
     /// GET /api/categories
+    /// GET /api/categories?includeInactive=true — только для Admin (админка React).
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetTree(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetTree(
+        [FromQuery] bool includeInactive = false,
+        CancellationToken cancellationToken = default)
     {
-        var all = await _db.Categories
-            .AsNoTracking()
-            .Where(c => c.IsActive)
+        if (includeInactive && !User.IsInRole("Admin"))
+            return Forbid();
+
+        var query = _db.Categories.AsNoTracking().AsQueryable();
+        if (!includeInactive)
+            query = query.Where(c => c.IsActive);
+
+        var all = await query
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
             .Select(c => new CategoryNode(

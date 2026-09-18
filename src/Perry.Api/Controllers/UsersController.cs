@@ -22,12 +22,32 @@ public class UsersController : ControllerBase
 
     public record RoleRequest(string RoleId);
 
+    /// <summary>
+    /// GET /api/users?status=active|deleted|all&amp;role=Admin
+    /// </summary>
     [HttpGet]
-    public async Task<IActionResult> List(CancellationToken ct)
+    public async Task<IActionResult> List(
+        [FromQuery] string status = "active",
+        [FromQuery] string? role = null,
+        CancellationToken ct = default)
     {
-        var list = await _db.Users.AsNoTracking()
-            .Include(u => u.Accesses)
-            .Where(u => u.DeletedAtUtc == null)
+        var query = _db.Users.AsNoTracking().Include(u => u.Accesses).AsQueryable();
+
+        status = (status ?? "active").Trim().ToLowerInvariant();
+        if (status == "deleted")
+            query = query.Where(u => u.DeletedAtUtc != null);
+        else if (status == "all")
+        { /* no filter */ }
+        else
+            query = query.Where(u => u.DeletedAtUtc == null);
+
+        if (!string.IsNullOrWhiteSpace(role))
+        {
+            var roleId = role.Trim();
+            query = query.Where(u => u.Accesses.Any(a => a.RoleId == roleId));
+        }
+
+        var list = await query
             .OrderByDescending(u => u.RegisteredAtUtc)
             .Take(200)
             .Select(u => new
@@ -37,7 +57,9 @@ public class UsersController : ControllerBase
                 u.Email,
                 login = u.Accesses.Select(a => a.Login).FirstOrDefault() ?? "",
                 roleId = u.Accesses.Select(a => a.RoleId).FirstOrDefault() ?? "Guest",
-                registeredAtUtc = u.RegisteredAtUtc
+                registeredAtUtc = u.RegisteredAtUtc,
+                deletedAtUtc = u.DeletedAtUtc,
+                isDeleted = u.DeletedAtUtc != null
             })
             .ToListAsync(ct);
 
@@ -49,6 +71,13 @@ public class UsersController : ControllerBase
     {
         await _users.SoftDeleteAsync(id, ct);
         return NoContent();
+    }
+
+    [HttpPost("{id:guid}/restore")]
+    public async Task<IActionResult> Restore(Guid id, CancellationToken ct)
+    {
+        await _users.RestoreAsync(id, ct);
+        return Ok(new { status = "Ok" });
     }
 
     [HttpPut("{id:guid}/role")]

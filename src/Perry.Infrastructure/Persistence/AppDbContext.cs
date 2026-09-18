@@ -37,6 +37,9 @@ public class AppDbContext : DbContext
     // --- Избранное ---
     public DbSet<WishlistItem> WishlistItems => Set<WishlistItem>();
 
+    // --- Notify when available ---
+    public DbSet<StockNotifyRequest> StockNotifyRequests => Set<StockNotifyRequest>();
+
     // --- Пользователи / админка (из homework ASP-421) ---
     public DbSet<User> Users => Set<User>();
     public DbSet<UserAccess> UserAccesses => Set<UserAccess>();

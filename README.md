@@ -11,13 +11,17 @@
 | Файл | О чём |
 |------|--------|
 | [docs/README.md](./docs/README.md) | Оглавление и быстрый старт |
+| [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Спринт к защите 19.09: админка React, PDP reviews/модалки, notify, Docker, Swagger |
 | [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Полная сводка изменений API / категорий / каталога / PDP / auth / React |
 | [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, чеклист |
 | [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Нумерация задач по макету Figma для доски Trello |
+| [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md) | Последовательность задач; сейчас топ-5 к защите |
 | [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories: таблица, seed, JSON API, витрина |
 | [docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Дизайн каталога: Product + Variants + атрибуты |
 | [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / Reset / Finishing touches: сценарии пользователя |
-| [docs/СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md](./docs/СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md) | Что добить до защиты vs что на потом |
+| [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Account: Wishlist / Orders / Settings по 14 скринам |
+| [docs/SMTP-НАСТРОЙКА.md](./docs/SMTP-НАСТРОЙКА.md) | Stub → Gmail App Password |
+| [docs/docker.md](./docs/docker.md) | docker compose + env для команды |
 | [docs/КЛИЕНТСКАЯ-ЧАСТЬ.md](./docs/КЛИЕНТСКАЯ-ЧАСТЬ.md) | Дерево Account / Cart / Orders / Auth (покупатель) |
 | [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск, smoke-тесты, что доделать по желанию |
 | [docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md](./docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md) | Что перенесено из homework |
@@ -34,6 +38,24 @@ dotnet run --project src/Perry.Web --launch-profile http
 - API: `dotnet run --project src/Perry.Api` → `/swagger`
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
+
+## Спринт к защите (19.09.2026)
+
+Закрыты карточки To Do: React-админка (Categories / Products / Reviews / Users), PDP reviews + инфо-модалки, Notify when available, Docker compose, Swagger JWT, SMTP-гайд.
+
+- Документ: [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md)
+- Скриншоты (**17** шт.): [docs/screenshots/sprint-2026-09-19/README.md](./docs/screenshots/sprint-2026-09-19/README.md)
+- Порядок задач: [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md)
+
+![Admin Products](./docs/screenshots/sprint-2026-09-19/02-admin-products.png)
+
+![Admin Reviews](./docs/screenshots/sprint-2026-09-19/04-admin-reviews.png)
+
+![Admin Users](./docs/screenshots/sprint-2026-09-19/06-admin-users.png)
+
+![404 Product not found](./docs/screenshots/sprint-2026-09-19/01-404-product-not-found.png)
+
+---
 
 ## Account (17.09.2026)
 
@@ -58,7 +80,9 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 ## Что сделано недавно
 
-Полный текст: **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:
+**19.09:** [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) — админка React (#65–#69), PDP (#34, #36–#40), notify (#29/#30), Docker (#5), Swagger (#76).
+
+Ранее **17.09:** **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:
 
 ### Категории (закрыт пробел Create/Update)
 - В entity и БД: `Description`, `ImageUrl`, `IconUrl`, `IsActive`.

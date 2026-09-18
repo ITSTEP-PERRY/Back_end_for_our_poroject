@@ -1,281 +1,74 @@
-# Docker
+# Docker / env для команды (#5)
 
-## Обзор
+Единый способ поднять **SQL Server + Perry.Api** без LocalDB.
 
-Проект Perry использует Docker для запуска приложения в изолированном окружении.
+Связано: [SMTP-НАСТРОЙКА.md](./SMTP-НАСТРОЙКА.md), [SMOKE-ЗАЩИТА.md](./SMOKE-ЗАЩИТА.md).
 
-Для управления несколькими контейнерами используется Docker Compose.
+---
 
-Docker-окружение состоит из трёх основных сервисов:
+## Что в репозитории
 
-- `sqlserver` — база данных SQL Server 2022;
-- `api` — backend API на ASP.NET Core 8;
-- `web` — web-приложение на ASP.NET Core 8.
+| Файл | Назначение |
+|------|------------|
+| `docker-compose.yml` | сервисы `sqlserver` + `api` |
+| `.env.example` | шаблон переменных (скопировать в `.env`) |
+| `src/Perry.Api/Dockerfile` | образ API (порт контейнера **8080**) |
 
-Конфигурация находится в файле:
+React-витрина (`D:\Perry`, Vite `:3000`) в Docker **не** входит — её гоняют локально с proxy на API.
 
-```text
-docker-compose.yml
-Структура Docker-окружения
+---
 
-Общая схема:
+## Быстрый старт
 
-                Docker Compose
-                      |
-        +-------------+-------------+
-        |             |             |
-        ↓             ↓             ↓
-   SQL Server        API           Web
-   perry-sql      perry-api     perry-web
-     :1433          :5001         :5000
-        |             |
-        +-------------+
-              |
-          Database
-            Perry
-Сервисы
-SQL Server
+```bash
+cd My_Amazon2
+cp .env.example .env
+# при необходимости отредактируйте SA_PASSWORD / JWT_KEY
 
-Контейнер:
+docker compose up --build
+```
 
-perry-sql
+| Сервис | URL |
+|--------|-----|
+| API + Swagger | http://localhost:5272/swagger |
+| SQL Server | `localhost,1433` — user `sa`, пароль из `.env` |
 
-Используемый образ:
+Миграции и seed выполняются при старте API (`DbSeeder.MigrateAsync` / `SeedAsync` в Development).
 
-mcr.microsoft.com/mssql/server:2022-latest
+Админ по умолчанию: **`Admin` / `Admin`**.
 
-Порт:
+---
 
-1433:1433
+## Локально без Docker (как раньше)
 
-Для хранения данных используется Docker volume:
+```bash
+# API
+dotnet run --project src/Perry.Api --launch-profile http
+# → http://localhost:5272/swagger
+# БД: (localdb)\mssqllocaldb → Perry
 
-sqlserver_data
+# Фронт (из корня D:\Perry)
+npm run dev
+# → http://localhost:3000  (proxy /api → :5272)
+```
 
-Volume подключается к:
+---
 
-/var/opt/mssql
+## Переменные окружения
 
-Это позволяет сохранять данные базы данных между перезапусками контейнера.
+| Переменная | Описание |
+|------------|----------|
+| `SA_PASSWORD` | пароль `sa` для SQL Server (сложный, иначе контейнер не стартует) |
+| `JWT_KEY` | ключ подписи JWT (≥32 символа) |
+| `SMTP_USE_STUB` | `true` — stub в лог; `false` — Gmail App Password |
+| `SMTP_FROM` / `SMTP_USERNAME` / `SMTP_PASSWORD` | только если stub выключен |
 
-Backend API
+Connection string API в compose собирается автоматически на хост `sqlserver`.
 
-Контейнер:
+---
 
-perry-api
+## Типичные проблемы
 
-Dockerfile:
-
-src/Perry.Api/Dockerfile
-
-Внутренний порт приложения:
-
-8080
-
-Порт на компьютере:
-
-5001
-
-Доступ к API:
-
-http://localhost:5001
-
-Swagger:
-
-http://localhost:5001/swagger
-
-Health Check:
-
-http://localhost:5001/health
-Web
-
-Контейнер:
-
-perry-web
-
-Dockerfile:
-
-src/Perry.Web/Dockerfile
-
-Внутренний порт приложения:
-
-8080
-
-Порт на компьютере:
-
-5000
-
-Доступ к web-приложению:
-
-http://localhost:5000
-Переменные окружения
-
-Пароль SQL Server не хранится непосредственно в docker-compose.yml.
-
-Используется переменная:
-
-SA_PASSWORD
-
-В Docker Compose она передаётся через:
-
-${SA_PASSWORD}
-
-Переменная используется для:
-
-SQL Server;
-backend API;
-web-приложения.
-
-Локальные секретные значения хранятся в .env.
-
-Файл .env не должен добавляться в Git.
-
-Для примера конфигурации используется:
-
-.env.example
-
-В .env.example должны находиться только примерные значения без реальных секретов.
-
-Проверка конфигурации
-
-Перед запуском окружения рекомендуется проверить конфигурацию:
-
-docker compose config
-
-Команда проверяет корректность файла docker-compose.yml.
-
-При использовании секретных переменных итоговая конфигурация может содержать раскрытые значения переменных в выводе команды.
-
-Поэтому вывод docker compose config не следует публиковать в открытом виде, если он содержит секретные данные.
-
-Сборка Docker-образов
-
-Для сборки всех образов используется:
-
-docker compose build
-
-Команда собирает:
-
-perry-api
-perry-web
-
-SQL Server не собирается локально, поскольку используется готовый официальный Docker-образ.
-
-Запуск окружения
-
-Для запуска всех сервисов в фоновом режиме:
-
-docker compose up -d
-
-После запуска рекомендуется проверить состояние контейнеров:
-
-docker compose ps
-
-При корректном запуске должны работать:
-
-perry-sql
-perry-api
-perry-web
-Просмотр логов
-
-Для просмотра логов всех сервисов:
-
-docker compose logs
-
-Для просмотра последних 100 строк:
-
-docker compose logs --tail=100
-
-Для просмотра логов конкретного сервиса:
-
-docker compose logs api
-docker compose logs web
-docker compose logs sqlserver
-
-Для просмотра логов в режиме реального времени:
-
-docker compose logs -f
-Проверка API
-
-После запуска контейнеров необходимо проверить health endpoint:
-
-http://localhost:5001/health
-
-При успешном запуске API должен вернуть:
-
-Healthy
-
-Также можно проверить Swagger:
-
-http://localhost:5001/swagger
-Остановка окружения
-
-Для остановки контейнеров:
-
-docker compose down
-
-Эта команда останавливает и удаляет контейнеры Docker Compose.
-
-Docker volume базы данных при этом сохраняется, если отдельно не используется команда удаления volumes.
-
-Полный цикл запуска
-
-Для запуска проекта с чистой сборкой можно использовать:
-
-docker compose down
-docker compose build
-docker compose up -d
-docker compose ps
-
-После этого проверить:
-
-http://localhost:5000
-
-и:
-
-http://localhost:5001/health
-Пересборка после изменения кода
-
-Если исходный код был изменён, необходимо пересобрать Docker-образы:
-
-docker compose up -d --build
-
-После пересборки рекомендуется проверить состояние:
-
-docker compose ps
-
-И при необходимости посмотреть логи:
-
-docker compose logs --tail=100
-Остановка и очистка
-
-Для остановки и удаления контейнеров:
-
-docker compose down
-
-Для удаления контейнеров вместе с volumes:
-
-docker compose down -v
-
-Команда docker compose down -v удаляет volume базы данных, поэтому использовать её следует осторожно.
-
-Проверка работоспособности
-
-Минимальная проверка Docker-окружения включает:
-
-Проверку конфигурации:
-docker compose config
-Сборку:
-docker compose build
-Запуск:
-docker compose up -d
-Проверку контейнеров:
-docker compose ps
-Проверку API:
-http://localhost:5001/health
-Проверку web-приложения:
-http://localhost:5000
-Остановку:
-docker compose down
-
-Успешное прохождение этих проверок подтверждает, что Docker-окружение проекта Perry может быть собрано и запущено заново.
+1. **SQL не healthy** — пароль слишком простой; смените `SA_PASSWORD` (≥8, буквы+цифры+символ).  
+2. **API 502 с фронта** — compose не поднят или порт 5272 занят; `docker compose ps`.  
+3. **Письма не приходят** — при stub смотрите логи контейнера `perry-api`; реальный SMTP — [SMTP-НАСТРОЙКА.md](./SMTP-НАСТРОЙКА.md).

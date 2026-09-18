@@ -1,4 +1,8 @@
-version: '3.8'
+# Perry — локальный стек для команды
+# SQL Server + Perry.Api
+#
+# cp .env.example .env   # задайте SA_PASSWORD
+# docker compose up --build
 
 services:
   sqlserver:
@@ -6,11 +10,11 @@ services:
     container_name: perry-sql
     environment:
       ACCEPT_EULA: "Y"
-      SA_PASSWORD: "${SA_PASSWORD}"
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Perry_Dev_Passw0rd!}
     ports:
       - "1433:1433"
     volumes:
-      - sqlserver_data:/var/opt/mssql
+      - perry_sql_data:/var/opt/mssql
 
   api:
     build:
@@ -20,21 +24,21 @@ services:
     depends_on:
       - sqlserver
     environment:
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:-Perry_Dev_Passw0rd!};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY:-PerryDevSecretKey_ChangeMe_32chars!!}
+      Jwt__Issuer: Perry
+      Jwt__Audience: Perry
+      Smtp__UseStub: ${SMTP_USE_STUB:-true}
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__From: ${SMTP_FROM:-}
+      Smtp__Username: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__EnableSsl: "true"
     ports:
-      - "5001:8080"
-
-  web:
-    build:
-      context: .
-      dockerfile: src/Perry.Web/Dockerfile
-    container_name: perry-web
-    depends_on:
-      - api
-    environment:
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
-    ports:
-      - "5000:8080"
+      - "5272:8080"
 
 volumes:
-  sqlserver_data:
+  perry_sql_data:

@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using Perry.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Perry.Api.Controllers;
@@ -103,6 +105,24 @@ public class CartController : ControllerBase
         CancellationToken ct)
     {
         await _cart.RemoveAsync(userId, sessionId, productId, ct);
+        return Ok(new { status = "Ok" });
+    }
+
+    public record MergeRequest(string SessionId);
+
+    /// <summary>Слить гостевую корзину (sessionId) в корзину текущего пользователя после login/register.</summary>
+    [Authorize]
+    [HttpPost("merge")]
+    public async Task<IActionResult> Merge([FromBody] MergeRequest body, CancellationToken ct)
+    {
+        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        if (!Guid.TryParse(raw, out var userId))
+            return Unauthorized();
+
+        if (string.IsNullOrWhiteSpace(body.SessionId))
+            return BadRequest(new { error = "sessionId required" });
+
+        await _cart.MergeGuestToUserAsync(body.SessionId, userId, ct);
         return Ok(new { status = "Ok" });
     }
 
