@@ -62,17 +62,6 @@
 
 ---
 
-## S06. Admin — Users
-
-**Файл:** [`06-admin-users.png`](./06-admin-users.png)  
-**URL:** `/admin/users`
-
-![Admin Users](./06-admin-users.png)
-
-Фильтры Active / Deleted / All, роль, поиск; список пользователей. Карточка #68.
-
----
-
 ## S07. Admin — Products: dropdown категорий
 
 **Файл:** [`07-admin-products-category-dropdown.png`](./07-admin-products-category-dropdown.png)  
