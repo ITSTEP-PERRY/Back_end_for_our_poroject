@@ -17,16 +17,16 @@ public class ProductReview
     public Guid UserId { get; set; }
 
     /// <summary>Имя автора, отображаемое в отзыве.</summary>
-    public string AuthorName { get; set; } = string.Empty;
+    public string? AuthorName { get; set; } = string.Empty;
 
     /// <summary>Оценка от 1 до 5 звёзд.</summary>
     public int Rating { get; set; }
 
     /// <summary>Краткий заголовок отзыва.</summary>
-    public string Title { get; set; } = string.Empty;
+    public string? Title { get; set; } = string.Empty;
 
     /// <summary>Текст отзыва.</summary>
-    public string Body { get; set; } = string.Empty;
+    public string? Body { get; set; } = string.Empty;
 
     /// <summary>Модерация: показывать на сайте только после одобрения.</summary>
     public bool IsApproved { get; set; }
