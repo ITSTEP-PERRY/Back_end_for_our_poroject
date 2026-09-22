@@ -1,4 +1,5 @@
 using System.Text;
+using DotNetEnv;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
@@ -57,9 +59,11 @@ builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(
-                "http://localhost:3000",
-                "http://10.1.0.17:3000")
+        policy.WithOrigins(["https://admin.perrydev.space",
+            "http://localhost:3000",
+            "http://10.1.0.17:3000"
+            ])
+            .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
@@ -71,11 +75,11 @@ if (app.Environment.IsDevelopment())
 {
     await DbSeeder.SeedAsync(app.Services);
 }
+app.UseCors("Frontend");
 
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

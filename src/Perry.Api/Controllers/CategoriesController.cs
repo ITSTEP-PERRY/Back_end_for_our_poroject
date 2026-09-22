@@ -72,7 +72,6 @@ public class CategoriesController : ControllerBase
     {
         var category = await _db.Categories.AsNoTracking()
             .Where(c => c.Slug == slug)
-            .Include(c => c)
             .Select(c => new
             {
                 c.Id,

@@ -167,6 +167,51 @@ public class ProductsController : ControllerBase
             .ToListAsync(ct);
 
     /// <summary>
+    /// Partial product details :
+    /// GET /api/products/partial/{id}
+    /// </summary>
+    [HttpGet("partial/{id:guid}")]
+    public async Task<IActionResult> GetPartialById(Guid id, CancellationToken cancellationToken)
+    {
+        var product = await _db.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Sku,
+                p.Brand,
+                p.Price,
+                p.OldPrice,
+                DiscountPercent = p.OldPrice != null && p.OldPrice > p.Price
+                    ? (int?)Math.Round((p.OldPrice.Value - p.Price) / p.OldPrice.Value * 100)
+                    : null,
+                p.StockQuantity,
+                p.Status,
+                p.AverageRating,
+                p.ReviewCount,
+                p.IsBestSeller,
+                p.CategoryId,
+                Images = p.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new { i.Id, i.Url, i.IsPrimary, i.IsVideo, i.AltText }),
+                Attributes = p.Attributes
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => new { a.Name, a.Value }),
+                AboutItems = p.AboutItems
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => new { a.Title, a.Description }),
+               
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (product is null) return NotFound();
+        return Ok(product);
+    }
+    
+    /// <summary>
     /// Полная карточка товара для Product Page:
     /// галерея, specs, about, категория.
     /// GET /api/products/{id}
