@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Perry.Infrastructure.Options;
 
-namespace Perry.Api.Extentions;
+namespace Perry.Api.Extensions;
 
 public static class JwtAuthenticationService
 {

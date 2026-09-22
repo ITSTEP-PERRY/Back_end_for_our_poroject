@@ -13,9 +13,8 @@ public class ProductReview
 
     /// <summary>
     /// Id пользователя из модуля Auth (часть диплома другого участника).
-    /// Пока может быть null, если отзыв оставлен без привязки к аккаунту.
     /// </summary>
-    public Guid? UserId { get; set; }
+    public Guid UserId { get; set; }
 
     /// <summary>Имя автора, отображаемое в отзыве.</summary>
     public string AuthorName { get; set; } = string.Empty;

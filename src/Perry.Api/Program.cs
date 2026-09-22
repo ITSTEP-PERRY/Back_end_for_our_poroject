@@ -1,15 +1,19 @@
+using System.Text.Json.Serialization;
 using DotNetEnv;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
 using Microsoft.OpenApi.Models;
-using Perry.Api.Extentions;
+using Perry.Api.Extensions;
 using Perry.Infrastructure.Options;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -62,7 +66,6 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy(AuthorizationPolicies.SellerAccess, policy =>
         policy.RequireAuthenticatedUser().RequireRole("Seller"));
 });
-
 
 
 var app = builder.Build();
