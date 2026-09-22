@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Auth;
 
 namespace Perry.Api.Controllers;
 
@@ -12,6 +14,7 @@ namespace Perry.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Policy = AuthorizationPolicies.AdminAccess)]
 public class CategoriesController : ControllerBase
 {
     private readonly AppDbContext _db;

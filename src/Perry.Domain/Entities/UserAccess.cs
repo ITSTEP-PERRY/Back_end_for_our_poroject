@@ -4,6 +4,7 @@ namespace Perry.Domain.Entities;
 /// Учётные данные входа + роль (из homework ASP-421).
 /// Dk — derived key пароля (RFC 2898 / PbKdf1).
 /// </summary>
+[Obsolete("Deprecated: Use Auth service instead")]
 public class UserAccess
 {
     public Guid Id { get; set; }

@@ -1,11 +1,10 @@
-using System.Text;
 using DotNetEnv;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Perry.Api.Extentions;
+using Perry.Infrastructure.Options;
 
 Env.Load();
 var builder = WebApplication.CreateBuilder(args);
@@ -36,37 +35,35 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
-builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+// builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "PerryDevSecretKey_ChangeMe_32chars!!";
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "Perry",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "Perry",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
-builder.Services.AddAuthorization();
+var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
+    throw new InvalidOperationException("JWT signing secret is not configured.");
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
         policy.WithOrigins(["https://admin.perrydev.space",
-            "http://localhost:3000",
-            "http://10.1.0.17:3000"
+                "http://localhost:3000",
+                "http://10.1.0.17:3000"
             ])
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
+
+builder.Services.AddJwtAuthentication(jwt);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthorizationPolicies.AdminAccess, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("Admin") );
+    options.AddPolicy(AuthorizationPolicies.SellerAccess, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("Seller"));
+});
+
+
 
 var app = builder.Build();
 

@@ -12,7 +12,7 @@ public class ProductImageConfiguration : IEntityTypeConfiguration<ProductImage>
         builder.ToTable("ProductImages");
 
         builder.HasKey(x => x.Id);
-        builder.Property(x => x.Url).HasMaxLength(1000).IsRequired();
+        builder.Property(x => x.Url).IsRequired();
         builder.Property(x => x.AltText).HasMaxLength(300);
 
         // Cascade: при удалении товара удаляются и его картинки

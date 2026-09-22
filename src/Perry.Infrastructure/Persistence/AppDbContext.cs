@@ -45,5 +45,8 @@ public class AppDbContext : DbContext
         // (папка Persistence/Configurations).
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Ignore<User>();
+        modelBuilder.Ignore<UserAccess>();
+        modelBuilder.Ignore<UserRole>();
     }
 }

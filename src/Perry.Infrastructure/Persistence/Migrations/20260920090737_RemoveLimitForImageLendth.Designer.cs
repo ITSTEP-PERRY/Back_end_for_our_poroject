@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Perry.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Perry.Infrastructure.Persistence;
 namespace Perry.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260920090737_RemoveLimitForImageLendth")]
+    partial class RemoveLimitForImageLendth
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -490,6 +493,160 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.ToTable("ProductReviewTags", (string)null);
                 });
 
+            modelBuilder.Entity("Perry.Domain.Entities.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Avatar")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("Birthdate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("RegisteredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("53759101-7de4-4e04-833a-884752290fa0"),
+                            Avatar = "",
+                            Email = "admin@perry.local",
+                            Name = "Administrator",
+                            RegisteredAtUtc = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.UserAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Dk")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Login")
+                        .IsUnique();
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("UserAccesses", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("2570a0d2-fab2-4de0-8efc-e2bd28de2502"),
+                            Dk = "1678112717E7AF0947F6",
+                            Login = "Admin",
+                            RoleId = "Admin",
+                            Salt = "4FA5D20B-E546-4818-9381-B4BD9F327F4E",
+                            UserId = new Guid("53759101-7de4-4e04-833a-884752290fa0")
+                        });
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("CanCreate")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanUpdate")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "Admin",
+                            CanCreate = true,
+                            CanDelete = true,
+                            CanRead = true,
+                            CanUpdate = true,
+                            Description = "Администратор — полный доступ"
+                        },
+                        new
+                        {
+                            Id = "Editor",
+                            CanCreate = true,
+                            CanDelete = false,
+                            CanRead = true,
+                            CanUpdate = true,
+                            Description = "Редактор каталога"
+                        },
+                        new
+                        {
+                            Id = "Guest",
+                            CanCreate = false,
+                            CanDelete = false,
+                            CanRead = true,
+                            CanUpdate = false,
+                            Description = "Гость / покупатель"
+                        });
+                });
+
             modelBuilder.Entity("Perry.Domain.Entities.CartItem", b =>
                 {
                     b.HasOne("Perry.Domain.Entities.Cart", "Cart")
@@ -517,6 +674,17 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("Perry.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Perry.Domain.Entities.OrderItem", b =>
@@ -615,6 +783,25 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Review");
                 });
 
+            modelBuilder.Entity("Perry.Domain.Entities.UserAccess", b =>
+                {
+                    b.HasOne("Perry.Domain.Entities.UserRole", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Perry.Domain.Entities.User", "User")
+                        .WithMany("Accesses")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Perry.Domain.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
@@ -650,6 +837,11 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Images");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Accesses");
                 });
 #pragma warning restore 612, 618
         }

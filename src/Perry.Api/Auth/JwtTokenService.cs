@@ -6,11 +6,12 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Perry.Api.Auth;
 
+[Obsolete("Deprecated; use JwtAuthenticationService instead")]
 public interface IJwtTokenService
 {
     string CreateToken(Guid userId, string login, string name, string email, string roleId);
 }
-
+[Obsolete("Deprecated; use JwtAuthenticationService instead")]
 public class JwtTokenService : IJwtTokenService
 {
     private readonly IConfiguration _config;
