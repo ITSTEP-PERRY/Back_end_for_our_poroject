@@ -6,6 +6,7 @@ using Perry.Infrastructure.Persistence;
 using Microsoft.OpenApi.Models;
 using Perry.Api.Extensions;
 using Perry.Api.Filters;
+using Perry.Infrastructure.Interfaces;
 using Perry.Infrastructure.Options;
 
 Env.Load();
@@ -69,7 +70,6 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<ModelValidateActionFilter>();
-
 
 var app = builder.Build();
 

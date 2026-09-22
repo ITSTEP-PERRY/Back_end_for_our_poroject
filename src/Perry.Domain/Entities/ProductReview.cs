@@ -3,7 +3,7 @@ namespace Perry.Domain.Entities;
 /// <summary>
 /// Отзыв покупателя о товаре (блок Customer Reviews на Product Page).
 /// </summary>
-public class ProductReview
+public record ProductReview
 {
     public Guid Id { get; set; }
 
@@ -38,4 +38,7 @@ public class ProductReview
 
     /// <summary>Теги («easy to use» и т.п.) для блока Frequent tags.</summary>
     public ICollection<ProductReviewTag> Tags { get; set; } = new List<ProductReviewTag>();
+    
+    /// <summary>Grades by another users for current review</summary>
+    public ICollection<ProductReviewGrade> Grades { get; set; } = new List<ProductReviewGrade>();
 }

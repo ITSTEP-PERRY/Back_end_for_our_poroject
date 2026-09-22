@@ -25,7 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<ProductReviewImage> ProductReviewImages => Set<ProductReviewImage>();
     public DbSet<ProductReviewTag> ProductReviewTags => Set<ProductReviewTag>();
-
+    public DbSet<ProductReviewGrade>  ProductReviewGrades => Set<ProductReviewGrade>();
     // --- Корзина ---
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();

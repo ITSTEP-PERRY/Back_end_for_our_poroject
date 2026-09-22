@@ -1,7 +1,7 @@
 namespace Perry.Domain.Entities;
 
 /// <summary>Фото, приложенное к отзыву (открытие фото в комментариях в макете).</summary>
-public class ProductReviewImage
+public record ProductReviewImage
 {
     public Guid Id { get; set; }
 

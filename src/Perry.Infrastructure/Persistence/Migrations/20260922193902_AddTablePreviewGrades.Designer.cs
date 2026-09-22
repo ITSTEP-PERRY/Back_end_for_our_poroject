@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Perry.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Perry.Infrastructure.Persistence;
 namespace Perry.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260922193902_AddTablePreviewGrades")]
+    partial class AddTablePreviewGrades
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -455,15 +458,10 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Property<bool>("IsHelpful")
                         .HasColumnType("bit");
 
-                    b.Property<Guid>("ReviewId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ReviewId");
 
                     b.ToTable("ProductReviewGrades");
                 });
@@ -615,17 +613,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Perry.Domain.Entities.ProductReviewGrade", b =>
-                {
-                    b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
-                        .WithMany("Grades")
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
-                });
-
             modelBuilder.Entity("Perry.Domain.Entities.ProductReviewImage", b =>
                 {
                     b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
@@ -680,8 +667,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Perry.Domain.Entities.ProductReview", b =>
                 {
-                    b.Navigation("Grades");
-
                     b.Navigation("Images");
 
                     b.Navigation("Tags");

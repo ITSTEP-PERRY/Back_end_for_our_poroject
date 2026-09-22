@@ -5,6 +5,8 @@ using Perry.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Perry.Infrastructure.Interfaces;
+using Perry.Infrastructure.Repositories;
 
 namespace Perry.Infrastructure;
 
@@ -39,7 +41,7 @@ public static class DependencyInjection
         services.AddMemoryCache();
         services.AddSingleton<IEmailCodeService, EmailCodeService>();
         services.AddSingleton<IPasswordResetService, PasswordResetService>();
-
+        services.AddScoped<IReviewRepository, ReviewRepository>();
         // Пока SMTP-заглушка (код в лог). Позже Smtp:UseStub=false + App Password.
         var useStub = configuration.GetValue("Smtp:UseStub", true);
         if (useStub)
