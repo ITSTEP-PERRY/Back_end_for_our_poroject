@@ -36,6 +36,16 @@ namespace Perry.Infrastructure.Options;
         /// </summary>
         public static async Task<PagedList<T>> CreateAsync(IQueryable<T> query, QueryOptions? options, CancellationToken   cancellationToken)
         {
+            query = CreateQuery(query, options);
+
+            var count = await query.CountAsync(cancellationToken);
+            var items = await query.Skip((options!.CurrentPage - 1) * options.PageSize).Take(options.PageSize).ToListAsync(cancellationToken);
+
+            return new PagedList<T>(items, count, options);
+        }
+
+        public static IQueryable<T> CreateQuery(IQueryable<T> query, QueryOptions? options)
+        {
             if (options != null)
             {
                 if (!string.IsNullOrEmpty(options.OrderPropertyName))
@@ -46,19 +56,25 @@ namespace Perry.Infrastructure.Options;
                 {
                     query = Search(query, options.SearchPropertyName, options.SearchTerm);
                 }
-                if (!string.IsNullOrEmpty(options.FilterPropertyName) && !string.IsNullOrEmpty(options.FilterPropertyValue))
+                if (options.FilterObjects.Any())
                 {
-                    query = Filter(query, options.FilterPropertyName, options.FilterPropertyValue);
+                    foreach (var filter in options.FilterObjects)
+                    {
+                        query = Filter(query, filter.PropertyName, filter.Value);
+                    }
+                }
+                if (options.CompareObjects.Any())
+                {
+                    foreach (var filter in options.CompareObjects)
+                    {
+                        query = MoreOrLess(query, filter.PropertyName, filter.MoreValue, filter.LessValue);
+                    }
                 }
             }
-
-            var count = await query.CountAsync();
-            var items = await query.Skip((options!.CurrentPage - 1) * options.PageSize).Take(options.PageSize).ToListAsync(cancellationToken);
-
-            return new PagedList<T>(items, count, options);
+            return query;
         }
-
-        private static IQueryable<T> Search(IQueryable<T> query, string propertyName, string searchTerm)
+        
+        public static IQueryable<T> Search(IQueryable<T> query, string propertyName, string searchTerm)
         {
             var parameter = Expression.Parameter(typeof(T), "x");
             var source = propertyName.Split('.').Aggregate((Expression)parameter, Expression.Property);
@@ -67,7 +83,7 @@ namespace Perry.Infrastructure.Options;
             return query.Where(lambda);
         }
 
-        private static IQueryable<T> Filter(IQueryable<T> query, string propertyName, object searchTerm)
+        public static IQueryable<T> Filter(IQueryable<T> query, string propertyName, object searchTerm)
         {
             var parameter = Expression.Parameter(typeof(T), "x");
             var source = propertyName.Split('.').Aggregate((Expression)parameter, Expression.Property);
@@ -79,11 +95,69 @@ namespace Perry.Infrastructure.Options;
             var constant = Expression.Constant(convertedValue, source.Type);
 
             var body = Expression.Call(source, "Equals", Type.EmptyTypes, constant);
+            
             var lambda = Expression.Lambda<Func<T, bool>>(body, parameter);
             return  query.Where(lambda);
         }
+
+        public static IQueryable<T> MoreOrLess(IQueryable<T> query, string propertyName, string? moreValue,
+            string? lessValue)
+        {
+            var parameter = Expression.Parameter(typeof(T), "x");
+            var source = propertyName.Split('.').Aggregate((Expression)parameter, Expression.Property);
+
+            // Извлекаем базовый тип, если это Nullable (например, int? -> int)
+            var targetType = Nullable.GetUnderlyingType(source.Type) ?? source.Type;
+
+            // Проверяем, поддерживает ли тип сравнение
+            if (!typeof(IComparable).IsAssignableFrom(targetType) && 
+                !targetType.IsInterface) // для обобщенных интерфейсов IComparable<T>
+            {
+                throw new InvalidOperationException($"Тип {source.Type} не реализует IComparable.");
+            }
+
+            var methodInfo = targetType.GetMethod("CompareTo", new[] { targetType });
+            // Константа 0 для сравнения результатов CompareTo
+            var zero = Expression.Constant(0);
+            // More than
+            if (moreValue != null)
+            {
+                // Безопасное приведение типов (учитывая Nullable)
+                var convertedMoreValue = Convert.ChangeType(moreValue, targetType);
+                // Создаем константы
+                var constantMore = Expression.Constant(convertedMoreValue, source.Type);
+                var callMore = Expression.Call(source, methodInfo, constantMore);
+                // Формируем логические условия (bool):
+                // source >= moreValue  =>  source.CompareTo(moreValue) >= 0
+                var bodyMore = Expression.GreaterThanOrEqual(callMore, zero);
+                var lambdaMore = Expression.Lambda<Func<T, bool>>(bodyMore, parameter);
+                query = query.Where(lambdaMore);
+                
+            }
+
+            if (lessValue != null)
+            {
+                var convertedLessValue = Convert.ChangeType(lessValue, targetType);
+
+                var constantLess = Expression.Constant(convertedLessValue, source.Type);
+
+                // Вызовы метода CompareTo: source.CompareTo(constant)
+                var callLess = Expression.Call(source, methodInfo, constantLess);
+
+                // source <= lessValue  =>  source.CompareTo(lessValue) <= 0
+                var bodyLess = Expression.LessThanOrEqual(callLess, zero);
+
+                // Создаем лямбды и применяем к query
+                var lambdaLess = Expression.Lambda<Func<T, bool>>(bodyLess, parameter);
+                query = query.Where(lambdaLess);
+                
+            }
+           
+
+            return query;
+        }
         
-        private static IQueryable<T> Order(IQueryable<T> query, string propertyName, bool desc)
+        public static IQueryable<T> Order(IQueryable<T> query, string propertyName, bool desc)
         {
             var parameter = Expression.Parameter(typeof(T), "x");
             var source = propertyName.Split('.').Aggregate((Expression)parameter, Expression.Property);

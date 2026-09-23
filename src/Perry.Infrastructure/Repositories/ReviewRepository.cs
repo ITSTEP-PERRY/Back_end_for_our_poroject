@@ -21,7 +21,7 @@ public class ReviewRepository: IReviewRepository
         _dbContext = dbContext;
     }
     
-    public async Task<Result<PagedList<ProductReview>>> GetAllReviews(QueryOptions options, CancellationToken cancellationToken)
+    public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, CancellationToken cancellationToken)
     {
         IQueryable<ProductReview> query =  _dbContext.ProductReviews
             .Select(r =>new ProductReview
@@ -36,13 +36,21 @@ public class ReviewRepository: IReviewRepository
                 Title = r.Title,
                 UserId = r.UserId,
                 Images = r.Images,
+                Grades = r.Grades
             })
             .AsNoTracking();
         
-        return await PagedList<ProductReview>.CreateAsync(query, options,  cancellationToken);
+        var pageList = await PagedList<ProductReview>.CreateAsync(query, options,  cancellationToken);
+        var stats = await GetReviewStatistic(options, cancellationToken);
+        return new ProductReviewDto
+        {
+            PagedList = pageList,
+            Statistic = stats
+        };
     }
 
-    public async Task<Result<PagedList<ProductReview>>> GetReviewsByUserOrProductId(Guid id, QueryOptions options, CancellationToken cancellationToken)
+   
+    public async Task<Result<ProductReviewDto>> GetReviewsByUserOrProductId(Guid id, QueryOptions options, CancellationToken cancellationToken)
     {
         IQueryable<ProductReview> query =  _dbContext.ProductReviews
             .Where(r => r.ProductId == id || r.UserId == id)
@@ -58,11 +66,17 @@ public class ReviewRepository: IReviewRepository
                 Title = r.Title,
                 UserId = r.UserId,
                 Images = r.Images,
+                Grades = r.Grades
             })
             .AsNoTracking();
         
-        return await PagedList<ProductReview>.CreateAsync(query, options,  cancellationToken);
-        
+        var pageList = await PagedList<ProductReview>.CreateAsync(query, options,  cancellationToken);
+        var stats = await GetReviewStatistic(options, cancellationToken);
+        return new ProductReviewDto
+        {
+            PagedList = pageList,
+            Statistic = stats
+        };
     }
 
     public async Task<Result<ProductReview>> GetReviewById(Guid id, CancellationToken cancellationToken)
@@ -169,4 +183,24 @@ public class ReviewRepository: IReviewRepository
         return Result.Success();
     }
     
+    
+    private async Task<ProductReviewStatistic> GetReviewStatistic(QueryOptions options, CancellationToken cancellationToken)
+    {
+        ProductReviewStatistic stats = new();
+        var statQuery = _dbContext.ProductReviews.AsQueryable();
+        
+        statQuery = PagedList<ProductReview>.CreateQuery(statQuery, options);
+        
+        stats.TotalReviews = await statQuery.CountAsync(cancellationToken);
+        stats.TotalComments = await statQuery
+            .Where(r => !string.IsNullOrWhiteSpace(r.Title) || !string.IsNullOrWhiteSpace(r.Body))
+            .CountAsync(cancellationToken);
+
+        stats.Statistics = await statQuery.GroupBy(r => r.Rating).Select(r => new Statistic<int>
+        {
+            Name = r.Key.ToString(),
+            Value = r.Count()
+        }).ToListAsync(cancellationToken);
+        return stats;
+    }
 }

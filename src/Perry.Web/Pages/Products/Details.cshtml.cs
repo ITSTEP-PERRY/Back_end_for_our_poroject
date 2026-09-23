@@ -255,7 +255,7 @@ public class DetailsModel : PageModel
         {
             Id = Guid.NewGuid(),
             ProductId = productId.Value,
-            UserId = HttpContext.GetUserId(),
+            UserId = HttpContext.GetUserId() ?? new Guid(),
             AuthorName = author,
             Rating = ReviewRating,
             Title = string.IsNullOrWhiteSpace(ReviewTitle) ? "Review" : ReviewTitle.Trim(),

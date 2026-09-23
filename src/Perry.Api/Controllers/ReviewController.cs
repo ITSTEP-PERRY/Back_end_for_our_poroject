@@ -51,15 +51,16 @@ public class ReviewController: ControllerBase
         var user = HttpContext.User;
         if (!(await _authorizationService.AuthorizeAsync(user, AuthorizationPolicies.AdminAccess)).Succeeded)
         {
-            options.FilterPropertyName = nameof(ProductReview.IsApproved);
-            options.FilterPropertyValue = true.ToString();
+            options.FilterObjects.RemoveAll(f => f.PropertyName == nameof(ProductReview.IsApproved));
+            options.FilterObjects.Add(new FilterObject
+                { PropertyName = nameof(ProductReview.IsApproved), Value = "true" });
         }
         
         var result = await _reviewRepository.GetAllReviews(options, ct);
         if (result.Value != null)
         {
             var review = result.Value;
-            review.Items = ConvertImagesToLinks(review.Items, Request, Url);
+            review.PagedList.Items = ConvertImagesToLinks(review.PagedList.Items, Request, Url);
             return Ok(review);
         }
         return StatusCode(500);
@@ -71,15 +72,16 @@ public class ReviewController: ControllerBase
         var user = HttpContext.User;
         if (!(await _authorizationService.AuthorizeAsync(user, AuthorizationPolicies.AdminAccess)).Succeeded)
         {
-            options.FilterPropertyName = nameof(ProductReview.IsApproved);
-            options.FilterPropertyValue = true.ToString();
+            options.FilterObjects.RemoveAll(f => f.PropertyName == nameof(ProductReview.IsApproved));
+            options.FilterObjects.Add(new FilterObject
+                { PropertyName = nameof(ProductReview.IsApproved), Value = "true" });
         }
         
         var result = await _reviewRepository.GetReviewsByUserOrProductId(id, options, ct);
         if (result.Value != null)
         {
             var review = result.Value;
-            review.Items = ConvertImagesToLinks(review.Items, Request, Url);
+            review.PagedList.Items = ConvertImagesToLinks(review.PagedList.Items, Request, Url);
             return Ok(review);
         }
         return StatusCode(500);
