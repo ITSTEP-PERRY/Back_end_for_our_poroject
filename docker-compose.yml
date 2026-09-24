@@ -10,7 +10,7 @@ services:
     container_name: perry-sql
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD:-Perry_Dev_Passw0rd!}
+      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?SA_PASSWORD is required}
     ports:
       - "1433:1433"
     volumes:
@@ -26,8 +26,8 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:-Perry_Dev_Passw0rd!};TrustServerCertificate=True"
-      Jwt__Key: ${JWT_KEY:-PerryDevSecretKey_ChangeMe_32chars!!}
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
+      Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
       Jwt__Issuer: Perry
       Jwt__Audience: Perry
       Smtp__UseStub: ${SMTP_USE_STUB:-true}
@@ -39,6 +39,28 @@ services:
       Smtp__EnableSsl: "true"
     ports:
       - "5272:8080"
+
+  web:
+    build:
+      context: .
+      dockerfile: src/Perry.Web/Dockerfile
+    container_name: perry-web
+    depends_on:
+      - api
+      - sqlserver
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
+      Smtp__UseStub: ${SMTP_USE_STUB:-true}
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__From: ${SMTP_FROM:-}
+      Smtp__Username: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__EnableSsl: "true"
+    ports:
+      - "5000:8080"
 
 volumes:
   perry_sql_data:
