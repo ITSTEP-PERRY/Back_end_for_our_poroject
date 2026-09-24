@@ -1,220 +1,423 @@
-@page "{id:guid}"
+@page
 @model Perry.Web.Pages.Admin.EditModel
-@using Perry.Domain.Enums
+
 @{
-    Layout = "_AdminLayout";
-    ViewData["Title"] = Model.IsCreate ? "Create product" : "Edit product";
+    ViewData["Title"] = Model.IsCreate ? "Создание товара" : "Редактирование товара";
 }
 
-<div class="admin-top">
-    <h1>@(Model.IsCreate ? "Create product" : "Product card")</h1>
-    <div class="admin-top-actions">
-        <a class="btn btn-ghost" asp-page="/Admin/Products">← Products</a>
-        @if (!Model.IsCreate)
-        {
-            <a class="btn btn-ghost" asp-page="/Products/Details" asp-route-id="@Model.Id">На витрине</a>
-        }
+<div class="admin-page">
+
+    <div class="admin-header">
+        <div>
+            <h1>@(Model.IsCreate ? "Создание товара" : "Редактирование товара")</h1>
+            <p class="admin-subtitle">
+                @(Model.IsCreate
+                    ? "Добавление нового товара"
+                    : "Изменение информации о товаре")
+            </p>
+        </div>
+
+        <a asp-page="./Products" class="btn btn-secondary">
+            ← Назад к товарам
+        </a>
     </div>
-</div>
 
-@if (!string.IsNullOrEmpty(Model.Message))
-{
-    <div class="alert alert-ok">@Model.Message</div>
-}
-@if (!string.IsNullOrEmpty(Model.Error))
-{
-    <div class="alert alert-error">@Model.Error</div>
-}
+    @if (!string.IsNullOrWhiteSpace(Model.Message))
+    {
+        <div class="alert alert-success">
+            @Model.Message
+        </div>
+    }
 
-<form method="post" enctype="multipart/form-data" class="ap-edit" id="product-edit-form">
-    <input type="hidden" name="Create" value="@Model.IsCreate.ToString().ToLowerInvariant()" />
-    <input type="hidden" name="Id" value="@Model.Id" />
+    @if (!string.IsNullOrWhiteSpace(Model.Error))
+    {
+        <div class="alert alert-danger">
+            @Model.Error
+        </div>
+    }
 
-    <div class="ap-edit__grid">
-        <section class="admin-card">
+    <form method="post"
+          enctype="multipart/form-data"
+          class="admin-form">
+
+        <div asp-validation-summary="ModelOnly"
+             class="text-danger">
+        </div>
+
+        <div class="form-section">
+
             <h2>Основное</h2>
-            <div class="admin-form">
-                <label>Название *
-                    <input asp-for="Form.Name" required />
+
+            <div class="form-group">
+
+                <label asp-for="Form.Name">
+                    Название *
                 </label>
-                <label>Описание
-                    <textarea asp-for="Form.Description" rows="4"></textarea>
+
+                <input asp-for="Form.Name"
+                       class="form-control"
+                       required />
+
+                <span asp-validation-for="Form.Name"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="form-group">
+
+                <label asp-for="Form.Description">
+                    Описание
                 </label>
-                <label>Категория *
-                    <select asp-for="Form.CategoryId" required class="ap-cat-select">
-                        <option value="">— выберите —</option>
+
+                <textarea asp-for="Form.Description"
+                          class="form-control"
+                          rows="5">
+                </textarea>
+
+                <span asp-validation-for="Form.Description"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label asp-for="Form.CategoryId">
+                        Категория *
+                    </label>
+
+                    <select asp-for="Form.CategoryId"
+                            class="form-control"
+                            required>
+
+                        <option value="">
+                            — выберите категорию —
+                        </option>
+
                         @foreach (var root in Model.CategoryTree)
                         {
-                            @RenderCatOptions(root)
+                            <option value="@root.Id">
+                                @root.Name
+                            </option>
+
+                            @foreach (var child in root.Children)
+                            {
+                                <option value="@child.Id">
+                                    &nbsp;&nbsp;&nbsp;↳ @child.Name
+                                </option>
+
+                                @foreach (var child2 in child.Children)
+                                {
+                                    <option value="@child2.Id">
+                                        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↳ @child2.Name
+                                    </option>
+
+                                    @foreach (var child3 in child2.Children)
+                                    {
+                                        <option value="@child3.Id">
+                                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;↳ @child3.Name
+                                        </option>
+                                    }
+                                }
+                            }
                         }
+
                     </select>
+
+                    <span asp-validation-for="Form.CategoryId"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label asp-for="Form.Brand">
+                        Бренд
+                    </label>
+
+                    <input asp-for="Form.Brand"
+                           class="form-control" />
+
+                    <span asp-validation-for="Form.Brand"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label asp-for="Form.Price">
+                        Цена *
+                    </label>
+
+                    <input asp-for="Form.Price"
+                           type="number"
+                           step="0.01"
+                           min="0"
+                           class="form-control"
+                           required />
+
+                    <span asp-validation-for="Form.Price"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label asp-for="Form.OldPrice">
+                        Старая цена
+                    </label>
+
+                    <input asp-for="Form.OldPrice"
+                           type="number"
+                           step="0.01"
+                           min="0"
+                           class="form-control" />
+
+                    <span asp-validation-for="Form.OldPrice"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label asp-for="Form.StockQuantity">
+                        Количество на складе
+                    </label>
+
+                    <input asp-for="Form.StockQuantity"
+                           type="number"
+                           min="0"
+                           class="form-control" />
+
+                    <span asp-validation-for="Form.StockQuantity"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label asp-for="Form.Sku">
+                        SKU
+                    </label>
+
+                    <input asp-for="Form.Sku"
+                           class="form-control" />
+
+                    <span asp-validation-for="Form.Sku"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="form-row">
+
+                <div class="form-group">
+
+                    <label asp-for="Form.Slug">
+                        Slug
+                    </label>
+
+                    <input asp-for="Form.Slug"
+                           class="form-control" />
+
+                    <span asp-validation-for="Form.Slug"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label asp-for="Form.Status">
+                        Статус
+                    </label>
+
+                    <select asp-for="Form.Status"
+                            asp-items="Html.GetEnumSelectList<Perry.Domain.Enums.ProductStatus>()"
+                            class="form-control">
+                    </select>
+
+                    <span asp-validation-for="Form.Status"
+                          class="text-danger">
+                    </span>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>
+                    <input asp-for="Form.IsBestSeller" />
+                    Лучший продавец
                 </label>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-section">
+
+            <h2>Изображение</h2>
+
+            @if (Model.CurrentImageUrls.Count > 0)
+            {
+                <div class="current-images">
+
+                    @foreach (var imageUrl in Model.CurrentImageUrls)
+                    {
+                        <div class="current-image">
+
+                            <img src="@imageUrl"
+                                 alt="Изображение товара"
+                                 style="max-width: 180px; max-height: 180px;" />
+
+                        </div>
+                    }
+
+                </div>
+            }
+
+            <div class="form-group">
+
+                <label asp-for="Form.Image">
+                    Новое изображение
+                </label>
+
+                <input asp-for="Form.Image"
+                       type="file"
+                       accept="image/*"
+                       class="form-control" />
+
+                <span asp-validation-for="Form.Image"
+                      class="text-danger">
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="form-section">
+
+            <h2>About</h2>
+
+            @for (var i = 0; i < Model.Form.AboutItems.Count; i++)
+            {
                 <div class="form-row">
-                    <label>SKU <input asp-for="Form.Sku" placeholder="авто" /></label>
-                    <label>Slug <input asp-for="Form.Slug" placeholder="auto" /></label>
-                    <label>Brand <input asp-for="Form.Brand" /></label>
-                </div>
-                <div class="form-row">
-                    <label>Price * <input asp-for="Form.Price" type="number" step="0.01" min="0" required /></label>
-                    <label>Old price <input asp-for="Form.OldPrice" type="number" step="0.01" min="0" /></label>
-                    <label>Stock <input asp-for="Form.StockQuantity" type="number" min="0" /></label>
-                </div>
-                <div class="form-row form-row--2">
-                    <label>Status
-                        <select asp-for="Form.Status" asp-items="Html.GetEnumSelectList<ProductStatus>()"></select>
-                    </label>
-                    <label class="checkbox-row">
-                        <input asp-for="Form.IsBestSeller" /> Best seller
-                    </label>
-                </div>
-                @if (Model.CurrentImageUrls.Count > 0)
-                {
-                    <div class="edit-preview-row">
-                        @foreach (var url in Model.CurrentImageUrls.Take(4))
-                        {
-                            <div class="edit-preview"><img src="@url" alt="" /></div>
-                        }
+
+                    <div class="form-group">
+
+                        <label>
+                            Заголовок
+                        </label>
+
+                        <input asp-for="Form.AboutItems[i].Title"
+                               class="form-control" />
+
                     </div>
-                }
-                <label>Изображение (primary)
-                    <input asp-for="Form.Image" type="file" accept="image/*" />
-                </label>
-            </div>
-        </section>
 
-        <section class="admin-card">
-            <h2>About product <span class="admin-card__hint">аккордеон на карточке</span></h2>
-            <div class="ap-dyn" data-dyn="about">
-                <div class="ap-dyn__list" data-dyn-list>
-                    @for (var i = 0; i < Model.Form.AboutItems.Count; i++)
-                    {
-                        <div class="ap-dyn__item" data-dyn-item>
-                            <label>Заголовок
-                                <input name="Form.AboutItems[@i].Title" value="@Model.Form.AboutItems[i].Title" />
-                            </label>
-                            <label>Текст
-                                <textarea name="Form.AboutItems[@i].Description" rows="2">@Model.Form.AboutItems[i].Description</textarea>
-                            </label>
-                            <button type="button" class="btn btn-ghost ap-dyn__remove" data-dyn-remove>Удалить</button>
-                        </div>
-                    }
+                    <div class="form-group">
+
+                        <label>
+                            Описание
+                        </label>
+
+                        <input asp-for="Form.AboutItems[i].Description"
+                               class="form-control" />
+
+                    </div>
+
                 </div>
-                <button type="button" class="btn btn-ghost" data-dyn-add="about">+ About item</button>
-            </div>
-        </section>
+            }
 
-        <section class="admin-card">
-            <h2>Product details <span class="admin-card__hint">таблица характеристик</span></h2>
-            <div class="ap-dyn" data-dyn="attrs">
-                <div class="ap-dyn__list" data-dyn-list>
-                    @for (var i = 0; i < Model.Form.Attributes.Count; i++)
-                    {
-                        <div class="ap-dyn__item ap-dyn__item--row" data-dyn-item>
-                            <label>Name
-                                <input name="Form.Attributes[@i].Name" value="@Model.Form.Attributes[i].Name" />
-                            </label>
-                            <label>Value
-                                <input name="Form.Attributes[@i].Value" value="@Model.Form.Attributes[i].Value" />
-                            </label>
-                            <label class="checkbox-row">
-                                <input type="checkbox" name="Form.Attributes[@i].IsFilterable" value="true"
-                                       @(Model.Form.Attributes[i].IsFilterable ? "checked" : null) /> Filter
-                            </label>
-                            <button type="button" class="btn btn-ghost ap-dyn__remove" data-dyn-remove>×</button>
-                        </div>
-                    }
+        </div>
+
+
+        <div class="form-section">
+
+            <h2>Характеристики</h2>
+
+            @for (var i = 0; i < Model.Form.Attributes.Count; i++)
+            {
+                <div class="form-row">
+
+                    <div class="form-group">
+
+                        <label>
+                            Название характеристики
+                        </label>
+
+                        <input asp-for="Form.Attributes[i].Name"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>
+                            Значение
+                        </label>
+
+                        <input asp-for="Form.Attributes[i].Value"
+                               class="form-control" />
+
+                    </div>
+
+                    <div class="form-group">
+
+                        <label>
+                            <input asp-for="Form.Attributes[i].IsFilterable" />
+                            Фильтруемая
+                        </label>
+
+                    </div>
+
                 </div>
-                <button type="button" class="btn btn-ghost" data-dyn-add="attrs">+ Spec</button>
-            </div>
-        </section>
-    </div>
+            }
 
-    <div class="ap-edit__footer">
-        <button type="submit" class="btn btn-primary">@(Model.IsCreate ? "Create" : "Save")</button>
-        <a class="btn btn-ghost" asp-page="/Admin/Products">Cancel</a>
-    </div>
-</form>
+        </div>
 
-<template id="tpl-about">
-    <div class="ap-dyn__item" data-dyn-item>
-        <label>Заголовок
-            <input data-name="Title" />
-        </label>
-        <label>Текст
-            <textarea data-name="Description" rows="2"></textarea>
-        </label>
-        <button type="button" class="btn btn-ghost ap-dyn__remove" data-dyn-remove>Удалить</button>
-    </div>
-</template>
-<template id="tpl-attrs">
-    <div class="ap-dyn__item ap-dyn__item--row" data-dyn-item>
-        <label>Name
-            <input data-name="Name" />
-        </label>
-        <label>Value
-            <input data-name="Value" />
-        </label>
-        <label class="checkbox-row">
-            <input type="checkbox" data-name="IsFilterable" value="true" /> Filter
-        </label>
-        <button type="button" class="btn btn-ghost ap-dyn__remove" data-dyn-remove>×</button>
-    </div>
-</template>
 
-@functions {
-    void RenderCatOptions(Perry.Web.Pages.Admin.ProductsModel.CategoryNodeVm node)
-    {
-        var pad = new string('\u00A0', node.Depth * 3);
-        var prefix = node.Depth > 0 ? pad + "↳ " : "";
-        <option value="@node.Id">@prefix@node.Name</option>
-        foreach (var child in node.Children)
-        {
-            RenderCatOptions(child);
-        }
-    }
-}
+        <div class="form-actions">
+
+            <button type="submit"
+                    class="btn btn-primary">
+                Сохранить
+            </button>
+
+            <a asp-page="./Products"
+               class="btn btn-secondary">
+                Отмена
+            </a>
+
+        </div>
+
+    </form>
+
+</div>
 
 @section Scripts {
-<script>
-(function () {
-  function reindex(list, prefix) {
-    list.querySelectorAll('[data-dyn-item]').forEach(function (item, i) {
-      item.querySelectorAll('[data-name], input, textarea').forEach(function (el) {
-        var key = el.getAttribute('data-name');
-        if (!key) {
-          var m = (el.getAttribute('name') || '').match(/\.(\w+)$/);
-          key = m && m[1];
-        }
-        if (!key) return;
-        el.setAttribute('name', prefix + '[' + i + '].' + key);
-      });
-    });
-  }
 
-  document.querySelectorAll('[data-dyn-add]').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var kind = btn.getAttribute('data-dyn-add');
-      var root = btn.closest('[data-dyn]');
-      var list = root.querySelector('[data-dyn-list]');
-      var tpl = document.getElementById('tpl-' + (kind === 'about' ? 'about' : 'attrs'));
-      if (!tpl || !list) return;
-      list.appendChild(tpl.content.cloneNode(true));
-      var prefix = kind === 'about' ? 'Form.AboutItems' : 'Form.Attributes';
-      reindex(list, prefix);
-    });
-  });
+    <partial name="_ValidationScriptsPartial" />
 
-  document.addEventListener('click', function (e) {
-    var rm = e.target.closest('[data-dyn-remove]');
-    if (!rm) return;
-    var item = rm.closest('[data-dyn-item]');
-    var list = rm.closest('[data-dyn-list]');
-    var root = rm.closest('[data-dyn]');
-    if (!item || !list || list.children.length <= 1) return;
-    item.remove();
-    var kind = root.getAttribute('data-dyn');
-    reindex(list, kind === 'about' ? 'Form.AboutItems' : 'Form.Attributes');
-  });
-})();
-</script>
 }
