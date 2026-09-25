@@ -19,7 +19,7 @@ builder.Services.AddSwaggerGen(c =>
         Description =
             "REST for the Perry React storefront (:3000) and admin.\n\n" +
             "**Auth:** `POST /api/auth/login` → JWT Bearer.\n\n" +
-            "**Main groups:** auth, categories, products, reviews, cart, orders, wishlist, users, admin/reviews, notify."
+            "**Main groups:** auth, categories, products, reviews, cart, orders, wishlist, users, admin/reviews, admin/wishlist, notify."
     });
     // Nested records like CartController.AddRequest / WishlistController.AddRequest collide on schemaId.
     c.CustomSchemaIds(t => t.FullName?.Replace("+", ".") ?? t.Name);

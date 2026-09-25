@@ -248,6 +248,11 @@ public class ProductsController : ControllerBase
         var stats = await _stats.GetStatsAsync(id, cancellationToken);
         var viewCount = stats?.ViewCount ?? product.ViewCount;
         var orderCount = stats?.OrderCount ?? product.OrderCount;
+        var wishlistUserCount = await _db.WishlistItems.AsNoTracking()
+            .Where(w => w.ProductId == id)
+            .Select(w => w.UserId)
+            .Distinct()
+            .CountAsync(cancellationToken);
 
         var related = await _db.Products
             .AsNoTracking()
@@ -323,10 +328,12 @@ public class ProductsController : ControllerBase
             product.IsBestSeller,
             viewCount,
             orderCount,
+            wishlistUserCount,
             stats = new
             {
                 viewCount,
                 orderCount,
+                wishlistUserCount,
                 viewCounted
             },
             product.Category,
@@ -349,11 +356,18 @@ public class ProductsController : ControllerBase
         var stats = await _stats.GetStatsAsync(id, cancellationToken);
         if (stats is null) return NotFound();
 
+        var wishlistUserCount = await _db.WishlistItems.AsNoTracking()
+            .Where(w => w.ProductId == id)
+            .Select(w => w.UserId)
+            .Distinct()
+            .CountAsync(cancellationToken);
+
         return Ok(new
         {
             productId = id,
             viewCount = stats.Value.ViewCount,
-            orderCount = stats.Value.OrderCount
+            orderCount = stats.Value.OrderCount,
+            wishlistUserCount
         });
     }
 
