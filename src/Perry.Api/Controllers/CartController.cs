@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Perry.Api.Controllers;
 
-/// <summary>REST корзина (homework Api/CartController) — sessionId или userId.</summary>
+/// <summary>REST корзина — sessionId (гость) или JWT userId (игнор query userId).</summary>
 [ApiController]
 [Route("api/[controller]")]
 public class CartController : ControllerBase
@@ -21,10 +21,10 @@ public class CartController : ControllerBase
 
     [HttpGet]
     public async Task<IActionResult> Get(
-        [FromQuery] Guid? userId,
         [FromQuery] string? sessionId,
         CancellationToken ct)
     {
+        var userId = ResolveUserId();
         var items = await _cart.GetItemsAsync(userId, sessionId, ct);
         var total = await _cart.GetTotalAsync(userId, sessionId, ct);
         var count = await _cart.GetCountAsync(userId, sessionId, ct);
@@ -49,22 +49,24 @@ public class CartController : ControllerBase
 
     [HttpGet("count")]
     public async Task<IActionResult> Count(
-        [FromQuery] Guid? userId,
         [FromQuery] string? sessionId,
-        CancellationToken ct) =>
-        Ok(new { count = await _cart.GetCountAsync(userId, sessionId, ct) });
+        CancellationToken ct)
+    {
+        var userId = ResolveUserId();
+        return Ok(new { count = await _cart.GetCountAsync(userId, sessionId, ct) });
+    }
 
     public record AddRequest(Guid ProductId, int Quantity = 1);
 
     [HttpPost("add")]
     public async Task<IActionResult> Add(
         [FromBody] AddRequest body,
-        [FromQuery] Guid? userId,
         [FromQuery] string? sessionId,
         CancellationToken ct)
     {
+        var userId = ResolveUserId();
         if (userId is null && string.IsNullOrWhiteSpace(sessionId))
-            return BadRequest(new { error = "Укажите userId или sessionId." });
+            return BadRequest(new { error = "Укажите sessionId или авторизуйтесь (JWT)." });
 
         try
         {
@@ -82,10 +84,10 @@ public class CartController : ControllerBase
     [HttpPut("quantity")]
     public async Task<IActionResult> SetQuantity(
         [FromBody] QtyRequest body,
-        [FromQuery] Guid? userId,
         [FromQuery] string? sessionId,
         CancellationToken ct)
     {
+        var userId = ResolveUserId();
         try
         {
             await _cart.UpdateQuantityAsync(userId, sessionId, body.ProductId, body.Quantity, ct);
@@ -100,10 +102,10 @@ public class CartController : ControllerBase
     [HttpDelete("item/{productId:guid}")]
     public async Task<IActionResult> Remove(
         Guid productId,
-        [FromQuery] Guid? userId,
         [FromQuery] string? sessionId,
         CancellationToken ct)
     {
+        var userId = ResolveUserId();
         await _cart.RemoveAsync(userId, sessionId, productId, ct);
         return Ok(new { status = "Ok" });
     }
@@ -115,31 +117,42 @@ public class CartController : ControllerBase
     [HttpPost("merge")]
     public async Task<IActionResult> Merge([FromBody] MergeRequest body, CancellationToken ct)
     {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        if (!Guid.TryParse(raw, out var userId))
+        var userId = ResolveUserId();
+        if (userId is null)
             return Unauthorized();
 
         if (string.IsNullOrWhiteSpace(body.SessionId))
             return BadRequest(new { error = "sessionId required" });
 
-        await _cart.MergeGuestToUserAsync(body.SessionId, userId, ct);
+        await _cart.MergeGuestToUserAsync(body.SessionId, userId.Value, ct);
         return Ok(new { status = "Ok" });
     }
 
+    [Authorize]
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout(
-        [FromQuery] Guid userId,
         [FromQuery] string? sessionId,
         CancellationToken ct)
     {
+        var userId = ResolveUserId();
+        if (userId is null)
+            return Unauthorized();
+
         try
         {
-            var order = await _orders.CreateFromCartAsync(userId, sessionId, ct);
+            var order = await _orders.CreateFromCartAsync(userId.Value, sessionId, ct);
             return Ok(new { status = "Ok", orderId = order.Id, total = order.TotalAmount });
         }
         catch (Exception ex)
         {
             return BadRequest(new { error = ex.Message });
         }
+    }
+
+    /// <summary>UserId только из JWT; query userId намеренно игнорируется.</summary>
+    private Guid? ResolveUserId()
+    {
+        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
+        return Guid.TryParse(raw, out var id) ? id : null;
     }
 }

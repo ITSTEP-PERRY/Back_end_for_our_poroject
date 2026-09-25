@@ -45,6 +45,9 @@ public class AppDbContext : DbContext
     public DbSet<UserAccess> UserAccesses => Set<UserAccess>();
     public DbSet<UserRole> UserRoles => Set<UserRole>();
 
+    // --- Auth коды / токены (#15) ---
+    public DbSet<AuthToken> AuthTokens => Set<AuthToken>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // Подтягивает все IEntityTypeConfiguration<> из этой сборки

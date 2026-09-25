@@ -338,7 +338,11 @@ public class AuthController : ControllerBase
             await _email.SendEmailAsync(user.Email, "Perry password reset", $"Your reset token: {code}", ct);
         }
 
-        return Ok(new { status = "Ok" });
+        return Ok(new
+        {
+            status = "Ok",
+            message = "If an account exists for this email, we sent password reset instructions."
+        });
     }
 
     private object BuildAuthResponse(UserAccess access)

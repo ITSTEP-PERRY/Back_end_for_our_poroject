@@ -38,8 +38,9 @@ public static class DependencyInjection
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IUserService, UserService>();
         services.AddMemoryCache();
-        services.AddSingleton<IEmailCodeService, EmailCodeService>();
-        services.AddSingleton<IPasswordResetService, PasswordResetService>();
+        // #15: коды/токены в БД (scoped + AppDbContext), не MemoryCache
+        services.AddScoped<IEmailCodeService, EmailCodeService>();
+        services.AddScoped<IPasswordResetService, PasswordResetService>();
 
         // Пока SMTP-заглушка (код в лог). Позже Smtp:UseStub=false + App Password.
         var useStub = configuration.GetValue("Smtp:UseStub", true);
