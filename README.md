@@ -12,13 +12,15 @@
 | Файл | О чём |
 |------|--------|
 | [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) | Последовательность всей работы + запуск + бэклог |
-| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Карточки #1–#88 с доски Trello (как вели задачи) |
+| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Карточки Trello (актуальные статусы) |
 | [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Инструкция: Wishlist / Orders / Settings |
 | [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Инструкция: Forgot / Reset / Finishing |
 | [docs/SMTP-НАСТРОЙКА.md](./docs/SMTP-НАСТРОЙКА.md) | Stub → Gmail App Password |
 | [docs/РЕЧЬ-SMTP-ДЕМО.md](./docs/РЕЧЬ-SMTP-ДЕМО.md) | Речь на защиту (~1 мин) |
 | [docs/SMOKE-ЗАЩИТА.md](./docs/SMOKE-ЗАЩИТА.md) | Чеклист демо |
 | [docs/docker.md](./docs/docker.md) | docker compose + env |
+| [docs/ИЗМЕНЕНИЯ-2026-09-25.md](./docs/ИЗМЕНЕНИЯ-2026-09-25.md) | Срез 25.09: AuthTokens #15, lightbox, JWT cart |
+| [docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) | Срез 25.09: Admin Orders #93 (фильтры + compare %) |
 | [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
 | [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
 | [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
@@ -38,6 +40,19 @@ dotnet run --project src/Perry.Web --launch-profile http
 - API: `dotnet run --project src/Perry.Api` → `/swagger`
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
+
+## Срез 25.09.2026 — что сделано
+
+Ветка `feature/categories-facets-figma-storefront` (+ зеркало ITSTEP `Back_end_for_our_poroject`). Детали: [ИЗМЕНЕНИЯ-2026-09-25.md](./docs/ИЗМЕНЕНИЯ-2026-09-25.md), [ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md).
+
+| # | Что |
+|---|-----|
+| **#15** | Коды verify / reset-токены в таблице **`AuthTokens`** (не MemoryCache); миграция `AddAuthTokens` |
+| **#16** | Secure Forgot — единый ответ «если email есть — отправили» |
+| **#73** | `CartController`: `userId` только из JWT |
+| **#93** | **Admin Orders API:** статусы Ordered / Received / Shipped / ReadyToPickup / Cancelled / Returned; `GET /api/orders/admin?status=&fromUtc=&toUtc=&orderId=` → `statusCounts`, `totalOrders`, `totalAmount`, `totalOrderCompare`, `totalAmountCompare` |
+
+Фронт (perry-front): lightbox, empty catalog, social icons, Admin Orders UI под этот API.
 
 ## Спринт к защите (19.09.2026)
 
