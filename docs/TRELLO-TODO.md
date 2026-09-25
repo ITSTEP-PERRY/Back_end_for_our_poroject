@@ -197,6 +197,15 @@
 
 ---
 
+## Epic M. Product analytics & wishlist (сент. 2026)
+
+| # | Задача | Метки | Статус | Примечание |
+|---|--------|-------|--------|------------|
+| **90** | Product API: statistics (views / popular / orders) | BE | ✅ | Антиспам на GetById; `/products/popular`, `/products/{id}/stats` |
+| **91** | Product Wishlist: CRUD + admin stats по месяцам | FE BE Admin | ✅ | User: `/api/wishlist`; Admin: `/api/admin/wishlist/*` |
+
+---
+
 ## Рекомендуемый порядок для Trello (ближайший спринт)
 
 Перенесите в **To Do** в таком порядке:
