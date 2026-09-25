@@ -171,11 +171,11 @@ public class ProductsController : ControllerBase
             .ToListAsync(ct);
 
     /// <summary>
-    /// Partial product details :
-    /// GET /api/products/partial/{id}
+    /// product details for update:
+    /// GET /api/products/update/{id}
     /// </summary>
-    [HttpGet("partial/{id:guid}")]
-    public async Task<IActionResult> GetPartialById(Guid id, CancellationToken cancellationToken)
+    [HttpGet("update/{id:guid}")]
+    public async Task<IActionResult> GetForUpdateById(Guid id, CancellationToken cancellationToken)
     {
         var product = await _db.Products
             .AsNoTracking()
@@ -203,7 +203,7 @@ public class ProductsController : ControllerBase
                     .Select(i => new
                     {
                         i.Id, 
-                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                        i.Url, 
                         i.IsPrimary, 
                         i.IsVideo, 
                         i.AltText
@@ -401,7 +401,44 @@ public class ProductsController : ControllerBase
 
         return product is null ? NotFound() : Ok(product);
     }
-
+    
+    
+    [HttpGet("partial/{id}")]
+    public async Task<IActionResult> GetPartialById(Guid id, CancellationToken cancellationToken)
+        {
+            var product = await _db.Products
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Slug,
+                    p.Description,
+                    p.Sku,
+                    p.Brand,
+                    p.Price,
+                    p.OldPrice,
+                    p.StockQuantity,
+                    p.Status,
+                    p.AverageRating,
+                    p.ReviewCount,
+                    Images =  p.Images
+                        .Select(i => new
+                        {
+                            i.Id, 
+                            Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                            i.IsPrimary, 
+                            i.IsVideo, 
+                            i.AltText
+                        }),
+                    p.CategoryId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+    
+            return product is null ? NotFound() : Ok(product);
+        }
+    
     /// <summary>Фото/видео товара — URL в JSON вместе с продуктом (без multipart).</summary>
     public record ProductImageInput(
         string Url,
@@ -513,6 +550,7 @@ public class ProductsController : ControllerBase
         IReadOnlyList<ProductImageInput>? images,
         IReadOnlyList<string>? imageUrls)
     {
+        
         foreach (var img in NormalizeProductImages(images, imageUrls))
         {
             _db.ProductImages.Add(new Domain.Entities.ProductImage

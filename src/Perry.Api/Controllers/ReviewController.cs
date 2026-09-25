@@ -114,6 +114,7 @@ public class ReviewController: ControllerBase
     [HttpPost]
     public async Task<IActionResult> PostProductReview(PostReviewDto dto, CancellationToken ct)
     {
+        if(dto.Rating > 5 || dto.Rating <= 0) return BadRequest(dto);
         var userId = HttpContext.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();
         dto.UserId = new Guid(userId);
@@ -139,6 +140,17 @@ public class ReviewController: ControllerBase
         var userId = HttpContext.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
         if (userId == null) return Unauthorized();
         var result = await _reviewRepository.SetGrade(reviewId,new Guid(userId), ct);
+        if (result) return NoContent();
+        return NotFound();
+    }
+    
+    [HttpPost("report/{reviewId}")]
+    [Authorize]
+    public async Task<IActionResult> SetReport(Guid reviewId, CancellationToken ct)
+    {
+        var userId = HttpContext.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+        var result = await _reviewRepository.Report(reviewId,new Guid(userId), ct);
         if (result) return NoContent();
         return NotFound();
     }
