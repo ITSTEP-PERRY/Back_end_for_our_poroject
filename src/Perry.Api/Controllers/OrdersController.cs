@@ -60,25 +60,63 @@ public class OrdersController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpGet("admin")]
-    public async Task<IActionResult> All(CancellationToken ct)
+    public async Task<IActionResult> All(
+        [FromQuery] string? status,
+        [FromQuery] DateTime? fromUtc,
+        [FromQuery] DateTime? toUtc,
+        [FromQuery] string? orderId,
+        CancellationToken ct)
     {
-        var list = await _orders.GetAllAsync(ct);
-        return Ok(list.Select(o => new
+        OrderStatus? parsed = null;
+        if (!string.IsNullOrWhiteSpace(status))
         {
-            o.Id,
-            orderDateUtc = o.OrderDateUtc,
-            status = o.Status.ToString(),
-            totalAmount = o.TotalAmount,
-            itemsCount = o.Items.Count,
-            userName = o.User?.Name,
-            items = o.Items.Select(i => new
+            if (!Enum.TryParse<OrderStatus>(status, true, out var s))
+                return BadRequest(new
+                {
+                    error = "Неизвестный статус.",
+                    allowed = Enum.GetNames<OrderStatus>()
+                });
+            parsed = s;
+        }
+
+        var result = await _orders.GetAdminOrdersAsync(new AdminOrdersQuery
+        {
+            Status = parsed,
+            FromUtc = fromUtc,
+            ToUtc = toUtc,
+            OrderId = orderId
+        }, ct);
+
+        return Ok(new
+        {
+            items = result.Items.Select(o => new
             {
-                i.ProductId,
-                productName = i.ProductName,
-                i.Quantity,
-                unitPrice = i.ProductPrice
-            })
-        }));
+                o.Id,
+                orderDateUtc = o.OrderDateUtc,
+                status = o.Status.ToString(),
+                totalAmount = o.TotalAmount,
+                itemsCount = o.Items.Count,
+                userName = o.User?.Name,
+                items = o.Items.Select(i => new
+                {
+                    i.ProductId,
+                    productName = i.ProductName,
+                    i.Quantity,
+                    unitPrice = i.ProductPrice
+                })
+            }),
+            totalOrders = result.TotalOrders,
+            totalAmount = result.TotalAmount,
+            statusCounts = result.StatusCounts,
+            totalOrderCompare = result.TotalOrderCompare,
+            totalAmountCompare = result.TotalAmountCompare,
+            period = result.PeriodFromUtc is null && result.PeriodToUtc is null
+                ? null
+                : new { fromUtc = result.PeriodFromUtc, toUtc = result.PeriodToUtc },
+            comparePeriod = result.CompareFromUtc is null
+                ? null
+                : new { fromUtc = result.CompareFromUtc, toUtc = result.CompareToUtc }
+        });
     }
 
     [Authorize(Roles = "Admin")]

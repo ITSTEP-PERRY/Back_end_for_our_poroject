@@ -19,7 +19,7 @@ public class Order
 
     public int ItemsCount { get; set; }
 
-    public OrderStatus Status { get; set; } = OrderStatus.Completed;
+    public OrderStatus Status { get; set; } = OrderStatus.ReadyToPickup;
 
     /// <summary>Имя получателя (Account → Order details).</summary>
     public string? RecipientName { get; set; }
