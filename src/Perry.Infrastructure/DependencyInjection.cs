@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<IOrderService, OrderService>();
         services.AddScoped<IViewedProductsService, ViewedProductsService>();
         services.AddScoped<IProductService, ProductService>();
+        services.AddScoped<IProductStatisticsService, ProductStatisticsService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IUserService, UserService>();
         services.AddMemoryCache();

@@ -17,10 +17,17 @@ namespace Perry.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    private readonly IProductStatisticsService _stats;
+    private readonly IViewedProductsService _viewed;
 
-    public ProductsController(AppDbContext db)
+    public ProductsController(
+        AppDbContext db,
+        IProductStatisticsService stats,
+        IViewedProductsService viewed)
     {
         _db = db;
+        _stats = stats;
+        _viewed = viewed;
     }
 
     /// <summary>
@@ -167,8 +174,19 @@ public class ProductsController : ControllerBase
             .ToListAsync(ct);
 
     /// <summary>
+    /// Часто просматриваемые товары (по ViewCount).
+    /// GET /api/products/popular?take=10
+    /// </summary>
+    [HttpGet("popular")]
+    public async Task<IActionResult> GetPopular([FromQuery] int take = 10, CancellationToken cancellationToken = default)
+    {
+        var items = await _stats.GetMostViewedAsync(take, cancellationToken);
+        return Ok(new { take = items.Count, items });
+    }
+
+    /// <summary>
     /// Полная карточка товара для Product Page:
-    /// галерея, specs, about, категория.
+    /// галерея, specs, about, категория + учёт просмотра.
     /// GET /api/products/{id}
     /// </summary>
     [HttpGet("{id:guid}")]
@@ -194,6 +212,8 @@ public class ProductsController : ControllerBase
                 p.AverageRating,
                 p.ReviewCount,
                 p.IsBestSeller,
+                p.ViewCount,
+                p.OrderCount,
                 Category = new { p.Category.Id, p.Category.Name, p.Category.Slug },
                 Images = p.Images
                     .OrderBy(i => i.SortOrder)
@@ -222,6 +242,13 @@ public class ProductsController : ControllerBase
 
         if (product is null) return NotFound();
 
+        var viewCounted = await _stats.TryRecordViewAsync(id, clientKey: null, cancellationToken);
+        _viewed.AddViewedProduct(id);
+
+        var stats = await _stats.GetStatsAsync(id, cancellationToken);
+        var viewCount = stats?.ViewCount ?? product.ViewCount;
+        var orderCount = stats?.OrderCount ?? product.OrderCount;
+
         var related = await _db.Products
             .AsNoTracking()
             .Where(p => p.CategoryId == product.Category.Id
@@ -244,6 +271,8 @@ public class ProductsController : ControllerBase
                 p.AverageRating,
                 p.ReviewCount,
                 p.IsBestSeller,
+                p.ViewCount,
+                p.OrderCount,
                 p.Status,
                 ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.Url).FirstOrDefault()
                     ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
@@ -269,6 +298,8 @@ public class ProductsController : ControllerBase
                 p.AverageRating,
                 p.ReviewCount,
                 p.IsBestSeller,
+                p.ViewCount,
+                p.OrderCount,
                 p.Status,
                 ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.Url).FirstOrDefault()
                     ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
@@ -290,6 +321,14 @@ public class ProductsController : ControllerBase
             product.AverageRating,
             product.ReviewCount,
             product.IsBestSeller,
+            viewCount,
+            orderCount,
+            stats = new
+            {
+                viewCount,
+                orderCount,
+                viewCounted
+            },
             product.Category,
             product.Images,
             product.Attributes,
@@ -297,6 +336,24 @@ public class ProductsController : ControllerBase
             product.Reviews,
             related,
             saleRelated
+        });
+    }
+
+    /// <summary>
+    /// Статистика товара по Id (просмотры + заказы).
+    /// GET /api/products/{id}/stats
+    /// </summary>
+    [HttpGet("{id:guid}/stats")]
+    public async Task<IActionResult> GetStats(Guid id, CancellationToken cancellationToken)
+    {
+        var stats = await _stats.GetStatsAsync(id, cancellationToken);
+        if (stats is null) return NotFound();
+
+        return Ok(new
+        {
+            productId = id,
+            viewCount = stats.Value.ViewCount,
+            orderCount = stats.Value.OrderCount
         });
     }
 

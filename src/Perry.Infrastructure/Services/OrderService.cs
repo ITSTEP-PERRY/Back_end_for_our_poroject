@@ -122,6 +122,7 @@ public class OrderService : IOrderService
                 product.StockQuantity = 0;
                 product.Status = ProductStatus.OutOfStock;
             }
+            product.OrderCount += item.Quantity;
             product.UpdatedAtUtc = DateTime.UtcNow;
         }
 
