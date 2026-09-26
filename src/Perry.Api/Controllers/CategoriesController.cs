@@ -27,12 +27,17 @@ public class CategoriesController : ControllerBase
     /// <summary>
     /// Полное дерево категорий (все уровни).
     /// GET /api/categories
+    /// GET /api/categories?includeInactive=true — Admin (наша /admin).
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetTree(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetTree(
+        [FromQuery] bool includeInactive = false,
+        CancellationToken cancellationToken = default)
     {
-        var all = await GetAllCategoryNodes(cancellationToken);
+        if (includeInactive && !User.IsInRole("Admin"))
+            return Forbid();
 
+        var all = await GetCategoryNodes(includeInactive, cancellationToken);
         return Ok(BuildTree(all, null));
     }
 
@@ -40,11 +45,13 @@ public class CategoriesController : ControllerBase
         Guid Id, string Name, string Slug, string? Description, string? ImageUrl, string? IconUrl,
         bool IsActive, int SortOrder, Guid? ParentCategoryId);
 
-    private async Task<List<CategoryNode>> GetAllCategoryNodes(CancellationToken cancellationToken)
+    private async Task<List<CategoryNode>> GetCategoryNodes(bool includeInactive, CancellationToken cancellationToken)
     {
-        return await _db.Categories
-            .AsNoTracking()
-            .Where(c => c.IsActive)
+        var query = _db.Categories.AsNoTracking().AsQueryable();
+        if (!includeInactive)
+            query = query.Where(c => c.IsActive);
+
+        return await query
             .OrderBy(c => c.SortOrder)
             .ThenBy(c => c.Name)
             .Select(c => new CategoryNode(
