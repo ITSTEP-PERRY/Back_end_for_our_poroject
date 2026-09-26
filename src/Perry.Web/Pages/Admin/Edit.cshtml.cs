@@ -39,6 +39,7 @@ public class EditModel : PageModel
 
     public List<Category> Categories { get; private set; } = [];
     public List<ProductsModel.CategoryNodeVm> CategoryTree { get; private set; } = [];
+    public List<CategorySelectOption> CategorySelectOptions { get; private set; } = [];
     public string? Message { get; set; }
     public string? Error { get; set; }
     public List<string> CurrentImageUrls { get; private set; } = [];
@@ -241,6 +242,21 @@ public class EditModel : PageModel
             .ToListAsync(ct);
 
         CategoryTree = BuildTree(Categories, null, 0);
+        CategorySelectOptions = [];
+        FlattenCategoryTree(CategoryTree, CategorySelectOptions);
+    }
+
+    private static void FlattenCategoryTree(
+        IEnumerable<ProductsModel.CategoryNodeVm> nodes,
+        List<CategorySelectOption> target)
+    {
+        foreach (var node in nodes)
+        {
+            var pad = new string('\u00A0', node.Depth * 3);
+            var prefix = node.Depth > 0 ? pad + "↳ " : "";
+            target.Add(new CategorySelectOption { Id = node.Id, Label = prefix + node.Name });
+            FlattenCategoryTree(node.Children, target);
+        }
     }
 
     private static List<ProductsModel.CategoryNodeVm> BuildTree(List<Category> all, Guid? parentId, int depth) =>
@@ -253,6 +269,12 @@ public class EditModel : PageModel
                 Children = BuildTree(all, c.Id, depth + 1)
             })
             .ToList();
+
+    public sealed class CategorySelectOption
+    {
+        public Guid Id { get; init; }
+        public string Label { get; init; } = string.Empty;
+    }
 
     public class ProductEditForm
     {

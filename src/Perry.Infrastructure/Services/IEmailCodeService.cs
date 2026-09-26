@@ -1,6 +1,6 @@
 namespace Perry.Infrastructure.Services;
 
-/// <summary>Генерация, хранение и проверка 6-значного кода подтверждения email (10 минут).</summary>
+/// <summary>Генерация, хранение и проверка 6-значного кода подтверждения email (10 минут, БД).</summary>
 public interface IEmailCodeService
 {
     string GenerateCode(string email);

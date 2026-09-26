@@ -1,29 +1,20 @@
+using System.Security.Claims;
 using Perry.Domain.Entities;
-using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
 using Perry.Web.Extensions;
-using Perry.Web.Middleware;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace Perry.Web.Pages.Account;
 
-/// <summary>Профиль покупателя — homework User/Profile (view + edit + soft-delete).</summary>
+/// <summary>Профиль покупателя (read-only из claims; редактирование — Auth Service + React).</summary>
 public class ProfileModel : PageModel
 {
-    private readonly AppDbContext _db;
     private readonly IOrderService _orders;
-    private readonly IUserService _users;
 
-    public ProfileModel(AppDbContext db, IOrderService orders, IUserService users)
-    {
-        _db = db;
-        _orders = orders;
-        _users = users;
-    }
+    public ProfileModel(IOrderService orders) => _orders = orders;
 
-    public User? Account { get; private set; }
+    public ProfileAccountView? Account { get; private set; }
     public string? LoginName { get; private set; }
     public string? RoleId { get; private set; }
     public IReadOnlyList<Order> RecentOrders { get; private set; } = [];
@@ -42,43 +33,22 @@ public class ProfileModel : PageModel
         return await LoadAsync(ct) ?? Page();
     }
 
-    public async Task<IActionResult> OnPostUpdateAsync(CancellationToken ct)
+    public Task<IActionResult> OnPostUpdateAsync(CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
-        if (userId is null)
-            return RedirectToPage("/Account/Login", new { returnUrl = "/Account/Profile" });
-
-        try
-        {
-            await _users.UpdateAsync(userId.Value, EditName, EditEmail, ct);
-            Message = "Профиль обновлён.";
-        }
-        catch (Exception ex)
-        {
-            Error = ex.Message;
-        }
-
-        return await LoadAsync(ct) ?? Page();
+        Error =
+            "Изменение профиля перенесено в Perry Auth Service и React-приложение.";
+        return LoadAndPageAsync(ct);
     }
 
-    public async Task<IActionResult> OnPostDeleteAsync(CancellationToken ct)
+    public Task<IActionResult> OnPostDeleteAsync(CancellationToken ct)
     {
-        var userId = HttpContext.GetUserId();
-        if (userId is null)
-            return RedirectToPage("/Account/Login");
-
-        try
-        {
-            await _users.SoftDeleteAsync(userId.Value, ct);
-            HttpContext.Session.Remove(AuthSessionMiddleware.SessionKey);
-            return RedirectToPage("/Index");
-        }
-        catch (Exception ex)
-        {
-            Error = ex.Message;
-            return await LoadAsync(ct) ?? Page();
-        }
+        Error =
+            "Удаление аккаунта перенесено в Perry Auth Service и React-приложение.";
+        return LoadAndPageAsync(ct);
     }
+
+    private async Task<IActionResult> LoadAndPageAsync(CancellationToken ct) =>
+        await LoadAsync(ct) ?? Page();
 
     private async Task<IActionResult?> LoadAsync(CancellationToken ct)
     {
@@ -86,20 +56,31 @@ public class ProfileModel : PageModel
         if (userId is null)
             return RedirectToPage("/Account/Login", new { returnUrl = "/Account/Profile" });
 
-        Account = await _users.GetByIdAsync(userId.Value, ct);
-        if (Account is null)
-            return NotFound();
+        var principal = HttpContext.User;
+        var name = principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
+        var email = principal.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+        LoginName = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        RoleId = principal.FindFirstValue(ClaimTypes.Role);
 
-        var access = await _db.UserAccesses.AsNoTracking()
-            .FirstOrDefaultAsync(a => a.UserId == userId, ct);
-        LoginName = access?.Login;
-        RoleId = access?.RoleId;
-        EditName = Account.Name;
-        EditEmail = Account.Email;
+        Account = new ProfileAccountView
+        {
+            Name = name,
+            Email = email,
+            RegisteredAtUtc = null
+        };
+        EditName = name;
+        EditEmail = email;
 
         var orders = await _orders.GetUserOrdersAsync(userId.Value, ct);
         TotalOrders = orders.Count;
         RecentOrders = orders.Take(5).ToList();
         return null;
+    }
+
+    public sealed class ProfileAccountView
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public DateTime? RegisteredAtUtc { get; set; }
     }
 }

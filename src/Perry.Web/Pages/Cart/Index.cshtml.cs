@@ -72,7 +72,8 @@ public class IndexModel : PageModel
         try
         {
             var sid = HttpContext.Request.Cookies[HttpContextCartExtensions.GuestCookieName];
-            var order = await _orders.CreateFromCartAsync(userId.Value, sid, ct);
+            var recipientName = HttpContext.User.Identity?.Name;
+            var order = await _orders.CreateFromCartAsync(userId.Value, sid, recipientName, ct);
             return RedirectToPage("/Orders/Details", new { id = order.Id });
         }
         catch (Exception ex)
