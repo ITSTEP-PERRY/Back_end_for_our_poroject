@@ -43,9 +43,9 @@
                 <label>Категория *
                     <select asp-for="Form.CategoryId" required class="ap-cat-select">
                         <option value="">— выберите —</option>
-                        @foreach (var root in Model.CategoryTree)
+                        @foreach (var opt in Model.CategorySelectOptions)
                         {
-                            @RenderCatOptions(root)
+                            <option value="@opt.Id">@opt.Label</option>
                         }
                     </select>
                 </label>
@@ -160,19 +160,6 @@
         <button type="button" class="btn btn-ghost ap-dyn__remove" data-dyn-remove>×</button>
     </div>
 </template>
-
-@functions {
-    void RenderCatOptions(Perry.Web.Pages.Admin.ProductsModel.CategoryNodeVm node)
-    {
-        var pad = new string('\u00A0', node.Depth * 3);
-        var prefix = node.Depth > 0 ? pad + "↳ " : "";
-        <option value="@node.Id">@prefix@node.Name</option>
-        foreach (var child in node.Children)
-        {
-            RenderCatOptions(child);
-        }
-    }
-}
 
 @section Scripts {
 <script>

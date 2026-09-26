@@ -3,15 +3,14 @@ using Perry.Domain.Enums;
 namespace Perry.Domain.Entities;
 
 /// <summary>
-/// Заказ покупателя (из homework Order + под Figma Admin Order).
+/// Заказ покупателя. UserId — из Auth Service (JWT), без локальной таблицы Users (#94).
 /// </summary>
 public class Order
 {
     public Guid Id { get; set; }
 
+    /// <summary>Id пользователя из Perry Auth JWT.</summary>
     public Guid UserId { get; set; }
-
-    public User User { get; set; } = null!;
 
     public DateTime OrderDateUtc { get; set; } = DateTime.UtcNow;
 
@@ -21,13 +20,11 @@ public class Order
 
     public OrderStatus Status { get; set; } = OrderStatus.ReadyToPickup;
 
-    /// <summary>Имя получателя (Account → Order details).</summary>
+    /// <summary>Имя получателя (из JWT claims или клиента).</summary>
     public string? RecipientName { get; set; }
 
-    /// <summary>Адрес доставки.</summary>
     public string? ShippingAddress { get; set; }
 
-    /// <summary>Способ оплаты (Cash, Card, …).</summary>
     public string? PaymentType { get; set; }
 
     public DateTime? CompletedAtUtc { get; set; }

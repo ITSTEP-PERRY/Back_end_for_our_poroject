@@ -1,76 +1,26 @@
-using Perry.Infrastructure.Persistence;
-using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.EntityFrameworkCore;
 
 namespace Perry.Web.Pages.Account;
 
-/// <summary>Forgot password — единый ответ без user enumeration.</summary>
+/// <summary>Deprecated: сброс пароля через Perry Auth Service + React FE.</summary>
 public class ForgotPasswordModel : PageModel
 {
-    private readonly AppDbContext _db;
-    private readonly IPasswordResetService _reset;
-    private readonly IEmailSender _emailSender;
-    private readonly IConfiguration _configuration;
-
-    public ForgotPasswordModel(
-        AppDbContext db,
-        IPasswordResetService reset,
-        IEmailSender emailSender,
-        IConfiguration configuration)
-    {
-        _db = db;
-        _reset = reset;
-        _emailSender = emailSender;
-        _configuration = configuration;
-    }
+    public const string StubMessage =
+        "Восстановление пароля перенесено в Perry Auth Service и React-приложение.";
 
     [BindProperty]
     public string Email { get; set; } = string.Empty;
 
+    public string Notice { get; } = StubMessage;
     public bool EmailInvalid { get; set; }
-
     public bool Submitted { get; set; }
-
     public string? DevResetHint { get; set; }
 
     public void OnGet() { }
 
-    public async Task<IActionResult> OnPostAsync(CancellationToken ct)
+    public IActionResult OnPost()
     {
-        var email = (Email ?? string.Empty).Trim();
-        Email = email;
-
-        if (string.IsNullOrWhiteSpace(email)
-            || !email.Contains('@')
-            || email.IndexOf('@') <= 0
-            || email.IndexOf('@') >= email.Length - 1)
-        {
-            EmailInvalid = true;
-            return Page();
-        }
-
-        var user = await _db.Users.AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Email == email && u.DeletedAtUtc == null, ct);
-
-        // Письмо/токен только если email найден; клиенту всегда один и тот же успех.
-        if (user is not null)
-        {
-            var token = _reset.CreateToken(user.Email);
-            var resetUrl =
-                $"{Request.Scheme}://{Request.Host}{Url.Page("/Account/ResetPassword", new { token })}";
-
-            await _emailSender.SendEmailAsync(
-                user.Email,
-                "Perry password reset",
-                $"Reset your password: {resetUrl}",
-                ct);
-
-            if (_configuration.GetValue("Smtp:UseStub", true))
-                DevResetHint = resetUrl;
-        }
-
         Submitted = true;
         return Page();
     }

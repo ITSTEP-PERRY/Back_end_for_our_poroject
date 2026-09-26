@@ -1,31 +1,19 @@
-using Perry.Infrastructure.Services;
 using Perry.Web.Filters;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace Perry.Web.Pages.Admin;
 
-/// <summary>Список пользователей — Figma Admin User + homework Users.</summary>
+/// <summary>Deprecated: управление пользователями — Perry Auth Service + React FE.</summary>
 [AdminOnly]
 public class UsersModel : PageModel
 {
-    private readonly IUserService _users;
-
-    public UsersModel(IUserService users) => _users = users;
+    public string Notice { get; } =
+        "Список пользователей и роли управляются в Perry Auth Service и React-приложении. Данные здесь не отображаются.";
 
     public IReadOnlyList<UserRow> Rows { get; private set; } = [];
 
-    public async Task OnGetAsync(CancellationToken ct)
+    public void OnGet()
     {
-        var list = await _users.GetAllAsync(ct);
-        Rows = list.Select(u => new UserRow
-        {
-            Id = u.Id,
-            Name = u.Name,
-            Email = u.Email,
-            Login = u.Accesses.FirstOrDefault()?.Login ?? "—",
-            Role = u.Accesses.FirstOrDefault()?.RoleId ?? "—",
-            RegisteredAtUtc = u.RegisteredAtUtc
-        }).ToList();
     }
 
     public class UserRow

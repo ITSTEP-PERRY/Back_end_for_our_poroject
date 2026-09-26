@@ -15,12 +15,8 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.RecipientName).HasMaxLength(200);
         builder.Property(x => x.ShippingAddress).HasMaxLength(500);
         builder.Property(x => x.PaymentType).HasMaxLength(50);
+        // UserId without FK — users live in Auth Service (#94)
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => x.OrderDateUtc);
-
-        builder.HasOne(x => x.User)
-            .WithMany()
-            .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }

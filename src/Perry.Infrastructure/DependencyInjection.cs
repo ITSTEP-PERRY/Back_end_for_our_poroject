@@ -36,7 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IProductStatisticsService, ProductStatisticsService>();
         services.AddScoped<ICategoryService, CategoryService>();
-        services.AddScoped<IUserService, UserService>();
+        // IUserService удалён (#94) — пользователи в Auth Service
         services.AddMemoryCache();
         // #15: коды/токены в БД (scoped + AppDbContext), не MemoryCache
         services.AddScoped<IEmailCodeService, EmailCodeService>();

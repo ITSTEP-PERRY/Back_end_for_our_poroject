@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Perry.Api.Auth;
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +21,7 @@ public class OrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Mine(CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         var list = await _orders.GetUserOrdersAsync(userId.Value, ct);
@@ -32,7 +32,7 @@ public class OrdersController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ById(Guid id, CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         var isAdmin = User.IsInRole("Admin");
@@ -44,12 +44,16 @@ public class OrdersController : ControllerBase
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout([FromBody] CheckoutRequest body, CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         try
         {
-            var order = await _orders.CreateFromCartAsync(userId.Value, body.SessionId, ct);
+            var order = await _orders.CreateFromCartAsync(
+                userId.Value,
+                body.SessionId,
+                AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
+                ct);
             return Ok(MapOrder(order));
         }
         catch (Exception ex)
@@ -96,7 +100,8 @@ public class OrdersController : ControllerBase
                 status = o.Status.ToString(),
                 totalAmount = o.TotalAmount,
                 itemsCount = o.Items.Count,
-                userName = o.User?.Name,
+                userId = o.UserId,
+                userName = o.RecipientName,
                 items = o.Items.Select(i => new
                 {
                     i.ProductId,
@@ -133,12 +138,13 @@ public class OrdersController : ControllerBase
     private static object MapOrder(Domain.Entities.Order o) => new
     {
         o.Id,
+        userId = o.UserId,
         orderDateUtc = o.OrderDateUtc,
         status = o.Status.ToString(),
         totalAmount = o.TotalAmount,
         itemsCount = o.ItemsCount > 0 ? o.ItemsCount : o.Items.Count,
-        userName = o.User?.Name,
-        recipientName = o.RecipientName ?? o.User?.Name,
+        userName = o.RecipientName,
+        recipientName = o.RecipientName,
         shippingAddress = o.ShippingAddress,
         paymentType = o.PaymentType ?? "Cash",
         items = o.Items.Select(i => new
@@ -152,10 +158,4 @@ public class OrdersController : ControllerBase
             imageUrl = i.ProductImageUrl
         })
     };
-
-    private Guid? GetUserId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(raw, out var id) ? id : null;
-    }
 }

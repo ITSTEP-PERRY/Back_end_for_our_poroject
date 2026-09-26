@@ -1,13 +1,11 @@
 using System.Security.Claims;
 using System.Text.Json;
-using Perry.Domain.Entities;
 
 namespace Perry.Web.Middleware;
 
 /// <summary>
-/// Session-auth из homework: читает UserAccess из Session["SignIn"]
-/// и строит ClaimsPrincipal (Role = Admin и т.д.).
-/// ?logout=1 — выход.
+/// Читает JSON-сессию Session["SignIn"] (UserAccessSessionDto) и строит ClaimsPrincipal.
+/// ?logout=1 — выход. Источник пользователей — Perry Auth Service; DTO только для legacy session JSON.
 /// </summary>
 public class AuthSessionMiddleware
 {

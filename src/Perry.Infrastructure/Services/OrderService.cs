@@ -12,7 +12,8 @@ public interface IOrderService
     Task<Order?> GetByIdAsync(Guid orderId, Guid? userId = null, CancellationToken ct = default);
     Task<IReadOnlyList<Order>> GetAllAsync(CancellationToken ct = default);
     Task<AdminOrdersResult> GetAdminOrdersAsync(AdminOrdersQuery query, CancellationToken ct = default);
-    Task<Order> CreateFromCartAsync(Guid userId, string? sessionId, CancellationToken ct = default);
+    /// <param name="recipientName">Имя из JWT claims Auth Service (опционально).</param>
+    Task<Order> CreateFromCartAsync(Guid userId, string? sessionId, string? recipientName = null, CancellationToken ct = default);
     Task UpdateStatusAsync(Guid orderId, OrderStatus status, CancellationToken ct = default);
     /// <summary>Повторить заказ: очистить корзину и добавить позиции снова (homework RepeatOrder).</summary>
     Task RepeatOrderAsync(Guid userId, Guid orderId, CancellationToken ct = default);
@@ -55,14 +56,13 @@ public class OrderService : IOrderService
         await _db.Orders
             .AsNoTracking()
             .Include(o => o.Items)
-            .Include(o => o.User)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.OrderDateUtc)
             .ToListAsync(ct);
 
     public async Task<Order?> GetByIdAsync(Guid orderId, Guid? userId = null, CancellationToken ct = default)
     {
-        var q = _db.Orders.AsNoTracking().Include(o => o.Items).Include(o => o.User).AsQueryable();
+        var q = _db.Orders.AsNoTracking().Include(o => o.Items).AsQueryable();
         if (userId.HasValue)
             q = q.Where(o => o.UserId == userId);
 
@@ -72,7 +72,6 @@ public class OrderService : IOrderService
     public async Task<IReadOnlyList<Order>> GetAllAsync(CancellationToken ct = default) =>
         await _db.Orders
             .AsNoTracking()
-            .Include(o => o.User)
             .Include(o => o.Items)
             .OrderByDescending(o => o.OrderDateUtc)
             .Take(200)
@@ -80,7 +79,7 @@ public class OrderService : IOrderService
 
     public async Task<AdminOrdersResult> GetAdminOrdersAsync(AdminOrdersQuery query, CancellationToken ct = default)
     {
-        var baseQ = _db.Orders.AsNoTracking().Include(o => o.User).Include(o => o.Items).AsQueryable();
+        var baseQ = _db.Orders.AsNoTracking().Include(o => o.Items).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query.OrderId))
         {
@@ -176,7 +175,11 @@ public class OrderService : IOrderService
         return Math.Round((current - previous) / previous * 100.0, 2);
     }
 
-    public async Task<Order> CreateFromCartAsync(Guid userId, string? sessionId, CancellationToken ct = default)
+    public async Task<Order> CreateFromCartAsync(
+        Guid userId,
+        string? sessionId,
+        string? recipientName = null,
+        CancellationToken ct = default)
     {
         var items = await _cart.GetItemsAsync(userId, sessionId, ct);
         if (items.Count == 0)
@@ -199,8 +202,6 @@ public class OrderService : IOrderService
                     $"Недостаточно «{product.Name}». Доступно: {product.StockQuantity}.");
         }
 
-        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
-
         var order = new Order
         {
             Id = Guid.NewGuid(),
@@ -209,7 +210,7 @@ public class OrderService : IOrderService
             TotalAmount = items.Sum(i => i.Quantity * i.Product.Price),
             ItemsCount = items.Sum(i => i.Quantity),
             Status = OrderStatus.Ordered,
-            RecipientName = user?.Name,
+            RecipientName = string.IsNullOrWhiteSpace(recipientName) ? null : recipientName.Trim(),
             ShippingAddress = "Canada, Ontario, Something Street, 1919",
             PaymentType = "Cash",
             CreatedAtUtc = DateTime.UtcNow

@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Perry.Api.Auth;
 using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -140,7 +140,11 @@ public class CartController : ControllerBase
 
         try
         {
-            var order = await _orders.CreateFromCartAsync(userId.Value, sessionId, ct);
+            var order = await _orders.CreateFromCartAsync(
+                userId.Value,
+                sessionId,
+                AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
+                ct);
             return Ok(new { status = "Ok", orderId = order.Id, total = order.TotalAmount });
         }
         catch (Exception ex)
@@ -149,10 +153,6 @@ public class CartController : ControllerBase
         }
     }
 
-    /// <summary>UserId только из JWT; query userId намеренно игнорируется.</summary>
-    private Guid? ResolveUserId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(raw, out var id) ? id : null;
-    }
+    /// <summary>UserId только из JWT Auth Service (#94).</summary>
+    private Guid? ResolveUserId() => AuthClaims.GetUserId(User);
 }

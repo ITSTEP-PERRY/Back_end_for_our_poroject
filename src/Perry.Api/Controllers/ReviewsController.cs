@@ -1,7 +1,7 @@
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Auth;
 using Perry.Domain.Entities;
 using Perry.Infrastructure.Persistence;
 
@@ -27,7 +27,7 @@ public class ReviewsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create(Guid productId, [FromBody] CreateReviewRequest body, CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         if (body.Rating is < 1 or > 5)
@@ -38,10 +38,9 @@ public class ReviewsController : ControllerBase
         var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == productId, ct);
         if (product is null) return NotFound(new { error = "Product not found." });
 
-        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
-        var author = string.IsNullOrWhiteSpace(user?.Name)
-            ? (user?.Email ?? "Customer")
-            : user!.Name;
+        var author = AuthClaims.GetDisplayName(User)
+            ?? AuthClaims.GetEmail(User)
+            ?? "Customer";
 
         var reviewId = Guid.NewGuid();
         var review = new ProductReview
@@ -107,11 +106,5 @@ public class ReviewsController : ControllerBase
             tags = body.Tags ?? Array.Empty<string>(),
             images = body.ImageUrls ?? Array.Empty<string>()
         });
-    }
-
-    private Guid? GetUserId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(raw, out var id) ? id : null;
     }
 }
