@@ -14,5 +14,6 @@ public record ProductReviewGrade
     public ProductReview Review { get; set; } = null!;
     
     public bool IsHelpful { get; set; }
+    public bool Reported { get; set; }
     
 };

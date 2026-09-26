@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace Perry.Domain.Entities;
 
 /// <summary>
@@ -41,4 +43,9 @@ public record ProductReview
     
     /// <summary>Grades by another users for current review</summary>
     public ICollection<ProductReviewGrade> Grades { get; set; } = new List<ProductReviewGrade>();
+    
+    [NotMapped]
+    public int TotalHelpful { get; set; }
+    [NotMapped]
+    public int TotalReported { get; set; }
 }

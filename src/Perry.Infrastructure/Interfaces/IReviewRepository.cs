@@ -13,4 +13,5 @@ public interface IReviewRepository
     public Task<Result> PostProductReview(PostReviewDto dto, CancellationToken cancellationToken);
     public Task<Result> SetApproveReview (Guid reviewId, CancellationToken cancellationToken);
     public Task<Result> SetGrade(Guid reviewId,Guid userId, CancellationToken cancellationToken);
+    public Task<Result> Report(Guid reviewId,Guid userId, CancellationToken cancellationToken);
 }
