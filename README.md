@@ -21,6 +21,11 @@
 | [docs/docker.md](./docs/docker.md) | docker compose + env |
 | [docs/ИЗМЕНЕНИЯ-2026-09-25.md](./docs/ИЗМЕНЕНИЯ-2026-09-25.md) | Срез 25.09: AuthTokens #15, lightbox, JWT cart |
 | [docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) | Срез 25.09: Admin Orders #93 (фильтры + compare %) |
+| [docs/ИЗМЕНЕНИЯ-2026-09-26.md](./docs/ИЗМЕНЕНИЯ-2026-09-26.md) | Срез 26.09: #94 без Users, FE→Auth |
+| [docs/ОТЧЁТ-2026-09-26.md](./docs/ОТЧЁТ-2026-09-26.md) | Подробный отчёт + конфликт фронт-архитектур |
+| [docs/AUTH-INTEGRATION.md](./docs/AUTH-INTEGRATION.md) | Auth Service ↔ Product API ↔ FE |
+| [docs/ВОПРОСЫ-КОМАНДЕ.md](./docs/ВОПРОСЫ-КОМАНДЕ.md) | Вопросы Владу / Яне / Product |
+| [docs/СВЕСТИ-ДВЕ-ЛИНИИ.md](./docs/СВЕСТИ-ДВЕ-ЛИНИИ.md) | Figma-порт vs архитектура Яны |
 | [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
 | [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
 | [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
