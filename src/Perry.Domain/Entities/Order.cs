@@ -21,6 +21,15 @@ public class Order
 
     public OrderStatus Status { get; set; } = OrderStatus.Completed;
 
+    /// <summary>Имя получателя (Account → Order details).</summary>
+    public string? RecipientName { get; set; }
+
+    /// <summary>Адрес доставки.</summary>
+    public string? ShippingAddress { get; set; }
+
+    /// <summary>Способ оплаты (Cash, Card, …).</summary>
+    public string? PaymentType { get; set; }
+
     public DateTime? CompletedAtUtc { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;

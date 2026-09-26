@@ -35,6 +35,222 @@ public static class DbSeeder
 
         await EnsureCatalogFilterAttributesAsync(db);
         await EnsureProductPageDemoAsync(db);
+        await EnsureShopLooksAliveAsync(db);
+    }
+
+    /// <summary>
+    /// Категорийные фото + тематические картинки товаров + случайные отзывы,
+    /// чтобы витрина выглядела как живой магазин (для уже существующей БД тоже).
+    /// </summary>
+    private static async Task EnsureShopLooksAliveAsync(AppDbContext db)
+    {
+        var changed = false;
+
+        var categories = await db.Categories.ToListAsync();
+        foreach (var c in categories)
+        {
+            var urls = CategoryVisuals(c.Slug, c.Name);
+            if (string.IsNullOrWhiteSpace(c.ImageUrl))
+            {
+                c.ImageUrl = urls.Image;
+                changed = true;
+            }
+            if (string.IsNullOrWhiteSpace(c.IconUrl))
+            {
+                c.IconUrl = urls.Icon;
+                changed = true;
+            }
+            if (string.IsNullOrWhiteSpace(c.Description))
+            {
+                c.Description = $"Shop {c.Name} at Perry — curated picks and everyday essentials.";
+                changed = true;
+            }
+        }
+
+        var products = await db.Products
+            .Include(p => p.Images)
+            .Include(p => p.Reviews).ThenInclude(r => r.Tags)
+            .Include(p => p.Category)
+            .ToListAsync();
+
+        foreach (var p in products)
+        {
+            var theme = ImageThemeFor(p);
+            if (p.Images.Count == 0)
+            {
+                AddImages(db, p.Id, theme);
+                changed = true;
+            }
+            else
+            {
+                // Заменяем «пустые» picsum без темы категории на более узнаваемые seed-URL.
+                foreach (var img in p.Images.OrderBy(i => i.SortOrder).Take(4))
+                {
+                    if (string.IsNullOrWhiteSpace(img.Url) || img.Url.Contains("picsum.photos/seed/" + theme, StringComparison.Ordinal))
+                        continue;
+                    if (img.Url.Contains("picsum.photos", StringComparison.OrdinalIgnoreCase)
+                        && !img.Url.Contains($"seed/{theme}", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var idx = img.SortOrder;
+                        img.Url = $"https://picsum.photos/seed/{theme}{idx}/640/640";
+                        img.AltText = theme;
+                        changed = true;
+                    }
+                }
+            }
+
+            if (p.Reviews.Count < 4)
+            {
+                var need = 4 + (Math.Abs(p.Sku.GetHashCode()) % 5); // 4..8
+                var toAdd = need - p.Reviews.Count;
+                for (var i = 0; i < toAdd; i++)
+                {
+                    var review = RandomReview(p.Id, theme, p.Reviews.Count + i);
+                    db.ProductReviews.Add(review);
+                    p.Reviews.Add(review);
+                    foreach (var tag in review.Tags)
+                        db.ProductReviewTags.Add(tag);
+                    if (review.Images.Count > 0)
+                    {
+                        foreach (var img in review.Images)
+                            db.ProductReviewImages.Add(img);
+                    }
+                }
+                changed = true;
+            }
+
+            // Синхронизируем счётчики с реальными одобренными отзывами (витрина + карточка).
+            var approved = p.Reviews.Where(r => r.IsApproved).ToList();
+            if (approved.Count > 0)
+            {
+                var avg = Math.Round((decimal)approved.Average(r => r.Rating), 1);
+                if (p.AverageRating != avg || p.ReviewCount < approved.Count)
+                {
+                    p.AverageRating = avg;
+                    // Оставляем «маркетинговый» объём, но не ниже реальных отзывов.
+                    p.ReviewCount = Math.Max(p.ReviewCount, approved.Count);
+                    changed = true;
+                }
+            }
+        }
+
+        if (changed)
+            await db.SaveChangesAsync();
+    }
+
+    private static (string Image, string Icon) CategoryVisuals(string slug, string name)
+    {
+        // Стабильные Unsplash-URL (crop) — разные «витринные» фото по тематике.
+        var key = (slug ?? name).ToLowerInvariant();
+        if (key.Contains("electronic") || key.Contains("pc") || key.Contains("accessories"))
+            return (
+                "https://images.unsplash.com/photo-1498049794561-7780e7231661?auto=format&fit=crop&w=640&h=640&q=80",
+                "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=128&h=128&q=80");
+        if (key.Contains("stream"))
+            return (
+                "https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?auto=format&fit=crop&w=640&h=640&q=80",
+                "https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=128&h=128&q=80");
+        if (key.Contains("fashion") || key.Contains("women") || key.Contains("casual") || key.Contains("shirt") || key.Contains("tee") || key.Contains("top"))
+            return (
+                "https://images.unsplash.com/photo-1445205170230-053b83016050?auto=format&fit=crop&w=640&h=640&q=80",
+                "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=128&h=128&q=80");
+        return (
+            $"https://picsum.photos/seed/cat-{SanitizeSeed(key)}/640/640",
+            $"https://picsum.photos/seed/icon-{SanitizeSeed(key)}/128/128");
+    }
+
+    private static string ImageThemeFor(Product p)
+    {
+        var slug = p.Category?.Slug ?? "";
+        var name = (p.Name + " " + p.Brand + " " + slug).ToLowerInvariant();
+        if (name.Contains("roku") || name.Contains("stream")) return "stream-box";
+        if (name.Contains("headphone") || name.Contains("headset")) return "audio-gear";
+        if (name.Contains("keyboard")) return "mech-keyboard";
+        if (name.Contains("shoe") || name.Contains("aqua")) return "water-shoes";
+        if (name.Contains("hat")) return "sun-hat";
+        if (name.Contains("dress")) return "summer-dress";
+        if (name.Contains("tee") || name.Contains("t-shirt") || name.Contains("shirt")) return "soft-tee";
+        if (slug.Contains("electronic") || slug.Contains("pc")) return "gadget-desk";
+        if (slug.Contains("fashion") || slug.Contains("women")) return "fashion-rack";
+        return SanitizeSeed(p.Sku);
+    }
+
+    private static string SanitizeSeed(string raw)
+    {
+        var chars = raw.Where(char.IsLetterOrDigit).Take(24).ToArray();
+        return chars.Length == 0 ? "perry" : new string(chars).ToLowerInvariant();
+    }
+
+    private static ProductReview RandomReview(Guid productId, string theme, int index)
+    {
+        var authors = new[]
+        {
+            "Alex M.", "Jordan K.", "Sam Rivera", "Taylor Brooks", "Casey Nguyen",
+            "Morgan Lee", "Riley Quinn", "Avery Chen", "Jamie Ortiz", "Cameron Blake",
+            "Louisa Hines", "Sylvia Kennedy", "Cecilia Small", "Noah Patel", "Harper Diaz"
+        };
+        var titles = new[]
+        {
+            "Exactly as described", "Great everyday pick", "Worth the price", "Solid quality",
+            "Would buy again", "Happy with this", "Nice surprise", "Does the job",
+            "Comfortable and neat", "Fast favourite"
+        };
+        var bodies = new[]
+        {
+            "Arrived quickly and matched the photos. Using it daily without issues.",
+            "Good build for the money. Packaging was neat and setup was simple.",
+            "Looks better in person. Comfortable and fits the description well.",
+            "Not perfect, but for this price I am satisfied. Recommend for casual use.",
+            "Quality feels premium. Got compliments already.",
+            "Works as expected. Battery/life or fabric hold up after a week of use.",
+            "Colour is accurate. Size guidance was helpful.",
+            "A few small quirks, still a clear upgrade over my old one."
+        };
+        var tagPool = new[]
+        {
+            "High quality", "Worth the price", "Fits the description", "Matches the photos",
+            "Easy to use", "Great value", "Comfortable", "True to size", "Fast shipping", "Stylish"
+        };
+
+        var seed = Math.Abs(HashCode.Combine(productId, index, theme));
+        var rating = 3 + (seed % 3); // 3..5 — витрина выглядит позитивно
+        if (seed % 11 == 0) rating = 2;
+
+        var reviewId = Guid.NewGuid();
+        var review = new ProductReview
+        {
+            Id = reviewId,
+            ProductId = productId,
+            AuthorName = authors[seed % authors.Length],
+            Rating = rating,
+            Title = titles[(seed / 3) % titles.Length],
+            Body = bodies[(seed / 5) % bodies.Length],
+            IsApproved = true,
+            CreatedAtUtc = DateTime.UtcNow.AddDays(-(1 + seed % 120))
+        };
+
+        var tagCount = 1 + seed % 3;
+        for (var t = 0; t < tagCount; t++)
+        {
+            review.Tags.Add(new ProductReviewTag
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = reviewId,
+                Name = tagPool[(seed + t * 4) % tagPool.Length]
+            });
+        }
+
+        if (seed % 3 == 0)
+        {
+            review.Images.Add(new ProductReviewImage
+            {
+                Id = Guid.NewGuid(),
+                ReviewId = reviewId,
+                Url = $"https://picsum.photos/seed/{theme}-rev{index}/160/160"
+            });
+        }
+
+        return review;
     }
 
     /// <summary>Дополняет dress демо-данными Product Page (about / reviews), если БД уже была.</summary>

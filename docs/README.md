@@ -1,79 +1,64 @@
 # Документация Perry
 
-Маркетплейс **Perry** (диплом, зона товаров) — ASP.NET Core 8, макет Figma, паттерны из [HomeWork_25.10.2025](https://github.com/Teslyar75/HomeWork_25.10.2025.git).
-
-| Файл | Содержание |
-|------|------------|
-| [ПРОДЕЛАННАЯ-РАБОТА.md](./ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, админка, сервисы, миграции |
-| [ИЗМЕНЕНИЯ-2026-09-17.md](./ИЗМЕНЕНИЯ-2026-09-17.md) | Сводка изменений API/категорий/каталога/PDP/auth + React-порт |
-| [TRELLO-TODO.md](./TRELLO-TODO.md) | Нумерация задач (#1–#88) по макету Figma для доски Trello |
-| [КАТЕГОРИИ.md](./КАТЕГОРИИ.md) | Таблица Categories, seed-дерево, API JSON, витрина/админка |
-| [КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Дизайн БД большого каталога: Product + Variants + атрибуты |
-| [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / Reset / Finishing touches: сценарии для пользователя |
-| [СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md](./СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md) | Что добить до защиты vs что на потом |
-| [КЛИЕНТСКАЯ-ЧАСТЬ.md](./КЛИЕНТСКАЯ-ЧАСТЬ.md) | Дерево и зоны кода покупателя (Account / Cart / Orders / Auth) |
-| [КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Как запустить, сценарии проверки, что осталось по желанию |
-| [ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md](./ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md) | Что перенесено из homework → Perry |
+**Начни здесь:** [ХРОНИКА-РАБОТЫ.md](./ХРОНИКА-РАБОТЫ.md) — единый документ: последовательность всей работы, запуск, smoke, бэклог.
 
 ---
 
-## Быстрый старт
+## Инструкции (как пользоваться)
 
-```bash
-cd D:\Perry\My_Amazon2
-dotnet run --project src/Perry.Web --launch-profile http
-```
+| Файл | О чём |
+|------|--------|
+| [ACCOUNT-КАБИНЕТ.md](./ACCOUNT-КАБИНЕТ.md) | Wishlist / My orders / Settings — пошагово |
+| [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / Reset / Finishing / VerifyCode |
+| [SMTP-НАСТРОЙКА.md](./SMTP-НАСТРОЙКА.md) | Stub → реальный Gmail |
+| [РЕЧЬ-SMTP-ДЕМО.md](./РЕЧЬ-SMTP-ДЕМО.md) | Речь на защиту (~1 мин) |
+| [SMOKE-ЗАЩИТА.md](./SMOKE-ЗАЩИТА.md) | Чеклист Register→Buy→Admin |
+| [docker.md](./docker.md) | docker compose + `.env` |
+| [КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск и разбор кода |
 
-Открывай именно **http://localhost:5122/** (не `https://`). В Development HTTPS-редирект отключён.
+## Доска Trello (как вели задачи)
 
-| Что | URL / данные |
-|-----|----------------|
-| Витрина | http://localhost:5122/ |
-| Каталог | http://localhost:5122/Products |
-| Админка | http://localhost:5122/Admin/Login — **`Admin` / `Admin`** |
-| Покупатель | `/Account/Register` → Login; после 3 fails → `/Account/VerifyCode` |
-| API + Swagger | `dotnet run --project src/Perry.Api` → порт из консоли `/swagger` |
+| Файл | О чём |
+|------|--------|
+| [TRELLO-TODO.md](./TRELLO-TODO.md) | Нумерация карточек #1–#88 с доски [ITSTEP-PERRY](https://trello.com/b/bwEYs3Kq/itstep-perry) — видно, что работа шла через Trello |
 
-БД: `(localdb)\mssqllocaldb` → **`Perry`**.
+## Срезы по датам (история этапов)
 
----
+| Файл | О чём |
+|------|--------|
+| [ИЗМЕНЕНИЯ-2026-09-17.md](./ИЗМЕНЕНИЯ-2026-09-17.md) | Каталог / PDP / React-порт |
+| [ИЗМЕНЕНИЯ-Account-2026-09-17.md](./ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Account |
+| [ИЗМЕНЕНИЯ-2026-09-19.md](./ИЗМЕНЕНИЯ-2026-09-19.md) | Спринт к защите |
+
+## Углубление
+
+| Файл | О чём |
+|------|--------|
+| [КАТЕГОРИИ.md](./КАТЕГОРИИ.md) | Categories API / seed |
+| [КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Product + Variants |
+| [TRELLO-TODO.md](./TRELLO-TODO.md) | Карточки #1–#88 |
 
 ## Скриншоты
 
-Каталог картинок с подписями: **[screenshots/README.md](./screenshots/README.md)**
+| Галерея | Ссылка |
+|---------|--------|
+| Витрина / auth / legal | [screenshots/README.md](./screenshots/README.md) |
+| Account (14) | [screenshots/account/](./screenshots/account/) |
+| Спринт 19.09 (15) | [screenshots/sprint-2026-09-19/README.md](./screenshots/sprint-2026-09-19/README.md) |
 
-| # | Экран | Файл |
-|---|--------|------|
-| 1 | Главная | [01-home.png](./screenshots/01-home.png) |
-| 2 | Каталог + фильтры | [02-catalog.png](./screenshots/02-catalog.png) |
-| 3 | Sign in | [03-login.png](./screenshots/03-login.png) |
-| 4 | Admin Dashboard | [04-admin-dashboard.png](./screenshots/04-admin-dashboard.png) |
-| 5 | Admin категории/товары | [05-admin-catalog.png](./screenshots/05-admin-catalog.png) |
-| 6 | Admin Users | [06-admin-users.png](./screenshots/06-admin-users.png) |
-| 7 | Product Page | [07-product-details.png](./screenshots/07-product-details.png) |
-| 8 | Cart (update) | [08-cart-update.png](./screenshots/08-cart-update.png) |
-| 9 | Profile | [09-profile.png](./screenshots/09-profile.png) |
-| 10 | Related products | [10-related-products.png](./screenshots/10-related-products.png) |
-| 11 | Cart (full) | [11-cart-full.png](./screenshots/11-cart-full.png) |
-| 12 | Welcome back | [12-auth-login.png](./screenshots/12-auth-login.png) |
-| 13 | Welcome back — ошибки | [13-auth-login-errors.png](./screenshots/13-auth-login-errors.png) |
-| 14 | Create account | [14-auth-register.png](./screenshots/14-auth-register.png) |
-| 15 | Create account — ошибки | [15-auth-register-errors.png](./screenshots/15-auth-register-errors.png) |
-| 16 | Send code (пусто) | [16-auth-verify-empty.png](./screenshots/16-auth-verify-empty.png) |
-| 17 | Send code — ввод + таймер | [17-auth-verify-filled.png](./screenshots/17-auth-verify-filled.png) |
-| 18 | Send code — ошибка | [18-auth-verify-error.png](./screenshots/18-auth-verify-error.png) |
-| 19 | Forgot password | [19-auth-forgot.png](./screenshots/19-auth-forgot.png) |
-| 20 | Forgot password — ошибка | [20-auth-forgot-error.png](./screenshots/20-auth-forgot-error.png) |
-| 21 | Reset password | [21-auth-reset.png](./screenshots/21-auth-reset.png) |
-| 22 | Reset password — ошибки | [22-auth-reset-error.png](./screenshots/22-auth-reset-error.png) |
-| 23 | Finishing touches | [23-auth-finishing.png](./screenshots/23-auth-finishing.png) |
-| 24 | Finishing touches — ошибки | [24-auth-finishing-error.png](./screenshots/24-auth-finishing-error.png) |
-| 25 | Congratulations | [25-auth-success.png](./screenshots/25-auth-success.png) |
-| 26 | Главная (витрина 2026-09) | [26-home-storefront.png](./screenshots/26-home-storefront.png) |
-| 27 | Product Page | [27-product-page.png](./screenshots/27-product-page.png) |
-| 28 | Каталог + фильтры V2 | [28-catalog-filters.png](./screenshots/28-catalog-filters.png) |
-| 29 | Customer reviews | [29-product-reviews.png](./screenshots/29-product-reviews.png) |
-| 30 | License agreement | [30-license.png](./screenshots/30-license.png) |
-| 31 | Privacy policy | [31-privacy.png](./screenshots/31-privacy.png) |
-| 32 | Related + footer | [32-product-related-footer.png](./screenshots/32-product-related-footer.png) |
-| 33 | Terms and conditions | [33-terms.png](./screenshots/33-terms.png) |
+---
+
+## Быстрый старт (демо)
+
+```bash
+# API
+dotnet run --project src/Perry.Api --launch-profile http
+# → http://localhost:5272/swagger
+
+# React (perry-front)
+npm run dev
+# → http://localhost:3000
+# Admin: /admin/login — Admin / Admin
+```
+
+Подробности и хроника: **[ХРОНИКА-РАБОТЫ.md](./ХРОНИКА-РАБОТЫ.md)**.

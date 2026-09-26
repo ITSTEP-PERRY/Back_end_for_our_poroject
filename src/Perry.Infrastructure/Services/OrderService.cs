@@ -32,13 +32,14 @@ public class OrderService : IOrderService
         await _db.Orders
             .AsNoTracking()
             .Include(o => o.Items)
+            .Include(o => o.User)
             .Where(o => o.UserId == userId)
             .OrderByDescending(o => o.OrderDateUtc)
             .ToListAsync(ct);
 
     public async Task<Order?> GetByIdAsync(Guid orderId, Guid? userId = null, CancellationToken ct = default)
     {
-        var q = _db.Orders.AsNoTracking().Include(o => o.Items).AsQueryable();
+        var q = _db.Orders.AsNoTracking().Include(o => o.Items).Include(o => o.User).AsQueryable();
         if (userId.HasValue)
             q = q.Where(o => o.UserId == userId);
 
@@ -77,6 +78,8 @@ public class OrderService : IOrderService
                     $"Недостаточно «{product.Name}». Доступно: {product.StockQuantity}.");
         }
 
+        var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, ct);
+
         var order = new Order
         {
             Id = Guid.NewGuid(),
@@ -84,8 +87,10 @@ public class OrderService : IOrderService
             OrderDateUtc = DateTime.UtcNow,
             TotalAmount = items.Sum(i => i.Quantity * i.Product.Price),
             ItemsCount = items.Sum(i => i.Quantity),
-            Status = OrderStatus.Completed,
-            CompletedAtUtc = DateTime.UtcNow,
+            Status = OrderStatus.Pending,
+            RecipientName = user?.Name,
+            ShippingAddress = "Canada, Ontario, Something Street, 1919",
+            PaymentType = "Cash",
             CreatedAtUtc = DateTime.UtcNow
         };
         _db.Orders.Add(order);
@@ -117,6 +122,7 @@ public class OrderService : IOrderService
                 product.StockQuantity = 0;
                 product.Status = ProductStatus.OutOfStock;
             }
+            product.OrderCount += item.Quantity;
             product.UpdatedAtUtc = DateTime.UtcNow;
         }
 

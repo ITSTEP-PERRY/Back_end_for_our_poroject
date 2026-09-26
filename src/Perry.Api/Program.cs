@@ -19,14 +19,33 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Perry API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo
+    {
+        Title = "Perry API",
+        Version = "v1",
+        Description =
+            "REST for the Perry React storefront (:3000) and admin.\n\n" +
+            "**Auth:** `POST /api/auth/login` → JWT Bearer.\n\n" +
+            "**Main groups:** auth, categories, products, reviews, cart, orders, wishlist, users, admin/reviews, admin/wishlist, notify."
+    });
+    // Nested records like CartController.AddRequest / WishlistController.AddRequest collide on schemaId.
+    c.CustomSchemaIds(t => t.FullName?.Replace("+", ".") ?? t.Name);
+    c.TagActionsBy(api =>
+    {
+        var controller = api.ActionDescriptor.RouteValues.TryGetValue("controller", out var name)
+            ? name
+            : "Other";
+        return new[] { controller ?? "Other" };
+    });
+    c.OrderActionsBy(api => $"{api.ActionDescriptor.RouteValues["controller"]}_{api.HttpMethod}_{api.RelativePath}");
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme.",
+        Description = "Paste JWT only (Swagger adds the Bearer prefix). Get a token via POST /api/auth/login.",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
-        Scheme = "bearer"
+        Scheme = "bearer",
+        BearerFormat = "JWT"
     });
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
@@ -42,6 +61,14 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 // builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(o =>
+{
+    o.IdleTimeout = TimeSpan.FromHours(12);
+    o.Cookie.HttpOnly = true;
+    o.Cookie.IsEssential = true;
+});
 
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
@@ -81,8 +108,15 @@ if (app.Environment.IsDevelopment())
 app.UseCors("Frontend");
 
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(o =>
+{
+    o.DocumentTitle = "Perry API";
+    o.SwaggerEndpoint("/swagger/v1/swagger.json", "Perry API v1");
+    o.DisplayRequestDuration();
+});
 
+app.UseCors("Frontend");
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

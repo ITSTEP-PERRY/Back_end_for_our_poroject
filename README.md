@@ -6,21 +6,25 @@
 
 ## Документация
 
-Этот README — краткий обзор. **Подробности по архитектуре, клиентской части, запуску и интеграциям** лежат в папке **[docs/](./docs/)** (начни с [docs/README.md](./docs/README.md)).
+**Единая хроника работы:** [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)  
+Оглавление: [docs/README.md](./docs/README.md)
 
 | Файл | О чём |
 |------|--------|
-| [docs/README.md](./docs/README.md) | Оглавление и быстрый старт |
-| [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Полная сводка изменений API / категорий / каталога / PDP / auth / React |
-| [docs/ПРОДЕЛАННАЯ-РАБОТА.md](./docs/ПРОДЕЛАННАЯ-РАБОТА.md) | Архитектура, сущности, API, витрина, чеклист |
-| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Нумерация задач по макету Figma для доски Trello |
-| [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories: таблица, seed, JSON API, витрина |
-| [docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Дизайн каталога: Product + Variants + атрибуты |
-| [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / Reset / Finishing touches: сценарии пользователя |
-| [docs/СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md](./docs/СОВЕТЫ-И-РЕКОМЕНДАЦИИ.md) | Что добить до защиты vs что на потом |
-| [docs/КЛИЕНТСКАЯ-ЧАСТЬ.md](./docs/КЛИЕНТСКАЯ-ЧАСТЬ.md) | Дерево Account / Cart / Orders / Auth (покупатель) |
-| [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск, smoke-тесты, что доделать по желанию |
-| [docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md](./docs/ИНТЕГРАЦИЯ-HOMEWORK-АДМИНКА.md) | Что перенесено из homework |
+| [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) | Последовательность всей работы + запуск + бэклог |
+| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Карточки #1–#88 с доски Trello (как вели задачи) |
+| [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Инструкция: Wishlist / Orders / Settings |
+| [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Инструкция: Forgot / Reset / Finishing |
+| [docs/SMTP-НАСТРОЙКА.md](./docs/SMTP-НАСТРОЙКА.md) | Stub → Gmail App Password |
+| [docs/РЕЧЬ-SMTP-ДЕМО.md](./docs/РЕЧЬ-SMTP-ДЕМО.md) | Речь на защиту (~1 мин) |
+| [docs/SMOKE-ЗАЩИТА.md](./docs/SMOKE-ЗАЩИТА.md) | Чеклист демо |
+| [docs/docker.md](./docs/docker.md) | docker compose + env |
+| [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
+| [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
+| [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
+| [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories API / seed |
+| [docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Product + Variants |
+| [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск и разбор кода |
 
 ## Запуск
 
@@ -35,9 +39,130 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
 
+## Спринт к защите (19.09.2026)
+
+Закрыты карточки To Do: React-админка (Categories / Products / Reviews / Users / Orders), PDP reviews + инфо-модалки, Notify when available, Docker compose, Swagger JWT, SMTP-гайд.
+
+Текстовая сводка: [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) · порядок: [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md)
+
+### 01 · 404 Product not found
+
+![404 Product not found](./docs/screenshots/sprint-2026-09-19/01-404-product-not-found.png)
+
+Товар не найден — Browse catalog / Go to home.
+
+### 02 · Admin Products
+
+![Admin Products](./docs/screenshots/sprint-2026-09-19/02-admin-products.png)
+
+Список товаров + фильтр Category / Search.
+
+### 03 · Admin Categories
+
+![Admin Categories](./docs/screenshots/sprint-2026-09-19/03-admin-categories.png)
+
+Корневые категории, Active, создание «+».
+
+### 04 · Admin Reviews
+
+![Admin Reviews](./docs/screenshots/sprint-2026-09-19/04-admin-reviews.png)
+
+Модерация: All / Hidden / Visible.
+
+### 05 · Admin Orders
+
+![Admin Orders](./docs/screenshots/sprint-2026-09-19/05-admin-orders.png)
+
+Список заказов Date / Customer / Status / Total.
+
+### 07 · Admin Products — category dropdown
+
+![Admin Products category dropdown](./docs/screenshots/sprint-2026-09-19/07-admin-products-category-dropdown.png)
+
+Иерархия категорий в тулбаре.
+
+### 08 · Admin Products — фильтр Streaming
+
+![Admin Products filtered](./docs/screenshots/sprint-2026-09-19/08-admin-products-filter-streaming.png)
+
+Отфильтрованный список (Roku Express 4K+).
+
+### 09 · Admin Users — Active
+
+![Admin Users Active](./docs/screenshots/sprint-2026-09-19/09-admin-users-filters.png)
+
+Активные пользователи, ellipsis на длинных email.
+
+### 10 · Admin Orders — детали
+
+![Admin Order details](./docs/screenshots/sprint-2026-09-19/10-admin-orders-details.png)
+
+Состав заказа + смена Status.
+
+### 11 · Admin Reviews — Hide
+
+![Admin Review Hide](./docs/screenshots/sprint-2026-09-19/11-admin-reviews-moderate-hide.png)
+
+Скрыть отзыв с витрины (Hide / Delete).
+
+### 12 · Account — My orders
+
+![My orders](./docs/screenshots/sprint-2026-09-19/12-account-my-orders.png)
+
+Кабинет: заказы Ordered / Ready for pickup.
+
+### 13 · Admin Reviews — Approve
+
+![Admin Review Approve](./docs/screenshots/sprint-2026-09-19/13-admin-reviews-approve.png)
+
+Вернуть скрытый отзыв (Approve / Delete).
+
+### 14 · Account — Order details
+
+![Order details modal](./docs/screenshots/sprint-2026-09-19/14-account-order-details-modal.png)
+
+Модалка: позиции, Total, How to cancel.
+
+### 15 · Account — Order details #2
+
+![Order details modal 2](./docs/screenshots/sprint-2026-09-19/15-account-order-details-modal-2.png)
+
+Второй заказ (#918320), Total $178.
+
+### 16 · Account — Change email
+
+![Change email modal](./docs/screenshots/sprint-2026-09-19/17-account-change-email-modal.png)
+
+Смена email: пароль + 6-digit code + Send code.
+
+---
+
+## Account (17.09.2026)
+
+Личный кабинет покупателя (Wishlist / My orders / Account settings) — FE+BE по макетным скринам.
+
+- Документ: [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md)
+- Скриншоты (14 шт.): [docs/screenshots/README.md](./docs/screenshots/README.md)
+- API: /api/wishlist, /api/auth/me, /api/auth/me/password, /api/auth/me/email, /api/orders
+
+![Account settings](./docs/screenshots/account/07-account-settings.png)
+| **Change password** | Модалка смены пароля | ![Change password](./docs/screenshots/account/09-change-password-modal.png) |
+| **Change email** | Email + OTP | ![Change email](./docs/screenshots/account/11-change-email-modal.png) |
+| **Delete account** | Подтверждение удаления | ![Delete](./docs/screenshots/account/14-delete-account-confirm.png) |
+
+![Wishlist](./docs/screenshots/account/01-wishlist.png)
+
+![My orders](./docs/screenshots/account/03-my-orders.png)
+
+Актуальная галерея: витрина/auth/legal + **14 Account** в `docs/screenshots/account/`.
+
+---
+
 ## Что сделано недавно
 
-Полный текст: **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:
+**19.09:** [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) — админка React (#65–#69), PDP (#34, #36–#40), notify (#29/#30), Docker (#5), Swagger (#76).
+
+Ранее **17.09:** **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:
 
 ### Категории (закрыт пробел Create/Update)
 - В entity и БД: `Description`, `ImageUrl`, `IconUrl`, `IsActive`.
@@ -97,8 +222,6 @@ dotnet run --project src/Perry.Web --launch-profile http
 | **Terms** | Terms and conditions | ![Terms](./docs/screenshots/33-terms.png) |
 | **License** | License agreement | ![License](./docs/screenshots/30-license.png) |
 | **Privacy** | Privacy policy | ![Privacy](./docs/screenshots/31-privacy.png) |
-| Главная (ранний кадр) | Hero и категории | ![Home](./docs/screenshots/01-home.png) |
-| Каталог (ранний кадр) | Product List с сайдбаром | ![Catalog](./docs/screenshots/02-catalog.png) |
 | Sign in (старый кадр) | Ранний кадр входа | ![Login](./docs/screenshots/03-login.png) |
 | **Welcome back** | Вход покупателя (Email / Password) | ![Welcome back](./docs/screenshots/12-auth-login.png) |
 | Welcome back — ошибки | Пустые поля: сообщения валидации | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
@@ -114,11 +237,38 @@ dotnet run --project src/Perry.Web --launch-profile http
 | **Finishing touches** | First name + Last name после Register | ![Finishing](./docs/screenshots/23-auth-finishing.png) |
 | Finishing touches — ошибки | First/Last name is required | ![Finishing error](./docs/screenshots/24-auth-finishing-error.png) |
 | **Congratulations!** | Успех регистрации или сброса пароля | ![Success](./docs/screenshots/25-auth-success.png) |
-| Admin Dashboard | Статистика и формы создания | ![Admin](./docs/screenshots/04-admin-dashboard.png) |
-| Admin категории/товары | Таблицы категорий и товаров | ![Admin tables](./docs/screenshots/05-admin-catalog.png) |
-| Admin Users | Список пользователей | ![Users](./docs/screenshots/06-admin-users.png) |
-| Product Page (ранний кадр) | Карточка товара | ![PDP](./docs/screenshots/07-product-details.png) |
-| Cart | Корзина | ![Cart](./docs/screenshots/08-cart-update.png) |
-| Profile | Профиль покупателя | ![Profile](./docs/screenshots/09-profile.png) |
-| Related / Best sellers | Похожие / бестселлеры | ![Related](./docs/screenshots/10-related-products.png) |
-| Cart (несколько позиций) | Полная корзина | ![Cart full](./docs/screenshots/11-cart-full.png) |
+
+
+## Скриншоты Account (14 новых)
+
+Полные описания и превью: **[docs/screenshots/README.md](./docs/screenshots/README.md)** (секция Account).
+
+| # | Экран | Файл |
+|---|--------|------|
+| A01 | Wishlist | [01-wishlist.png](./docs/screenshots/account/01-wishlist.png) |
+| A02 | Wishlist — Remove confirm | [02-wishlist-remove-modal.png](./docs/screenshots/account/02-wishlist-remove-modal.png) |
+| A03 | My orders | [03-my-orders.png](./docs/screenshots/account/03-my-orders.png) |
+| A04 | Account settings — photo tip | [04-account-settings-photo-tip.png](./docs/screenshots/account/04-account-settings-photo-tip.png) |
+| A05 | Order details (Ordered) | [05-order-details-modal.png](./docs/screenshots/account/05-order-details-modal.png) |
+| A06 | Order details (Received) | [06-order-details-received.png](./docs/screenshots/account/06-order-details-received.png) |
+| A07 | Account settings | [07-account-settings.png](./docs/screenshots/account/07-account-settings.png) |
+| A08 | Change name | [08-change-name-modal.png](./docs/screenshots/account/08-change-name-modal.png) |
+| A09 | Change password | [09-change-password-modal.png](./docs/screenshots/account/09-change-password-modal.png) |
+| A10 | Change password — validation | [10-change-password-validation.png](./docs/screenshots/account/10-change-password-validation.png) |
+| A11 | Change email | [11-change-email-modal.png](./docs/screenshots/account/11-change-email-modal.png) |
+| A12 | Change email — validation | [12-change-email-validation.png](./docs/screenshots/account/12-change-email-validation.png) |
+| A13 | Log out? | [13-logout-confirm.png](./docs/screenshots/account/13-logout-confirm.png) |
+| A14 | Delete account? | [14-delete-account-confirm.png](./docs/screenshots/account/14-delete-account-confirm.png) |
+
+![Wishlist](./docs/screenshots/account/01-wishlist.png)
+
+![My orders](./docs/screenshots/account/03-my-orders.png)
+
+![Account settings](./docs/screenshots/account/07-account-settings.png)
+
+![Change password](./docs/screenshots/account/09-change-password-modal.png)
+
+![Change email](./docs/screenshots/account/11-change-email-modal.png)
+
+![Delete account](./docs/screenshots/account/14-delete-account-confirm.png)
+

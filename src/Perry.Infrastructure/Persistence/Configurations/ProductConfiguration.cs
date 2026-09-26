@@ -38,6 +38,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(x => x.Brand);
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.Price);
+        builder.HasIndex(x => x.ViewCount);
+        builder.HasIndex(x => x.OrderCount);
 
         builder.HasOne(x => x.Category)
             .WithMany(x => x.Products)

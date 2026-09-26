@@ -10,6 +10,7 @@ public interface IUserService
     Task<User?> GetByIdAsync(Guid id, CancellationToken ct = default);
     Task UpdateAsync(Guid id, string name, string email, CancellationToken ct = default);
     Task SoftDeleteAsync(Guid id, CancellationToken ct = default);
+    Task RestoreAsync(Guid id, CancellationToken ct = default);
     Task<IReadOnlyList<User>> GetAllAsync(CancellationToken ct = default);
 }
 
@@ -46,6 +47,14 @@ public class UserService : IUserService
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, ct)
             ?? throw new InvalidOperationException("Пользователь не найден.");
         user.DeletedAtUtc = DateTime.UtcNow;
+        await _db.SaveChangesAsync(ct);
+    }
+
+    public async Task RestoreAsync(Guid id, CancellationToken ct = default)
+    {
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == id, ct)
+            ?? throw new InvalidOperationException("Пользователь не найден.");
+        user.DeletedAtUtc = null;
         await _db.SaveChangesAsync(ct);
     }
 
