@@ -3,6 +3,8 @@ using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Utils;
+using Perry.Domain.Utils;
 
 namespace Perry.Api.Controllers;
 
@@ -17,6 +19,8 @@ namespace Perry.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
+    
+    public ProductsController(AppDbContext db)
     private readonly IProductStatisticsService _stats;
     private readonly IViewedProductsService _viewed;
 
@@ -103,7 +107,7 @@ public class ProductsController : ControllerBase
         };
 
         var total = await query.CountAsync(cancellationToken);
-
+        
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -124,9 +128,11 @@ public class ProductsController : ControllerBase
                 p.Status,
                 ImageUrl = p.Images
                     .Where(i => i.IsPrimary)
-                    .Select(i => i.Url)
+                    .Select(i => ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url))
                     .FirstOrDefault()
-                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => 
+                        ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url))
+                        .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -174,6 +180,57 @@ public class ProductsController : ControllerBase
             .ToListAsync(ct);
 
     /// <summary>
+    /// product details for update:
+    /// GET /api/products/update/{id}
+    /// </summary>
+    [HttpGet("update/{id:guid}")]
+    public async Task<IActionResult> GetForUpdateById(Guid id, CancellationToken cancellationToken)
+    {
+        var product = await _db.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Sku,
+                p.Brand,
+                p.Price,
+                p.OldPrice,
+                DiscountPercent = p.OldPrice != null && p.OldPrice > p.Price
+                    ? (int?)Math.Round((p.OldPrice.Value - p.Price) / p.OldPrice.Value * 100)
+                    : null,
+                p.StockQuantity,
+                p.Status,
+                p.AverageRating,
+                p.ReviewCount,
+                p.IsBestSeller,
+                p.CategoryId,
+                Images = p.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new
+                    {
+                        i.Id, 
+                        i.Url, 
+                        i.IsPrimary, 
+                        i.IsVideo, 
+                        i.AltText
+                    }),
+                Attributes = p.Attributes
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => new { a.Name, a.Value }),
+                AboutItems = p.AboutItems
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => new { a.Title, a.Description }),
+               
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (product is null) return NotFound();
+        return Ok(product);
+    }
+    
     /// Часто просматриваемые товары (по ViewCount).
     /// GET /api/products/popular?take=10
     /// </summary>
@@ -217,7 +274,14 @@ public class ProductsController : ControllerBase
                 Category = new { p.Category.Id, p.Category.Name, p.Category.Slug },
                 Images = p.Images
                     .OrderBy(i => i.SortOrder)
-                    .Select(i => new { i.Id, i.Url, i.IsPrimary, i.IsVideo, i.AltText }),
+                    .Select(i => new
+                    {
+                        i.Id, 
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                        i.IsPrimary, 
+                        i.IsVideo, 
+                        i.AltText
+                    }),
                 Attributes = p.Attributes
                     .OrderBy(a => a.SortOrder)
                     .Select(a => new { a.Name, a.Value }),
@@ -279,8 +343,14 @@ public class ProductsController : ControllerBase
                 p.ViewCount,
                 p.OrderCount,
                 p.Status,
-                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.Url).FirstOrDefault()
-                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => new 
+                {
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                }).FirstOrDefault()
+                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => new 
+                    {
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                    }).FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -306,8 +376,14 @@ public class ProductsController : ControllerBase
                 p.ViewCount,
                 p.OrderCount,
                 p.Status,
-                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.Url).FirstOrDefault()
-                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => new
+                {
+                    Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url),
+                }).FirstOrDefault()
+                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => new
+                    {
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url),
+                    }).FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -397,7 +473,44 @@ public class ProductsController : ControllerBase
 
         return product is null ? NotFound() : Ok(product);
     }
-
+    
+    
+    [HttpGet("partial/{id}")]
+    public async Task<IActionResult> GetPartialById(Guid id, CancellationToken cancellationToken)
+        {
+            var product = await _db.Products
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Slug,
+                    p.Description,
+                    p.Sku,
+                    p.Brand,
+                    p.Price,
+                    p.OldPrice,
+                    p.StockQuantity,
+                    p.Status,
+                    p.AverageRating,
+                    p.ReviewCount,
+                    Images =  p.Images
+                        .Select(i => new
+                        {
+                            i.Id, 
+                            Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                            i.IsPrimary, 
+                            i.IsVideo, 
+                            i.AltText
+                        }),
+                    p.CategoryId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+    
+            return product is null ? NotFound() : Ok(product);
+        }
+    
     /// <summary>Фото/видео товара — URL в JSON вместе с продуктом (без multipart).</summary>
     public record ProductImageInput(
         string Url,
@@ -509,6 +622,7 @@ public class ProductsController : ControllerBase
         IReadOnlyList<ProductImageInput>? images,
         IReadOnlyList<string>? imageUrls)
     {
+        
         foreach (var img in NormalizeProductImages(images, imageUrls))
         {
             _db.ProductImages.Add(new Domain.Entities.ProductImage
@@ -603,5 +717,30 @@ public class ProductsController : ControllerBase
     {
         await products.SoftArchiveAsync(id, ct);
         return NoContent();
+    }
+    
+    
+    [HttpGet("image/{id}")]
+    public async Task<IActionResult> GetProductImage(Guid id, CancellationToken ct)
+    {
+        var image = await _db.ProductImages.FirstOrDefaultAsync(r => r.Id == id, ct);
+        
+        if (image != null)
+        {
+            var (mime, data) = Helpers.GetImageTypeFromBase64(image.Url);
+            if (mime != null && data != null)
+            {
+                if (data.Contains(","))
+                {
+                    data = data.Split(',')[1];
+                }
+
+                // 3. Конвертируем Base64 строку в массив байт
+                byte[] imageBytes = Convert.FromBase64String(data);
+
+                return File(imageBytes, mime,  enableRangeProcessing: false);
+            }
+        }
+        return NotFound("No image found");
     }
 }

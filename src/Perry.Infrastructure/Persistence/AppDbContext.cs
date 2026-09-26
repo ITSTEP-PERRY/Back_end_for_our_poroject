@@ -25,7 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<ProductReviewImage> ProductReviewImages => Set<ProductReviewImage>();
     public DbSet<ProductReviewTag> ProductReviewTags => Set<ProductReviewTag>();
-
+    public DbSet<ProductReviewGrade>  ProductReviewGrades => Set<ProductReviewGrade>();
     // --- Корзина ---
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
@@ -51,5 +51,8 @@ public class AppDbContext : DbContext
         // (папка Persistence/Configurations).
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+        modelBuilder.Ignore<User>();
+        modelBuilder.Ignore<UserAccess>();
+        modelBuilder.Ignore<UserRole>();
     }
 }

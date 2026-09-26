@@ -4,6 +4,8 @@ namespace Perry.Domain.Entities;
 /// Пользователь системы (из homework ASP-421).
 /// Для админки и будущей зоны Auth.
 /// </summary>
+
+[Obsolete("Deprecated: Use Auth service instead")]
 public class User
 {
     public Guid Id { get; set; }

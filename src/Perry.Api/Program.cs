@@ -1,14 +1,21 @@
-using System.Text;
+using System.Text.Json.Serialization;
+using DotNetEnv;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Perry.Api.Extensions;
+using Perry.Api.Filters;
+using Perry.Infrastructure.Interfaces;
+using Perry.Infrastructure.Options;
 
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
@@ -53,6 +60,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+// builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(o =>
@@ -62,33 +70,33 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "PerryDevSecretKey_ChangeMe_32chars!!";
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"] ?? "Perry",
-            ValidAudience = builder.Configuration["Jwt:Audience"] ?? "Perry",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
-        };
-    });
-builder.Services.AddAuthorization();
+var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
+    throw new InvalidOperationException("JWT signing secret is not configured.");
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(
+        policy.WithOrigins(["https://admin.perrydev.space",
                 "http://localhost:3000",
-                "http://127.0.0.1:3000")
+                "http://10.1.0.17:3000"
+            ])
+            .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
+
+builder.Services.AddJwtAuthentication(jwt);
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy(AuthorizationPolicies.AdminAccess, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("Admin") );
+    options.AddPolicy(AuthorizationPolicies.SellerAccess, policy =>
+        policy.RequireAuthenticatedUser().RequireRole("Seller"));
+});
+
+builder.Services.AddScoped<ModelValidateActionFilter>();
 
 var app = builder.Build();
 
@@ -97,6 +105,7 @@ if (app.Environment.IsDevelopment())
 {
     await DbSeeder.SeedAsync(app.Services);
 }
+app.UseCors("Frontend");
 
 app.UseSwagger();
 app.UseSwaggerUI(o =>

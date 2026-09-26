@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Perry.Infrastructure.Persistence;
 
@@ -11,9 +12,11 @@ using Perry.Infrastructure.Persistence;
 namespace Perry.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260918131102_RemoveImageLengthRestriction")]
+    partial class RemoveImageLengthRestriction
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -144,18 +147,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Property<DateTime>("OrderDateUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("PaymentType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("RecipientName")
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ShippingAddress")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -269,9 +260,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("OrderCount")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -298,16 +286,11 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Property<DateTime?>("UpdatedAtUtc")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("ViewCount")
-                        .HasColumnType("int");
-
                     b.HasKey("Id");
 
                     b.HasIndex("Brand");
 
                     b.HasIndex("CategoryId");
-
-                    b.HasIndex("OrderCount");
 
                     b.HasIndex("Price");
 
@@ -318,8 +301,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.HasIndex("Status");
-
-                    b.HasIndex("ViewCount");
 
                     b.ToTable("Products", (string)null);
                 });
@@ -411,7 +392,8 @@ namespace Perry.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.HasKey("Id");
 
@@ -453,7 +435,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -468,28 +450,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         });
                 });
 
-            modelBuilder.Entity("Perry.Domain.Entities.ProductReviewGrade", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsHelpful")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("ReviewId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewId");
-
-                    b.ToTable("ProductReviewGrades");
-                });
-
             modelBuilder.Entity("Perry.Domain.Entities.ProductReviewImage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -500,70 +460,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Url")
-                    b.HasKey("Id");
-
-                    b.HasIndex("Name");
-
-                    b.HasIndex("ReviewId");
-
-                    b.ToTable("ProductReviewTags", (string)null);
-                });
-
-            modelBuilder.Entity("Perry.Domain.Entities.StockNotifyRequest", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<DateTime?>("NotifiedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid>("ProductId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.HasIndex("ProductId", "Email")
-                        .IsUnique();
-
-                    b.ToTable("StockNotifyRequests", (string)null);
-                });
-
-            modelBuilder.Entity("Perry.Domain.Entities.User", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Avatar")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("Birthdate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("DeletedAtUtc")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(256)
-                        .HasColumnType("nvarchar(256)");
-
-                    b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(1000)
                         .HasColumnType("nvarchar(1000)");
@@ -598,33 +494,158 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.ToTable("ProductReviewTags", (string)null);
                 });
 
-            modelBuilder.Entity("Perry.Domain.Entities.WishlistItem", b =>
+            modelBuilder.Entity("Perry.Domain.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<DateTime>("CreatedAtUtc")
+                    b.Property<string>("Avatar")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("Birthdate")
                         .HasColumnType("datetime2");
 
-                    b.Property<Guid>("ProductId")
+                    b.Property<DateTime?>("DeletedAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("RegisteredAtUtc")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Users", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("53759101-7de4-4e04-833a-884752290fa0"),
+                            Avatar = "",
+                            Email = "admin@perry.local",
+                            Name = "Administrator",
+                            RegisteredAtUtc = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
+                        });
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.UserAccess", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Dk")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Login")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedAtUtc");
+                    b.HasIndex("Login")
+                        .IsUnique();
 
-                    b.HasIndex("ProductId");
+                    b.HasIndex("RoleId");
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("UserId", "ProductId")
-                        .IsUnique();
+                    b.ToTable("UserAccesses", (string)null);
 
-                    b.ToTable("WishlistItems", (string)null);
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("2570a0d2-fab2-4de0-8efc-e2bd28de2502"),
+                            Dk = "1678112717E7AF0947F6",
+                            Login = "Admin",
+                            RoleId = "Admin",
+                            Salt = "4FA5D20B-E546-4818-9381-B4BD9F327F4E",
+                            UserId = new Guid("53759101-7de4-4e04-833a-884752290fa0")
+                        });
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("CanCreate")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanRead")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanUpdate")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserRoles", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = "Admin",
+                            CanCreate = true,
+                            CanDelete = true,
+                            CanRead = true,
+                            CanUpdate = true,
+                            Description = "Администратор — полный доступ"
+                        },
+                        new
+                        {
+                            Id = "Editor",
+                            CanCreate = true,
+                            CanDelete = false,
+                            CanRead = true,
+                            CanUpdate = true,
+                            Description = "Редактор каталога"
+                        },
+                        new
+                        {
+                            Id = "Guest",
+                            CanCreate = false,
+                            CanDelete = false,
+                            CanRead = true,
+                            CanUpdate = false,
+                            Description = "Гость / покупатель"
+                        });
                 });
 
             modelBuilder.Entity("Perry.Domain.Entities.CartItem", b =>
@@ -654,6 +675,17 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("ParentCategory");
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.Order", b =>
+                {
+                    b.HasOne("Perry.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Perry.Domain.Entities.OrderItem", b =>
@@ -730,17 +762,6 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("Perry.Domain.Entities.ProductReviewGrade", b =>
-                {
-                    b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
-                        .WithMany("Grades")
-                        .HasForeignKey("ReviewId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Review");
-                });
-
             modelBuilder.Entity("Perry.Domain.Entities.ProductReviewImage", b =>
                 {
                     b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
@@ -752,19 +773,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Review");
                 });
 
-            
-            modelBuilder.Entity("Perry.Domain.Entities.StockNotifyRequest", b =>
-                {
-                    b.HasOne("Perry.Domain.Entities.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
-            modelBuilder.Entity("Perry.Domain.Entities.UserAccess", b =>
+            modelBuilder.Entity("Perry.Domain.Entities.ProductReviewTag", b =>
                 {
                     b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
                         .WithMany("Tags")
@@ -775,21 +784,21 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Review");
                 });
 
-            modelBuilder.Entity("Perry.Domain.Entities.WishlistItem", b =>
+            modelBuilder.Entity("Perry.Domain.Entities.UserAccess", b =>
                 {
-                    b.HasOne("Perry.Domain.Entities.Product", "Product")
+                    b.HasOne("Perry.Domain.Entities.UserRole", "Role")
                         .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Perry.Domain.Entities.User", "User")
-                        .WithMany()
+                        .WithMany("Accesses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Product");
+                    b.Navigation("Role");
 
                     b.Navigation("User");
                 });
@@ -826,11 +835,14 @@ namespace Perry.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Perry.Domain.Entities.ProductReview", b =>
                 {
-                    b.Navigation("Grades");
-
                     b.Navigation("Images");
 
                     b.Navigation("Tags");
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.User", b =>
+                {
+                    b.Navigation("Accesses");
                 });
 #pragma warning restore 612, 618
         }

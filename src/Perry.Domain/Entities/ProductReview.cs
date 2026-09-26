@@ -3,7 +3,7 @@ namespace Perry.Domain.Entities;
 /// <summary>
 /// Отзыв покупателя о товаре (блок Customer Reviews на Product Page).
 /// </summary>
-public class ProductReview
+public record ProductReview
 {
     public Guid Id { get; set; }
 
@@ -13,21 +13,20 @@ public class ProductReview
 
     /// <summary>
     /// Id пользователя из модуля Auth (часть диплома другого участника).
-    /// Пока может быть null, если отзыв оставлен без привязки к аккаунту.
     /// </summary>
-    public Guid? UserId { get; set; }
+    public Guid UserId { get; set; }
 
     /// <summary>Имя автора, отображаемое в отзыве.</summary>
-    public string AuthorName { get; set; } = string.Empty;
+    public string? AuthorName { get; set; } = string.Empty;
 
     /// <summary>Оценка от 1 до 5 звёзд.</summary>
     public int Rating { get; set; }
 
     /// <summary>Краткий заголовок отзыва.</summary>
-    public string Title { get; set; } = string.Empty;
+    public string? Title { get; set; } = string.Empty;
 
     /// <summary>Текст отзыва.</summary>
-    public string Body { get; set; } = string.Empty;
+    public string? Body { get; set; } = string.Empty;
 
     /// <summary>Модерация: показывать на сайте только после одобрения.</summary>
     public bool IsApproved { get; set; }
@@ -39,4 +38,7 @@ public class ProductReview
 
     /// <summary>Теги («easy to use» и т.п.) для блока Frequent tags.</summary>
     public ICollection<ProductReviewTag> Tags { get; set; } = new List<ProductReviewTag>();
+    
+    /// <summary>Grades by another users for current review</summary>
+    public ICollection<ProductReviewGrade> Grades { get; set; } = new List<ProductReviewGrade>();
 }
