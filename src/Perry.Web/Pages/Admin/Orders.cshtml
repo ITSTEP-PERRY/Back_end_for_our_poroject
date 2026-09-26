@@ -41,7 +41,7 @@
             {
                 <tr>
                     <td><code>@o.Id.ToString()[..8]</code></td>
-                    <td>@(o.User?.Name ?? o.UserId.ToString()[..8])</td>
+                    <td>@(string.IsNullOrWhiteSpace(o.RecipientName) ? o.UserId.ToString()[..8] : o.RecipientName)</td>
                     <td>@o.OrderDateUtc.ToLocalTime().ToString("g")</td>
                     <td>@o.ItemsCount</td>
                     <td>$@o.TotalAmount.ToString("0.00")</td>

@@ -1,5 +1,8 @@
+using System.Text;
 using System.Text.Json.Serialization;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
@@ -21,12 +24,13 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Perry API",
+        Title = "Perry Product API",
         Version = "v1",
         Description =
             "REST for the Perry React storefront (:3000) and admin.\n\n" +
-            "**Auth:** `POST /api/auth/login` → JWT Bearer.\n\n" +
-            "**Main groups:** auth, categories, products, reviews, cart, orders, wishlist, users, admin/reviews, admin/wishlist, notify."
+            "**Auth:** JWT from Perry Auth Service (Влада). Login/register — на Auth API, не здесь.\n\n" +
+            "**Main groups:** categories, products, reviews, cart, orders, wishlist, admin/*, notify.\n\n" +
+            "Users tables removed (#94). UserId comes from JWT claims (see #95)."
     });
     // Nested records like CartController.AddRequest / WishlistController.AddRequest collide on schemaId.
     c.CustomSchemaIds(t => t.FullName?.Replace("+", ".") ?? t.Name);
@@ -40,7 +44,9 @@ builder.Services.AddSwaggerGen(c =>
     c.OrderActionsBy(api => $"{api.ActionDescriptor.RouteValues["controller"]}_{api.HttpMethod}_{api.RelativePath}");
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description = "Paste JWT only (Swagger adds the Bearer prefix). Get a token via POST /api/auth/login.",
+        Description =
+            "Paste access JWT from Perry Auth Service (Swagger adds Bearer prefix). " +
+            "Claim for user id: sub / nameid / userId (#95).",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -61,7 +67,6 @@ builder.Services.AddSwaggerGen(c =>
 
 builder.Services.AddInfrastructure(builder.Configuration);
 // builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
-builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(o =>
 {
@@ -70,6 +75,31 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
+// JWT: по умолчанию локальный HS256 (dev). Для Auth Влада — Jwt:Issuer/Audience/Key из User Secrets / env (#95).
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "PerryDevSecretKey_ChangeMe_32chars!!";
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Perry";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Perry";
+var mapInbound = builder.Configuration.GetValue("Jwt:MapInboundClaims", true);
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = mapInbound;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = jwtIssuer,
+            ValidAudience = jwtAudience,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            RoleClaimType = builder.Configuration["Jwt:RoleClaimType"] ?? "role",
+            NameClaimType = builder.Configuration["Jwt:NameClaimType"] ?? "name"
+        };
+    });
+builder.Services.AddAuthorization();
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
     throw new InvalidOperationException("JWT signing secret is not configured.");
@@ -86,7 +116,7 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod());
 });
 
-builder.Services.AddJwtAuthentication(jwt);
+// builder.Services.AddJwtAuthentication(jwt);
 
 builder.Services.AddAuthorization(options =>
 {
@@ -105,7 +135,6 @@ if (app.Environment.IsDevelopment())
 {
     await DbSeeder.SeedAsync(app.Services);
 }
-app.UseCors("Frontend");
 
 app.UseSwagger();
 app.UseSwaggerUI(o =>

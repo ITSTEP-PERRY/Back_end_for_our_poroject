@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Perry.Infrastructure.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class RemoveUserTables : Migration
+    public partial class DropUserTables : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -16,6 +16,10 @@ namespace Perry.Infrastructure.Persistence.Migrations
             migrationBuilder.DropForeignKey(
                 name: "FK_Orders_Users_UserId",
                 table: "Orders");
+
+            migrationBuilder.DropForeignKey(
+                name: "FK_WishlistItems_Users_UserId",
+                table: "WishlistItems");
 
             migrationBuilder.DropTable(
                 name: "UserAccesses");
@@ -51,7 +55,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Avatar = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    Avatar = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Birthdate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     DeletedAtUtc = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
@@ -134,6 +138,14 @@ namespace Perry.Infrastructure.Persistence.Migrations
                 principalTable: "Users",
                 principalColumn: "Id",
                 onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_WishlistItems_Users_UserId",
+                table: "WishlistItems",
+                column: "UserId",
+                principalTable: "Users",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }

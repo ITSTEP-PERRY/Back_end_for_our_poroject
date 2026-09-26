@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Perry.Api.Auth;
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -21,7 +21,7 @@ public class OrdersController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> Mine(CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         var list = await _orders.GetUserOrdersAsync(userId.Value, ct);
@@ -32,7 +32,7 @@ public class OrdersController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> ById(Guid id, CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         var isAdmin = User.IsInRole("Admin");
@@ -44,12 +44,16 @@ public class OrdersController : ControllerBase
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout([FromBody] CheckoutRequest body, CancellationToken ct)
     {
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         if (userId is null) return Unauthorized();
 
         try
         {
-            var order = await _orders.CreateFromCartAsync(userId.Value, body.SessionId, ct);
+            var order = await _orders.CreateFromCartAsync(
+                userId.Value,
+                body.SessionId,
+                AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
+                ct);
             return Ok(MapOrder(order));
         }
         catch (Exception ex)
@@ -60,25 +64,64 @@ public class OrdersController : ControllerBase
 
     [Authorize(Roles = "Admin")]
     [HttpGet("admin")]
-    public async Task<IActionResult> All(CancellationToken ct)
+    public async Task<IActionResult> All(
+        [FromQuery] string? status,
+        [FromQuery] DateTime? fromUtc,
+        [FromQuery] DateTime? toUtc,
+        [FromQuery] string? orderId,
+        CancellationToken ct)
     {
-        var list = await _orders.GetAllAsync(ct);
-        return Ok(list.Select(o => new
+        OrderStatus? parsed = null;
+        if (!string.IsNullOrWhiteSpace(status))
         {
-            o.Id,
-            orderDateUtc = o.OrderDateUtc,
-            status = o.Status.ToString(),
-            totalAmount = o.TotalAmount,
-            itemsCount = o.Items.Count,
-            userName = o.User?.Name,
-            items = o.Items.Select(i => new
+            if (!Enum.TryParse<OrderStatus>(status, true, out var s))
+                return BadRequest(new
+                {
+                    error = "Неизвестный статус.",
+                    allowed = Enum.GetNames<OrderStatus>()
+                });
+            parsed = s;
+        }
+
+        var result = await _orders.GetAdminOrdersAsync(new AdminOrdersQuery
+        {
+            Status = parsed,
+            FromUtc = fromUtc,
+            ToUtc = toUtc,
+            OrderId = orderId
+        }, ct);
+
+        return Ok(new
+        {
+            items = result.Items.Select(o => new
             {
-                i.ProductId,
-                productName = i.ProductName,
-                i.Quantity,
-                unitPrice = i.ProductPrice
-            })
-        }));
+                o.Id,
+                orderDateUtc = o.OrderDateUtc,
+                status = o.Status.ToString(),
+                totalAmount = o.TotalAmount,
+                itemsCount = o.Items.Count,
+                userId = o.UserId,
+                userName = o.RecipientName,
+                items = o.Items.Select(i => new
+                {
+                    i.ProductId,
+                    productName = i.ProductName,
+                    i.Quantity,
+                    unitPrice = i.ProductPrice
+                })
+            }),
+            totalOrders = result.TotalOrders,
+            totalAmount = result.TotalAmount,
+            statusCounts = result.StatusCounts,
+            totalOrderCompare = result.TotalOrderCompare,
+            totalAmountCompare = result.TotalAmountCompare,
+            period = result.PeriodFromUtc is null && result.PeriodToUtc is null
+                ? null
+                : new { fromUtc = result.PeriodFromUtc, toUtc = result.PeriodToUtc },
+            comparePeriod = result.CompareFromUtc is null
+                ? null
+                : new { fromUtc = result.CompareFromUtc, toUtc = result.CompareToUtc }
+        });
     }
 
     [Authorize(Roles = "Admin")]
@@ -95,12 +138,13 @@ public class OrdersController : ControllerBase
     private static object MapOrder(Domain.Entities.Order o) => new
     {
         o.Id,
+        userId = o.UserId,
         orderDateUtc = o.OrderDateUtc,
         status = o.Status.ToString(),
         totalAmount = o.TotalAmount,
         itemsCount = o.ItemsCount > 0 ? o.ItemsCount : o.Items.Count,
-        userName = o.User?.Name,
-        recipientName = o.RecipientName ?? o.User?.Name,
+        userName = o.RecipientName,
+        recipientName = o.RecipientName,
         shippingAddress = o.ShippingAddress,
         paymentType = o.PaymentType ?? "Cash",
         items = o.Items.Select(i => new
@@ -114,10 +158,4 @@ public class OrdersController : ControllerBase
             imageUrl = i.ProductImageUrl
         })
     };
-
-    private Guid? GetUserId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(raw, out var id) ? id : null;
-    }
 }
