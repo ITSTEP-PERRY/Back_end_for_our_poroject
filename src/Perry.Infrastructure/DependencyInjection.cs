@@ -19,9 +19,10 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? throw new InvalidOperationException(
-                "Connection string 'DefaultConnection' is not configured.");
+        var connectionString = Environment.GetEnvironmentVariable("DefaultConnection") ?? 
+                               configuration.GetConnectionString("DefaultConnection")
+                                ?? throw new InvalidOperationException(
+                                    "Connection string 'DefaultConnection' is not configured.");
 
         services.AddDbContext<AppDbContext>(options =>
             options.UseSqlServer(connectionString));
