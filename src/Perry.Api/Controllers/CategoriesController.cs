@@ -70,6 +70,28 @@ public class CategoriesController : ControllerBase
             })
             .ToList();
 
+    /// <summary>GET /api/categories/by-id/{id} — для perry-admin-front.</summary>
+    [HttpGet("by-id/{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+        var category = await _db.Categories.AsNoTracking()
+            .Where(c => c.Id == id)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Slug,
+                c.Description,
+                c.ImageUrl,
+                c.IconUrl,
+                c.IsActive,
+                c.SortOrder,
+                c.ParentCategoryId
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        return category is null ? NotFound() : Ok(category);
+    }
+
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetBySlug(string slug, CancellationToken cancellationToken)
     {

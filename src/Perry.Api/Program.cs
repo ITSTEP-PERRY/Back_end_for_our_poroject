@@ -1,15 +1,11 @@
-using System.Text;
 using System.Text.Json.Serialization;
 using DotNetEnv;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
 using Microsoft.OpenApi.Models;
 using Perry.Api.Extensions;
 using Perry.Api.Filters;
-using Perry.Infrastructure.Interfaces;
 using Perry.Infrastructure.Options;
 
 Env.Load();
@@ -27,12 +23,10 @@ builder.Services.AddSwaggerGen(c =>
         Title = "Perry Product API",
         Version = "v1",
         Description =
-            "REST for the Perry React storefront (:3000) and admin.\n\n" +
-            "**Auth:** JWT from Perry Auth Service (Влада). Login/register — на Auth API, не здесь.\n\n" +
-            "**Main groups:** categories, products, reviews, cart, orders, wishlist, admin/*, notify.\n\n" +
-            "Users tables removed (#94). UserId comes from JWT claims (see #95)."
+            "REST for the Perry React storefront (:3000) and admin (:3001).\n\n" +
+            "**Auth:** JWT from Perry Auth Service.\n\n" +
+            "**Main groups:** categories, products, reviews, cart, orders, wishlist, admin/*."
     });
-    // Nested records like CartController.AddRequest / WishlistController.AddRequest collide on schemaId.
     c.CustomSchemaIds(t => t.FullName?.Replace("+", ".") ?? t.Name);
     c.TagActionsBy(api =>
     {
@@ -44,9 +38,7 @@ builder.Services.AddSwaggerGen(c =>
     c.OrderActionsBy(api => $"{api.ActionDescriptor.RouteValues["controller"]}_{api.HttpMethod}_{api.RelativePath}");
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
-        Description =
-            "Paste access JWT from Perry Auth Service (Swagger adds Bearer prefix). " +
-            "Claim for user id: sub / nameid / userId (#95).",
+        Description = "Paste access JWT from Perry Auth Service (Swagger adds Bearer prefix).",
         Name = "Authorization",
         In = ParameterLocation.Header,
         Type = SecuritySchemeType.Http,
@@ -66,7 +58,6 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
-// builder.Services.AddSingleton<IJwtTokenService, JwtTokenService>();
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(o =>
 {
@@ -75,53 +66,41 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
-// JWT: по умолчанию локальный HS256 (dev). Для Auth Влада — Jwt:Issuer/Audience/Key из User Secrets / env (#95).
-var jwtKey = builder.Configuration["Jwt:Key"] ?? "PerryDevSecretKey_ChangeMe_32chars!!";
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "Perry";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "Perry";
-var mapInbound = builder.Configuration.GetValue("Jwt:MapInboundClaims", true);
-
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.MapInboundClaims = mapInbound;
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = jwtIssuer,
-            ValidAudience = jwtAudience,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            RoleClaimType = builder.Configuration["Jwt:RoleClaimType"] ?? "role",
-            NameClaimType = builder.Configuration["Jwt:NameClaimType"] ?? "name"
-        };
-    });
-builder.Services.AddAuthorization();
+// JWT — конфиг команды (JwtOptions) + fallback на Jwt:Key для локальной совместимости
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
-    throw new InvalidOperationException("JWT signing secret is not configured.");
+    jwt.SigningSecret = builder.Configuration["Jwt:Key"] ?? string.Empty;
+if (string.IsNullOrWhiteSpace(jwt.Issuer))
+    jwt.Issuer = builder.Configuration["Jwt:Issuer"] ?? "Perry";
+if (string.IsNullOrWhiteSpace(jwt.Audience))
+    jwt.Audience = builder.Configuration["Jwt:Audience"] ?? "Perry";
+if (string.IsNullOrWhiteSpace(jwt.SigningSecret) && !jwt.SkipSignatureValidation)
+    throw new InvalidOperationException("JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key).");
+if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
+    jwt.SigningSecret = "dev-placeholder-not-used-when-skip-signature";
+
+builder.Services.AddJwtAuthentication(jwt);
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(["https://admin.perrydev.space",
+        policy.WithOrigins(
+                "https://admin.perrydev.space",
                 "http://localhost:3000",
-                "http://10.1.0.17:3000"
-            ])
+                "http://127.0.0.1:3000",
+                "http://localhost:3001",
+                "http://127.0.0.1:3001",
+                "http://10.1.0.17:3000",
+                "http://10.1.0.17:3001")
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
 
-// builder.Services.AddJwtAuthentication(jwt);
-
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy(AuthorizationPolicies.AdminAccess, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("Admin") );
+        policy.RequireAuthenticatedUser().RequireRole("Admin"));
     options.AddPolicy(AuthorizationPolicies.SellerAccess, policy =>
         policy.RequireAuthenticatedUser().RequireRole("Seller"));
 });
