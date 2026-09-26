@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Auth;
 
 namespace Perry.Api.Controllers;
 
@@ -12,6 +14,7 @@ namespace Perry.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+// [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
 public class CategoriesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -24,27 +27,11 @@ public class CategoriesController : ControllerBase
     /// <summary>
     /// Полное дерево категорий (все уровни).
     /// GET /api/categories
-    /// GET /api/categories?includeInactive=true — только для Admin (админка React).
     /// </summary>
     [HttpGet]
-    public async Task<IActionResult> GetTree(
-        [FromQuery] bool includeInactive = false,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetTree(CancellationToken cancellationToken)
     {
-        if (includeInactive && !User.IsInRole("Admin"))
-            return Forbid();
-
-        var query = _db.Categories.AsNoTracking().AsQueryable();
-        if (!includeInactive)
-            query = query.Where(c => c.IsActive);
-
-        var all = await query
-            .OrderBy(c => c.SortOrder)
-            .ThenBy(c => c.Name)
-            .Select(c => new CategoryNode(
-                c.Id, c.Name, c.Slug, c.Description, c.ImageUrl, c.IconUrl,
-                c.IsActive, c.SortOrder, c.ParentCategoryId))
-            .ToListAsync(cancellationToken);
+        var all = await GetAllCategoryNodes(cancellationToken);
 
         return Ok(BuildTree(all, null));
     }
@@ -53,6 +40,19 @@ public class CategoriesController : ControllerBase
         Guid Id, string Name, string Slug, string? Description, string? ImageUrl, string? IconUrl,
         bool IsActive, int SortOrder, Guid? ParentCategoryId);
 
+    private async Task<List<CategoryNode>> GetAllCategoryNodes(CancellationToken cancellationToken)
+    {
+        return await _db.Categories
+            .AsNoTracking()
+            .Where(c => c.IsActive)
+            .OrderBy(c => c.SortOrder)
+            .ThenBy(c => c.Name)
+            .Select(c => new CategoryNode(
+                c.Id, c.Name, c.Slug, c.Description, c.ImageUrl, c.IconUrl,
+                c.IsActive, c.SortOrder, c.ParentCategoryId))
+            .ToListAsync(cancellationToken);
+    }
+    
     private static object BuildTree(List<CategoryNode> all, Guid? parentId) =>
         all.Where(c => c.ParentCategoryId == parentId)
             .Select(c => new
@@ -85,12 +85,36 @@ public class CategoriesController : ControllerBase
                 c.IconUrl,
                 c.IsActive,
                 c.SortOrder,
-                c.ParentCategoryId
+                c.ParentCategoryId,
             })
             .FirstOrDefaultAsync(cancellationToken);
         return category is null ? NotFound() : Ok(category);
     }
-
+    
+    [HttpGet("id/{id}")]
+    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+    {
+       var all = await GetAllCategoryNodes(cancellationToken);
+        
+        var category = await _db.Categories.AsNoTracking()
+            .Where(c => c.Id == id)
+            .Select(c => new
+            {
+                c.Id,
+                c.Name,
+                c.Slug,
+                c.Description,
+                c.ImageUrl,
+                c.IconUrl,
+                c.IsActive,
+                c.SortOrder,
+                c.ParentCategoryId,
+                SubCategories = BuildTree(all, c.Id)
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+        return category is null ? NotFound() : Ok(category);
+    }
+    
     /// <summary>
     /// Тело создания/обновления категории.
     /// Картинки и иконка передаются URL-ами в JSON (без multipart).

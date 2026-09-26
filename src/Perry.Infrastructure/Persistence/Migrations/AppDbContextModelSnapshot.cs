@@ -133,12 +133,10 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("IconUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ImageUrl")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -454,8 +452,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
 
                     b.Property<string>("Url")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -497,7 +494,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
-                    b.Property<Guid?>("UserId")
+                    b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
@@ -510,6 +507,31 @@ namespace Perry.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("CK_ProductReviews_Rating", "[Rating] >= 1 AND [Rating] <= 5");
                         });
+                });
+
+            modelBuilder.Entity("Perry.Domain.Entities.ProductReviewGrade", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsHelpful")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("Reported")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("ReviewId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId");
+
+                    b.ToTable("ProductReviewGrades");
                 });
 
             modelBuilder.Entity("Perry.Domain.Entities.ProductReviewImage", b =>
@@ -721,6 +743,17 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("Perry.Domain.Entities.ProductReviewGrade", b =>
+                {
+                    b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
+                        .WithMany("Grades")
+                        .HasForeignKey("ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("Perry.Domain.Entities.ProductReviewImage", b =>
                 {
                     b.HasOne("Perry.Domain.Entities.ProductReview", "Review")
@@ -797,6 +830,8 @@ namespace Perry.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Perry.Domain.Entities.ProductReview", b =>
                 {
+                    b.Navigation("Grades");
+
                     b.Navigation("Images");
 
                     b.Navigation("Tags");
