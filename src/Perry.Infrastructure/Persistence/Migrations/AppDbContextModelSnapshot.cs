@@ -499,7 +499,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
                     b.Property<Guid>("ReviewId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Url")
+                    b.Property<string>("Url");
                     b.HasKey("Id");
 
                     b.HasIndex("Name");

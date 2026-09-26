@@ -183,6 +183,36 @@ public class ReviewRepository: IReviewRepository
         return Result.Success();
     }
     
+    public async Task<Result> Report(Guid reviewId,Guid userId, CancellationToken cancellationToken)
+    {
+        var grade = _dbContext.ProductReviewGrades
+            .FirstOrDefault(r => r.ReviewId == reviewId && r.UserId == userId);
+        if (grade != null)
+        {
+            grade.Reported = !grade.Reported;
+        }
+        else
+        {
+            var review = _dbContext.ProductReviews.FirstOrDefault(r => r.Id == reviewId);
+            if (review != null)
+            {
+                _dbContext.ProductReviewGrades.Add(new ProductReviewGrade
+                {
+                    UserId = userId,
+                    ReviewId = review.Id,
+                    Reported = true
+                });
+            }
+            else
+            {
+                return QueryError.EntityNotExist;
+            }
+
+        }
+        
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
     
     private async Task<ProductReviewStatistic> GetReviewStatistic(QueryOptions options, CancellationToken cancellationToken)
     {

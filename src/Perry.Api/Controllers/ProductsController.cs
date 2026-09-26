@@ -19,8 +19,7 @@ namespace Perry.Api.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
-    
-    public ProductsController(AppDbContext db)
+
     private readonly IProductStatisticsService _stats;
     private readonly IViewedProductsService _viewed;
 
