@@ -34,4 +34,9 @@ public sealed record ProductReviewDto
     public required PagedList<ProductReview> PagedList { get; set; }
     public ProductReviewStatistic Statistic { get; set; } = new();
 }
-    
+
+public sealed record ManyProductReview
+{
+    public List<Guid> ReviewIds { get; set; }
+    public bool Approved { get; set; }
+}

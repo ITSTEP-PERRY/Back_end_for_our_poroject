@@ -13,7 +13,15 @@ public interface IOrderService
     Task<IReadOnlyList<Order>> GetAllAsync(CancellationToken ct = default);
     Task<AdminOrdersResult> GetAdminOrdersAsync(AdminOrdersQuery query, CancellationToken ct = default);
     /// <param name="recipientName">Имя из JWT claims Auth Service (опционально).</param>
-    Task<Order> CreateFromCartAsync(Guid userId, string? sessionId, string? recipientName = null, CancellationToken ct = default);
+    /// <param name="shippingAddress">Адрес доставки с клиента (#A05).</param>
+    /// <param name="paymentType">Способ оплаты с клиента (#A05).</param>
+    Task<Order> CreateFromCartAsync(
+        Guid userId,
+        string? sessionId,
+        string? recipientName = null,
+        string? shippingAddress = null,
+        string? paymentType = null,
+        CancellationToken ct = default);
     Task UpdateStatusAsync(Guid orderId, OrderStatus status, CancellationToken ct = default);
     /// <summary>Повторить заказ: очистить корзину и добавить позиции снова (homework RepeatOrder).</summary>
     Task RepeatOrderAsync(Guid userId, Guid orderId, CancellationToken ct = default);
@@ -179,11 +187,22 @@ public class OrderService : IOrderService
         Guid userId,
         string? sessionId,
         string? recipientName = null,
+        string? shippingAddress = null,
+        string? paymentType = null,
         CancellationToken ct = default)
     {
         var items = await _cart.GetItemsAsync(userId, sessionId, ct);
         if (items.Count == 0)
             throw new InvalidOperationException("Корзина пуста.");
+
+        // #A05: клиент может передать адрес/оплату; иначе прежние демо-дефолты
+        var address = string.IsNullOrWhiteSpace(shippingAddress)
+            ? "Canada, Ontario, Something Street, 1919"
+            : shippingAddress.Trim();
+        var pay = string.IsNullOrWhiteSpace(paymentType) ? "Cash" : paymentType.Trim();
+        var allowedPay = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "Cash", "Card", "Online" };
+        if (!allowedPay.Contains(pay))
+            throw new InvalidOperationException("Неизвестный paymentType. Допустимо: Cash, Card, Online.");
 
         var productIds = items.Select(i => i.ProductId).ToList();
         var products = await _db.Products
@@ -211,8 +230,8 @@ public class OrderService : IOrderService
             ItemsCount = items.Sum(i => i.Quantity),
             Status = OrderStatus.Ordered,
             RecipientName = string.IsNullOrWhiteSpace(recipientName) ? null : recipientName.Trim(),
-            ShippingAddress = "Canada, Ontario, Something Street, 1919",
-            PaymentType = "Cash",
+            ShippingAddress = address,
+            PaymentType = pay,
             CreatedAtUtc = DateTime.UtcNow
         };
         _db.Orders.Add(order);

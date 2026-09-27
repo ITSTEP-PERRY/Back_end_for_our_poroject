@@ -66,7 +66,7 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
-// JWT — конфиг команды (JwtOptions) + fallback на Jwt:Key для локальной совместимости
+// JWT — JwtOptions + Auth Service (DEV: SkipSignatureValidation)
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
     jwt.SigningSecret = builder.Configuration["Jwt:Key"] ?? string.Empty;
@@ -128,5 +128,21 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// #A06 — healthcheck (API + SQL)
+app.MapGet("/api/health", async (AppDbContext db, CancellationToken ct) =>
+{
+    try
+    {
+        var ok = await db.Database.CanConnectAsync(ct);
+        return ok
+            ? Results.Ok(new { status = "Healthy", database = "up", utc = DateTime.UtcNow })
+            : Results.Json(new { status = "Unhealthy", database = "down" }, statusCode: 503);
+    }
+    catch (Exception ex)
+    {
+        return Results.Json(new { status = "Unhealthy", database = "error", error = ex.Message }, statusCode: 503);
+    }
+}).AllowAnonymous();
 
 app.Run();

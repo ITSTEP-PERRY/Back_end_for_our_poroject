@@ -14,7 +14,11 @@ public class OrdersController : ControllerBase
 
     public OrdersController(IOrderService orders) => _orders = orders;
 
-    public record CheckoutRequest(string? SessionId);
+    public record CheckoutRequest(
+        string? SessionId,
+        string? ShippingAddress,
+        string? PaymentType,
+        string? RecipientName);
     public record StatusRequest(string Status);
 
     [Authorize]
@@ -52,7 +56,9 @@ public class OrdersController : ControllerBase
             var order = await _orders.CreateFromCartAsync(
                 userId.Value,
                 body.SessionId,
-                AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
+                body.RecipientName ?? AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
+                body.ShippingAddress,
+                body.PaymentType,
                 ct);
             return Ok(MapOrder(order));
         }

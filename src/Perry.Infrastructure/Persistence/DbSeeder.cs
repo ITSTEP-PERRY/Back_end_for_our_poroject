@@ -36,6 +36,107 @@ public static class DbSeeder
         await EnsureCatalogFilterAttributesAsync(db);
         await EnsureProductPageDemoAsync(db);
         await EnsureShopLooksAliveAsync(db);
+        await EnsureDemoOrdersAsync(db);
+    }
+
+    /// <summary>
+    /// #A03 — демо-заказы + OrderItems (идемпотентно).
+    /// UserId — тестовый Admin из Auth (sanyamart13) для локальной админки.
+    /// </summary>
+    private static async Task EnsureDemoOrdersAsync(AppDbContext db)
+    {
+        if (await db.Orders.AnyAsync())
+            return;
+
+        var products = await db.Products
+            .AsNoTracking()
+            .Include(p => p.Category)
+            .Include(p => p.Images)
+            .Where(p => p.Status != ProductStatus.Archived)
+            .OrderBy(p => p.Name)
+            .Take(8)
+            .ToListAsync();
+        if (products.Count == 0)
+            return;
+
+        // Auth demo Admin (локально известен); плюс второй Guid для разнообразия
+        var adminUserId = Guid.Parse("d78e94a9-cf1d-43f3-9ecd-643149b9e95a");
+        var otherUserId = Guid.Parse("43465fbf-6e7a-4632-9c83-068851bb45f5");
+
+        var specs = new (Guid UserId, string Recipient, string Address, string Payment, OrderStatus Status, int DaysAgo, int[] ProductIndexes)[]
+        {
+            (adminUserId, "Aleksandr Martynov", "Canada, Ontario, Something Street, 1919", "Cash", OrderStatus.Ordered, 1, new[] { 0, 1 }),
+            (adminUserId, "Aleksandr Martynov", "Canada, Ontario, King St, 42", "Card", OrderStatus.Received, 3, new[] { 2 }),
+            (otherUserId, "Vladislav Melenchuk", "Ukraine, Kyiv, Khreshchatyk 1", "Card", OrderStatus.Shipped, 5, new[] { 1, 3 }),
+            (adminUserId, "Aleksandr Martynov", "Canada, Ontario, Something Street, 1919", "Cash", OrderStatus.ReadyToPickup, 8, new[] { 0, 2, 4 }),
+            (otherUserId, "Guest Buyer", "USA, NY, 5th Avenue 100", "Card", OrderStatus.Cancelled, 10, new[] { 5 }),
+        };
+
+        var now = DateTime.UtcNow;
+        foreach (var spec in specs)
+        {
+            var picks = spec.ProductIndexes
+                .Where(i => i >= 0 && i < products.Count)
+                .Select(i => products[i])
+                .DistinctBy(p => p.Id)
+                .ToList();
+            if (picks.Count == 0)
+                continue;
+
+            var orderId = Guid.NewGuid();
+            var orderDate = now.AddDays(-spec.DaysAgo).AddHours(-spec.DaysAgo);
+            var items = new List<OrderItem>();
+            var qtyBase = 1;
+            foreach (var p in picks)
+            {
+                var qty = qtyBase;
+                qtyBase = qtyBase == 1 ? 2 : 1;
+                var img = p.Images.FirstOrDefault(i => i.IsPrimary)?.Url
+                    ?? p.Images.OrderBy(i => i.SortOrder).FirstOrDefault()?.Url;
+                items.Add(new OrderItem
+                {
+                    Id = Guid.NewGuid(),
+                    OrderId = orderId,
+                    ProductId = p.Id,
+                    ProductName = p.Name,
+                    ProductDescription = p.Description,
+                    ProductPrice = p.Price,
+                    Quantity = qty,
+                    TotalPrice = qty * p.Price,
+                    ProductImageUrl = img,
+                    CategoryName = p.Category?.Name ?? "—",
+                    CreatedAtUtc = orderDate
+                });
+            }
+
+            db.Orders.Add(new Order
+            {
+                Id = orderId,
+                UserId = spec.UserId,
+                OrderDateUtc = orderDate,
+                TotalAmount = items.Sum(i => i.TotalPrice),
+                ItemsCount = items.Sum(i => i.Quantity),
+                Status = spec.Status,
+                RecipientName = spec.Recipient,
+                ShippingAddress = spec.Address,
+                PaymentType = spec.Payment,
+                CompletedAtUtc = spec.Status == OrderStatus.ReadyToPickup ? orderDate.AddDays(2) : null,
+                CreatedAtUtc = orderDate,
+                UpdatedAtUtc = orderDate
+            });
+            db.OrderItems.AddRange(items);
+
+            // лёгкий bump OrderCount на товарах (tracked отдельно)
+            foreach (var item in items)
+            {
+                var tracked = await db.Products.FirstOrDefaultAsync(x => x.Id == item.ProductId);
+                if (tracked is null) continue;
+                tracked.OrderCount += item.Quantity;
+                tracked.UpdatedAtUtc = now;
+            }
+        }
+
+        await db.SaveChangesAsync();
     }
 
     /// <summary>
