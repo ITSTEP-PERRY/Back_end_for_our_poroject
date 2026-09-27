@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
 using DotNetEnv;
@@ -95,8 +96,8 @@ builder.Services
             ValidIssuer = jwtIssuer,
             ValidAudience = jwtAudience,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            RoleClaimType = builder.Configuration["Jwt:RoleClaimType"] ?? "role",
-            NameClaimType = builder.Configuration["Jwt:NameClaimType"] ?? "name"
+            RoleClaimType = ClaimTypes.Role,
+            // NameClaimType = builder.Configuration["Jwt:NameClaimType"] ?? "name"
         };
     });
 builder.Services.AddAuthorization();

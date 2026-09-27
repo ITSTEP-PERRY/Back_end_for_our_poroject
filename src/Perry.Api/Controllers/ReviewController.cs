@@ -44,9 +44,8 @@ public class ReviewController: ControllerBase
         return reviews;
     }
     
-    
     [HttpGet]
-    public async Task<IActionResult> GetAllReviews([FromQuery] QueryOptions options, CancellationToken ct)
+    public async Task<IActionResult> GetAllReviews([FromQuery] QueryOptions options,Guid? id, CancellationToken ct)
     {
         var user = HttpContext.User;
         if (!(await _authorizationService.AuthorizeAsync(user, AuthorizationPolicies.AdminAccess)).Succeeded)
@@ -56,7 +55,7 @@ public class ReviewController: ControllerBase
                 { PropertyName = nameof(ProductReview.IsApproved), Value = "true" });
         }
         
-        var result = await _reviewRepository.GetAllReviews(options, ct);
+        var result = await _reviewRepository.GetAllReviews(options,id, ct);
         if (result.Value != null)
         {
             var review = result.Value;
@@ -132,6 +131,17 @@ public class ReviewController: ControllerBase
         if (result) return NoContent();
         return NotFound();
     }
+
+    
+    [HttpPatch("disable-many")]
+    [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
+    public async Task<IActionResult> DisableManyReviews([FromBody]ManyProductReview reviews, CancellationToken ct)
+    {
+        
+        var result = await _reviewRepository.SetApproveForAllReview(reviews.ReviewIds,reviews.Approved, ct);
+        if (result) return NoContent();
+        return NotFound();
+    }
     
     [HttpPost("grade/{reviewId}")]
     [Authorize]
@@ -152,6 +162,17 @@ public class ReviewController: ControllerBase
         if (userId == null) return Unauthorized();
         var result = await _reviewRepository.Report(reviewId,new Guid(userId), ct);
         if (result) return NoContent();
+        return NotFound();
+    }
+
+    [HttpGet("my/{reviewId}")]
+    [Authorize]
+    public async Task<IActionResult> GetMyGradeById(Guid reviewId, CancellationToken ct)
+    {
+        var userId = HttpContext.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+        var result = await _reviewRepository.GetMyGrade(reviewId, new Guid(userId), ct);
+        if (result) return Ok(result.Value);
         return NotFound();
     }
     

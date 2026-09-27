@@ -14,7 +14,7 @@ namespace Perry.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-// [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
+[Authorize(Policy = AuthorizationPolicies.AdminAccess)]
 public class CategoriesController : ControllerBase
 {
     private readonly AppDbContext _db;
