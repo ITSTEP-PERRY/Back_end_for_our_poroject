@@ -23,7 +23,10 @@
 | [docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) | Срез 25.09: Admin Orders #93 (фильтры + compare %) |
 | [docs/ИЗМЕНЕНИЯ-2026-09-26.md](./docs/ИЗМЕНЕНИЯ-2026-09-26.md) | Срез 26.09: #94 без Users, FE→Auth |
 | [docs/ОТЧЁТ-2026-09-26.md](./docs/ОТЧЁТ-2026-09-26.md) | Подробный отчёт + конфликт фронт-архитектур |
-| [docs/ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md) | **Срез 28.09: #A03–#A07 + CI fix** |
+| [docs/ОТЧЁТ-2026-09-28.md](./docs/ОТЧЁТ-2026-09-28.md) | **Отчёт 28.09: #A03–#A07 · #95 · #99–#104** |
+| [docs/ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md) | Срез 28.09: #A03–#A07 + CI fix |
+| [docs/ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./docs/ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) | #95 JWT secret от Auth |
+| [docs/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./docs/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md) | Отзывы #99–#104 |
 | [docs/AUTH-INTEGRATION.md](./docs/AUTH-INTEGRATION.md) | Auth Service ↔ Product API ↔ FE |
 | [docs/ВОПРОСЫ-КОМАНДЕ.md](./docs/ВОПРОСЫ-КОМАНДЕ.md) | Вопросы Владу / Яне / Product |
 | [docs/СВЕСТИ-ДВЕ-ЛИНИИ.md](./docs/СВЕСТИ-ДВЕ-ЛИНИИ.md) | Figma-порт vs архитектура Яны |
@@ -49,18 +52,18 @@ dotnet run --project src/Perry.Web --launch-profile http
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
 
-## Срез 28.09.2026 — #A03–#A07
+## Срез 28.09.2026 — итог дня
 
-Ветка `feature/categories-facets-figma-storefront` (+ `feature/front-match` в ITSTEP). Детали: [ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md).
+Полный отчёт: [ОТЧЁТ-2026-09-28.md](./docs/ОТЧЁТ-2026-09-28.md). Ветка `feature/categories-facets-figma-storefront`.
 
-| # | Что |
-|---|-----|
-| **#A03** | Seed демо-заказов (`EnsureDemoOrdersAsync`) |
-| **#A04** | Удалён `AdminReviewsController` → `ReviewController` |
-| **#A05** | Checkout: `shippingAddress` + `paymentType` |
-| **#A06** | `GET /api/health` |
-| **#A07** | `GET /api/admin/users/{userId}/popular-products` |
-| CI | Фикс Razor Cart (`ct: ct`) после смены сигнатуры — Perry CI green |
+| Блок | Что |
+|------|-----|
+| **#A03–#A07** | Seed orders · ReviewController · checkout · `/api/health` · popular-by-user · CI green |
+| **#95** | JWT HS256 `Jwt:SigningSecret` из `.env` |
+| **#99–#104** | Create + AuthClaims · unique · `/me` · Account UI · tags |
+| Auth next | #96 iss/aud · #97 credential · #98 claims |
+
+Срезы: [ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md) · [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./docs/ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./docs/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md).
 
 ## Срез 25.09.2026 — что сделано
 
