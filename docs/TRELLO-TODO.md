@@ -237,7 +237,7 @@
 **Закрыто 28.09:** **#A03** seed orders · **#A04** remove AdminReviewsController · **#A05** checkout shipping/payment · **#A06** `/api/health` · **#A07** popular-by-userId — см. [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md).  
 **#95** — ✅ secret HS256 получен; Product читает `.env` / валидирует подпись — [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md). Осталось: plaintext service credential + подтвердить iss/aud на живом токене. **#92** — слайды (Design).  
 **Отзывы (#99–#104)** — ✅ Done: create `POST /api/reviews`, AuthClaims UserId, unique, `/me`, Account «My reviews», tags — [ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md).  
-**Auth follow-up:** [#96](https://trello.com/c/dnk4VUUk) iss/aud · [#97](https://trello.com/c/hcmCvKWF) credential · [#98](https://trello.com/c/paCSfdu7) claims.
+**Auth follow-up (стыки):** пакет [#105](https://trello.com/c/6W4hdlT1) · Auth сдаёт [#96](https://trello.com/c/dnk4VUUk) iss/aud · [#98](https://trello.com/c/paCSfdu7) claims · [#97](https://trello.com/c/hcmCvKWF) credential · [#106](https://trello.com/c/LIL5NHlr) CORS · затем мы [#107](https://trello.com/c/zuzmLFVt) Product · [#108](https://trello.com/c/dKmess1E) Front smoke — [СТЫКИ-МИКРОСЕРВИСОВ.md](./СТЫКИ-МИКРОСЕРВИСОВ.md).
 
 ---
 
