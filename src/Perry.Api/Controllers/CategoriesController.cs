@@ -14,7 +14,6 @@ namespace Perry.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Policy = AuthorizationPolicies.AdminAccess)]
 public class CategoriesController : ControllerBase
 {
     private readonly AppDbContext _db;
@@ -119,12 +118,13 @@ public class CategoriesController : ControllerBase
             .FirstOrDefaultAsync(cancellationToken);
         return category is null ? NotFound() : Ok(category);
     }
-    
-    [HttpGet("id/{id}")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+
+    /// <summary>GET /api/categories/id/{id} — дерево детей (командный front-match).</summary>
+    [HttpGet("id/{id:guid}")]
+    public async Task<IActionResult> GetByIdWithChildren(Guid id, CancellationToken cancellationToken)
     {
-       var all = await GetAllCategoryNodes(cancellationToken);
-        
+        var all = await GetCategoryNodes(includeInactive: true, cancellationToken);
+
         var category = await _db.Categories.AsNoTracking()
             .Where(c => c.Id == id)
             .Select(c => new
@@ -160,6 +160,7 @@ public class CategoriesController : ControllerBase
 
     /// <summary>POST /api/categories</summary>
     [HttpPost]
+    [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
     public async Task<IActionResult> Create(
         [FromBody] CategoryWriteRequest body,
         CancellationToken ct)
@@ -193,6 +194,7 @@ public class CategoriesController : ControllerBase
 
     /// <summary>PUT /api/categories/{id}</summary>
     [HttpPut("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
     public async Task<IActionResult> Update(Guid id, [FromBody] CategoryWriteRequest body, CancellationToken ct)
     {
         if (string.IsNullOrWhiteSpace(body.Name))
@@ -226,6 +228,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
     public async Task<IActionResult> SoftDelete(Guid id, [FromServices] ICategoryService categories, CancellationToken ct)
     {
         await categories.SoftDeactivateAsync(id, ct);

@@ -167,7 +167,9 @@ public class ReviewController: ControllerBase
                 .Where(r => r.ProductId == productId && r.IsApproved)
                 .ToListAsync(ct);
             product.ReviewCount = approved.Count;
-            product.AverageRating = approved.Count == 0 ? 0 : Math.Round(approved.Average(r => r.Rating), 1);
+            product.AverageRating = approved.Count == 0
+                ? 0
+                : (decimal)Math.Round(approved.Average(r => r.Rating), 1);
             product.UpdatedAtUtc = DateTime.UtcNow;
             await _db.SaveChangesAsync(ct);
         }
