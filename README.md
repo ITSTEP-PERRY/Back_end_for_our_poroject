@@ -23,9 +23,12 @@
 | [docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) | Срез 25.09: Admin Orders #93 (фильтры + compare %) |
 | [docs/ИЗМЕНЕНИЯ-2026-09-26.md](./docs/ИЗМЕНЕНИЯ-2026-09-26.md) | Срез 26.09: #94 без Users, FE→Auth |
 | [docs/ОТЧЁТ-2026-09-26.md](./docs/ОТЧЁТ-2026-09-26.md) | Подробный отчёт + конфликт фронт-архитектур |
+| [docs/ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md) | **Срез 28.09: #A03–#A07 + CI fix** |
 | [docs/AUTH-INTEGRATION.md](./docs/AUTH-INTEGRATION.md) | Auth Service ↔ Product API ↔ FE |
 | [docs/ВОПРОСЫ-КОМАНДЕ.md](./docs/ВОПРОСЫ-КОМАНДЕ.md) | Вопросы Владу / Яне / Product |
 | [docs/СВЕСТИ-ДВЕ-ЛИНИИ.md](./docs/СВЕСТИ-ДВЕ-ЛИНИИ.md) | Figma-порт vs архитектура Яны |
+| [docs/НАША-АДМИНКА.md](./docs/НАША-АДМИНКА.md) | Локальная React `/admin` (не пушим страницы в perry-front) |
+| [docs/РЕШЕНИЕ-ФРОНТ-АДМИН.md](./docs/РЕШЕНИЕ-ФРОНТ-АДМИН.md) | Что команде / что держим у себя |
 | [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
 | [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
 | [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
@@ -45,6 +48,19 @@ dotnet run --project src/Perry.Web --launch-profile http
 - API: `dotnet run --project src/Perry.Api` → `/swagger`
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
+
+## Срез 28.09.2026 — #A03–#A07
+
+Ветка `feature/categories-facets-figma-storefront` (+ `feature/front-match` в ITSTEP). Детали: [ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md).
+
+| # | Что |
+|---|-----|
+| **#A03** | Seed демо-заказов (`EnsureDemoOrdersAsync`) |
+| **#A04** | Удалён `AdminReviewsController` → `ReviewController` |
+| **#A05** | Checkout: `shippingAddress` + `paymentType` |
+| **#A06** | `GET /api/health` |
+| **#A07** | `GET /api/admin/users/{userId}/popular-products` |
+| CI | Фикс Razor Cart (`ct: ct`) после смены сигнатуры — Perry CI green |
 
 ## Срез 25.09.2026 — что сделано
 

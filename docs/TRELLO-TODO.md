@@ -8,9 +8,9 @@
 1. Создайте доску: колонки `Backlog` → `To Do` → `In Progress` → `Review` → `Done`.
 2. Создайте карточку на каждую задачу ниже (номер = ID карточки).
 3. Метки (labels): `FE` · `BE` · `Admin` · `Mobile` · `Design` · `Docs` · `P0` / `P1` / `P2`.
-4. Статус — синхронизирован с доской **ITSTEP-PERRY** на **25.09.2026**.
+4. Статус — синхронизирован с доской **ITSTEP-PERRY** на **28.09.2026**.
 Легенда статуса: ✅ Done · 🟡 Partial · ⬜ To Do / Backlog · 🚫 Blocked · 🔵 In Progress · 🟣 Review
-Срез дня: [ИЗМЕНЕНИЯ-2026-09-25.md](./ИЗМЕНЕНИЯ-2026-09-25.md)
+Срез дня: [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md) · 26.09: [ИЗМЕНЕНИЯ-2026-09-26.md](./ИЗМЕНЕНИЯ-2026-09-26.md) · Auth: [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md)
 
 ---
 
@@ -206,7 +206,7 @@
 |---|--------|-------|--------|------------|
 | **90** | Product API: statistics (views / popular / orders) | BE | 🟣 | Код ✅ · на доске Review |
 | **91** | Product Wishlist: CRUD + admin stats по месяцам | FE BE Admin | 🟣 | Код ✅ · на доске Review |
-| **93** | Admin Orders: статусы, фильтры, stats + compare % | BE FE Admin P1 | ✅ | 25.09 · [ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) |
+| **93** | Admin Orders: статусы, фильтры, stats + compare % | BE FE Admin P1 | 🟣 | Review · автор фичи проверяет · [ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) |
 
 ---
 
@@ -215,7 +215,7 @@
 | Колонка | Номера |
 |---------|--------|
 | **Done** | 1–5, 7–24, 26–41, 43–44, 46, 48–73, 76–78, 80, 83–84, 86–89 |
-| **Review** | 90, 91 |
+| **Review** | 90, 91, **93** |
 | **To Do** | 92 |
 | **Backlog** | 25, 42, 45, 74, 75, 79, 81, 85 |
 | **Blocked** | 6, 47, 82 |
@@ -230,7 +230,12 @@
 | **P2** | **#74** **#75** **#45** **#42** **#85** | Не блокер |
 | **Blocked** | **#6** **#47** **#82** | Внешний доступ / зависимости |
 
-**Закрыто 25.09:** #15, #16, #32, #41, #43, #62, #73, **#93**.
+**Закрыто 25.09:** #15, #16, #32, #41, #43, #62, #73.  
+**#93** — в Review: автор предложения сверяет реализацию с желаемым контрактом.  
+**Закрыто 26.09:** **#94** (Users out of Product API).  
+**#A02** — ✅ Done: merge `backend/main` (PR #13, fixed DB migrations) · [карточка](https://trello.com/c/BgOTO4i6).  
+**Закрыто 28.09:** **#A03** seed orders · **#A04** remove AdminReviewsController · **#A05** checkout shipping/payment · **#A06** `/api/health` · **#A07** popular-by-userId — см. [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md).  
+**#95** — To Do: JWT у Влада ([карточка](https://trello.com/c/T28F0b7e)). **#92** — слайды (Design).
 
 ---
 
