@@ -44,9 +44,8 @@ public class ReviewController: ControllerBase
         return reviews;
     }
     
-    
     [HttpGet]
-    public async Task<IActionResult> GetAllReviews([FromQuery] QueryOptions options, CancellationToken ct)
+    public async Task<IActionResult> GetAllReviews([FromQuery] QueryOptions options,Guid? id, CancellationToken ct)
     {
         var user = HttpContext.User;
         if (!(await _authorizationService.AuthorizeAsync(user, AuthorizationPolicies.AdminAccess)).Succeeded)
@@ -56,7 +55,7 @@ public class ReviewController: ControllerBase
                 { PropertyName = nameof(ProductReview.IsApproved), Value = "true" });
         }
         
-        var result = await _reviewRepository.GetAllReviews(options, ct);
+        var result = await _reviewRepository.GetAllReviews(options,id, ct);
         if (result.Value != null)
         {
             var review = result.Value;
@@ -132,6 +131,51 @@ public class ReviewController: ControllerBase
         if (result) return NoContent();
         return NotFound();
     }
+
+    
+    [HttpPatch("disable-many")]
+    [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
+    public async Task<IActionResult> DisableManyReviews([FromBody]ManyProductReview reviews, CancellationToken ct)
+    {
+        
+        var result = await _reviewRepository.SetApproveForAllReview(reviews.ReviewIds,reviews.Approved, ct);
+        if (result) return NoContent();
+        return NotFound();
+    }
+
+    /// <summary>#A04 — удаление отзыва админом (вместо AdminReviewsController).</summary>
+    [HttpDelete("{reviewId:guid}")]
+    [Authorize(Policy = AuthorizationPolicies.AdminAccess)]
+    public async Task<IActionResult> DeleteReview(Guid reviewId, CancellationToken ct)
+    {
+        var review = await _db.ProductReviews
+            .Include(r => r.Tags)
+            .Include(r => r.Images)
+            .FirstOrDefaultAsync(r => r.Id == reviewId, ct);
+        if (review is null) return NotFound();
+
+        var productId = review.ProductId;
+        _db.ProductReviewTags.RemoveRange(review.Tags);
+        _db.ProductReviewImages.RemoveRange(review.Images);
+        _db.ProductReviews.Remove(review);
+        await _db.SaveChangesAsync(ct);
+
+        var product = await _db.Products.FirstOrDefaultAsync(p => p.Id == productId, ct);
+        if (product is not null)
+        {
+            var approved = await _db.ProductReviews.AsNoTracking()
+                .Where(r => r.ProductId == productId && r.IsApproved)
+                .ToListAsync(ct);
+            product.ReviewCount = approved.Count;
+            product.AverageRating = approved.Count == 0
+                ? 0
+                : (decimal)Math.Round(approved.Average(r => r.Rating), 1);
+            product.UpdatedAtUtc = DateTime.UtcNow;
+            await _db.SaveChangesAsync(ct);
+        }
+
+        return NoContent();
+    }
     
     [HttpPost("grade/{reviewId}")]
     [Authorize]
@@ -152,6 +196,17 @@ public class ReviewController: ControllerBase
         if (userId == null) return Unauthorized();
         var result = await _reviewRepository.Report(reviewId,new Guid(userId), ct);
         if (result) return NoContent();
+        return NotFound();
+    }
+
+    [HttpGet("my/{reviewId}")]
+    [Authorize]
+    public async Task<IActionResult> GetMyGradeById(Guid reviewId, CancellationToken ct)
+    {
+        var userId = HttpContext.User.FindFirst(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+        if (userId == null) return Unauthorized();
+        var result = await _reviewRepository.GetMyGrade(reviewId, new Guid(userId), ct);
+        if (result) return Ok(result.Value);
         return NotFound();
     }
     

@@ -21,14 +21,15 @@ public class ReviewRepository: IReviewRepository
         _dbContext = dbContext;
     }
     
-    public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, CancellationToken cancellationToken)
+    public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options,Guid? id,  CancellationToken cancellationToken)
     {
         IQueryable<ProductReview> query =  _dbContext.ProductReviews
             .Select(r =>new ProductReview
             {
                 Id = r.Id,
                 ProductId = r.ProductId,
-                 Body = r.Body,
+                AuthorName = r.AuthorName,
+                Body = r.Body,
                 CreatedAtUtc = r.CreatedAtUtc,
                 IsApproved = r.IsApproved,
                 Rating = r.Rating,
@@ -36,12 +37,21 @@ public class ReviewRepository: IReviewRepository
                 Title = r.Title,
                 UserId = r.UserId,
                 Images = r.Images,
-                Grades = r.Grades
+                TotalHelpful = r.Grades.Count(g => g.IsHelpful),
+                TotalReported = r.Grades.Count(g => g.Reported),
             })
             .AsNoTracking();
         
+        if(id != null) query = query.Where(r => r.ProductId == id ||  r.UserId == id) ;
+        
         var pageList = await PagedList<ProductReview>.CreateAsync(query, options,  cancellationToken);
-        var stats = await GetReviewStatistic(options, cancellationToken);
+
+        var statQuery = _dbContext.ProductReviews.AsQueryable();
+        
+        if(id != null) statQuery = statQuery.Where(r => r.ProductId == id ||  r.UserId == id) ;
+        
+        
+        var stats = await GetReviewStatistic(statQuery, options, cancellationToken);
         return new ProductReviewDto
         {
             PagedList = pageList,
@@ -66,19 +76,22 @@ public class ReviewRepository: IReviewRepository
                 Title = r.Title,
                 UserId = r.UserId,
                 Images = r.Images,
-                Grades = r.Grades
+                TotalHelpful = r.Grades.Count(g => g.IsHelpful),
+                TotalReported = r.Grades.Count(g => g.Reported),
             })
             .AsNoTracking();
         
         var pageList = await PagedList<ProductReview>.CreateAsync(query, options,  cancellationToken);
-        var stats = await GetReviewStatistic(options, cancellationToken);
+        var statQuery = _dbContext.ProductReviews.AsQueryable();
+        
+        var stats = await GetReviewStatistic(statQuery, options, cancellationToken);
         return new ProductReviewDto
         {
             PagedList = pageList,
             Statistic = stats
         };
     }
-
+    
     public async Task<Result<ProductReview>> GetReviewById(Guid id, CancellationToken cancellationToken)
     {
         var review =  await _dbContext.ProductReviews
@@ -152,6 +165,18 @@ public class ReviewRepository: IReviewRepository
         return QueryError.EntityNotExist;
     }
 
+    
+    public async Task<Result> SetApproveForAllReview(IList<Guid> reviewIds,bool approve, CancellationToken cancellationToken)
+    {
+        var reviews = await _dbContext.ProductReviews.Where(r => reviewIds.Contains(r.Id))
+            .ToListAsync(cancellationToken);
+        
+        reviews.ForEach(r => r.IsApproved = approve);
+        
+        await _dbContext.SaveChangesAsync(cancellationToken);
+        return Result.Success();
+    }
+    
     public async Task<Result> SetGrade(Guid reviewId, Guid userId, CancellationToken cancellationToken)
     {
         var grade = _dbContext.ProductReviewGrades
@@ -213,20 +238,25 @@ public class ReviewRepository: IReviewRepository
         await _dbContext.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }
+
+    public async Task<Result<ProductReviewGrade?>> GetMyGrade(Guid reviewId, Guid userId, CancellationToken cancellationToken)
+    {
+        var grade = await _dbContext.ProductReviewGrades.FirstOrDefaultAsync(r => r.ReviewId == reviewId && r.UserId == userId, cancellationToken);
+        return grade == null ? QueryError.EntityNotExist : grade;
+    }
     
-    private async Task<ProductReviewStatistic> GetReviewStatistic(QueryOptions options, CancellationToken cancellationToken)
+    private async Task<ProductReviewStatistic> GetReviewStatistic(IQueryable<ProductReview> query, QueryOptions options, CancellationToken cancellationToken)
     {
         ProductReviewStatistic stats = new();
-        var statQuery = _dbContext.ProductReviews.AsQueryable();
         
-        statQuery = PagedList<ProductReview>.CreateQuery(statQuery, options);
+        query = PagedList<ProductReview>.CreateQuery(query, options);
         
-        stats.TotalReviews = await statQuery.CountAsync(cancellationToken);
-        stats.TotalComments = await statQuery
+        stats.TotalReviews = await query.CountAsync(cancellationToken);
+        stats.TotalComments = await query
             .Where(r => !string.IsNullOrWhiteSpace(r.Title) || !string.IsNullOrWhiteSpace(r.Body))
             .CountAsync(cancellationToken);
-
-        stats.Statistics = await statQuery.GroupBy(r => r.Rating).Select(r => new Statistic<int>
+    
+        stats.Statistics = await query.GroupBy(r => r.Rating).Select(r => new Statistic<int>
         {
             Name = r.Key.ToString(),
             Value = r.Count()

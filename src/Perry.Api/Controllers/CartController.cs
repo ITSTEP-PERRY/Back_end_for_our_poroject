@@ -144,6 +144,8 @@ public class CartController : ControllerBase
                 userId.Value,
                 sessionId,
                 AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
+                shippingAddress: null,
+                paymentType: null,
                 ct);
             return Ok(new { status = "Ok", orderId = order.Id, total = order.TotalAmount });
         }
