@@ -322,6 +322,8 @@ public static class DbSeeder
         {
             Id = reviewId,
             ProductId = productId,
+            // Distinct seed UserId so unique (UserId, ProductId) holds across bulk reviews.
+            UserId = Guid.NewGuid(),
             AuthorName = authors[seed % authors.Length],
             Rating = rating,
             Title = titles[(seed / 3) % titles.Length],
@@ -391,6 +393,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
+                UserId = Guid.Parse("11111111-1111-1111-1111-111111111101"),
                 AuthorName = "Louisa Hines",
                 Rating = 5,
                 Title = "It's true to size and has pockets",
@@ -402,6 +405,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
+                UserId = Guid.Parse("11111111-1111-1111-1111-111111111102"),
                 AuthorName = "Sylvia Kennedy",
                 Rating = 5,
                 Title = "Elegant",
@@ -413,6 +417,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
+                UserId = Guid.Parse("11111111-1111-1111-1111-111111111103"),
                 AuthorName = "Cecilia Small",
                 Rating = 3,
                 Title = "Shift dress",
@@ -631,6 +636,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = roku.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222201"),
             AuthorName = "Alex M.",
             Rating = 5,
             Title = "Easy to use",
@@ -642,6 +648,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = roku.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222202"),
             AuthorName = "Jordan K.",
             Rating = 4,
             Title = "Great value",
@@ -654,6 +661,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222203"),
             AuthorName = "Louisa Hines",
             Rating = 5,
             Title = "It's true to size and has pockets",
@@ -665,6 +673,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222204"),
             AuthorName = "Sylvia Kennedy",
             Rating = 5,
             Title = "Elegant",
@@ -676,6 +685,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222205"),
             AuthorName = "Cecilia Small",
             Rating = 3,
             Title = "Shift dress",

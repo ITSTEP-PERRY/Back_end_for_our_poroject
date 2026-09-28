@@ -235,7 +235,9 @@
 **Закрыто 26.09:** **#94** (Users out of Product API).  
 **#A02** — ✅ Done: merge `backend/main` (PR #13, fixed DB migrations) · [карточка](https://trello.com/c/BgOTO4i6).  
 **Закрыто 28.09:** **#A03** seed orders · **#A04** remove AdminReviewsController · **#A05** checkout shipping/payment · **#A06** `/api/health` · **#A07** popular-by-userId — см. [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md).  
-**#95** — ✅ secret HS256 получен; Product читает `.env` / валидирует подпись — [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md). Осталось: plaintext service credential + подтвердить iss/aud на живом токене. **#92** — слайды (Design).
+**#95** — ✅ secret HS256 получен; Product читает `.env` / валидирует подпись — [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md). Осталось: plaintext service credential + подтвердить iss/aud на живом токене. **#92** — слайды (Design).  
+**Отзывы (#99–#104)** — ✅ Done: create `POST /api/reviews`, AuthClaims UserId, unique, `/me`, Account «My reviews», tags — [ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md).  
+**Auth follow-up:** [#96](https://trello.com/c/dnk4VUUk) iss/aud · [#97](https://trello.com/c/hcmCvKWF) credential · [#98](https://trello.com/c/paCSfdu7) claims.
 
 ---
 
