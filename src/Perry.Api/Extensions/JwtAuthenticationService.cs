@@ -41,7 +41,7 @@ public static class JwtAuthenticationService
 
                 if (jwtOptions.SkipSignatureValidation)
                 {
-                    // Local DEV until #95 shared secret/JWKS.
+                    // Emergency DEV only — prefer real Jwt:SigningSecret from Auth (#95).
                     // JwtBearer 8 uses JsonWebTokenHandler by default — SignatureValidator
                     // is ignored there; force the classic handler + unsigned accept.
                     parameters.ValidateIssuerSigningKey = false;

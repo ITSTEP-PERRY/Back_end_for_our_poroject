@@ -8,7 +8,22 @@ using Perry.Api.Extensions;
 using Perry.Api.Filters;
 using Perry.Infrastructure.Options;
 
-Env.Load();
+// Local secrets: `.env` next to csproj or solution root (gitignored). See .env.example.
+foreach (var envPath in new[]
+         {
+             Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+             Path.Combine(AppContext.BaseDirectory, ".env"),
+             Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", ".env")),
+             Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "..", ".env")),
+         })
+{
+    if (File.Exists(envPath))
+    {
+        Env.Load(envPath);
+        break;
+    }
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -66,16 +81,16 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
-// JWT — JwtOptions + Auth Service (DEV: SkipSignatureValidation)
+// JWT — shared HS256 secret with Perry Auth Service (#95). Prefer env / .env over appsettings placeholders.
 var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
     jwt.SigningSecret = builder.Configuration["Jwt:Key"] ?? string.Empty;
 if (string.IsNullOrWhiteSpace(jwt.Issuer))
-    jwt.Issuer = builder.Configuration["Jwt:Issuer"] ?? "Perry";
+    jwt.Issuer = builder.Configuration["Jwt:Issuer"] ?? "Perry.AuthService";
 if (string.IsNullOrWhiteSpace(jwt.Audience))
-    jwt.Audience = builder.Configuration["Jwt:Audience"] ?? "Perry";
+    jwt.Audience = builder.Configuration["Jwt:Audience"] ?? "Perry.Client";
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret) && !jwt.SkipSignatureValidation)
-    throw new InvalidOperationException("JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key).");
+    throw new InvalidOperationException("JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key / .env).");
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
     jwt.SigningSecret = "dev-placeholder-not-used-when-skip-signature";
 

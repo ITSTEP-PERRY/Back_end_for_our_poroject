@@ -28,8 +28,15 @@ services:
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
       Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
-      Jwt__Issuer: Perry
-      Jwt__Audience: Perry
+      Jwt__SigningSecret: ${JWT_KEY:?JWT_KEY is required}
+      Jwt__Issuer: ${JWT_ISSUER:-Perry.AuthService}
+      Jwt__Audience: ${JWT_AUDIENCE:-Perry.Client}
+      Jwt__SkipSignatureValidation: ${JWT_SKIP_SIGNATURE:-false}
+      Jwt__MapInboundClaims: "false"
+      Jwt__RoleClaimType: role
+      Jwt__NameClaimType: sub
+      AuthService__BaseUrl: ${AUTH_SERVICE_BASE_URL:-https://perry-auth-service.orangeplant-910928aa.swedencentral.azurecontainerapps.io}
+      AuthService__ServiceName: ${AUTH_SERVICE_NAME:-local-service}
       Smtp__UseStub: ${SMTP_USE_STUB:-true}
       Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
       Smtp__Port: ${SMTP_PORT:-587}
