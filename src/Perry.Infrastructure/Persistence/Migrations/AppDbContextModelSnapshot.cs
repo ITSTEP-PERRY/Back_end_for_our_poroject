@@ -510,7 +510,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
 
                     b.ToTable("ProductReviews", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProductReviews_Rating", "[Rating] >= 1 AND [Rating] <= 5");
+                            t.HasCheckConstraint("CK_ProductReviews_Rating", "\"Rating\" >= 1 AND \"Rating\" <= 5");
                         });
                 });
 

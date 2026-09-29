@@ -268,7 +268,7 @@ namespace Perry.Infrastructure.Persistence.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProductReviews", x => x.Id);
-                    table.CheckConstraint("CK_ProductReviews_Rating", "[Rating] >= 1 AND [Rating] <= 5");
+                    table.CheckConstraint("CK_ProductReviews_Rating", "\"Rating\" >= 1 AND \"Rating\" <= 5");
                     table.ForeignKey(
                         name: "FK_ProductReviews_Products_ProductId",
                         column: x => x.ProductId,

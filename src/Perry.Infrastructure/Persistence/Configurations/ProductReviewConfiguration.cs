@@ -22,9 +22,10 @@ public class ProductReviewConfiguration : IEntityTypeConfiguration<ProductReview
         // #101 — один отзыв на товар от одного пользователя Auth
         builder.HasIndex(x => new { x.UserId, x.ProductId }).IsUnique();
 
+        // PostgreSQL: identifiers in double quotes (SQL Server [] is invalid).
         builder.ToTable(t => t.HasCheckConstraint(
             "CK_ProductReviews_Rating",
-            "[Rating] >= 1 AND [Rating] <= 5"));
+            "\"Rating\" >= 1 AND \"Rating\" <= 5"));
 
         builder.HasOne(x => x.Product)
             .WithMany(x => x.Reviews)
