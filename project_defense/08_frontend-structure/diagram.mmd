@@ -1,17 +1,15 @@
 flowchart TB
-  MAIN["main.tsx → App.tsx"]
-  APP["app/<br/>router · Auth · Cart · Wishlist"]
-  PAGES["pages/<br/>storefront · auth · account · admin"]
-  WID["widgets/<br/>AppShell · ProductCard · admin"]
-  API["api/<br/>client · facade · types"]
-  STY["styles/ · theme/"]
+  M["main.tsx → App.tsx"]
+  APP["app/ — router, Auth, Cart, Wishlist"]
+  PAGES["pages/ — витрина, auth, account, admin"]
+  WID["widgets/ — AppShell, карточки, модалки"]
+  API["api/ — client + facade"]
 
-  MAIN --> APP
+  M --> APP
   APP --> PAGES
   APP --> WID
   PAGES --> API
   WID --> API
-  PAGES --> STY
 
-  classDef r fill:#1e3a5f,stroke:#5b9fd4,color:#fff
-  class MAIN,APP,PAGES,WID,API,STY r
+  classDef a fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  class M,APP,PAGES,WID,API a

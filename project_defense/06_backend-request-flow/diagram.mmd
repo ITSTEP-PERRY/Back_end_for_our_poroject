@@ -1,19 +1,15 @@
-sequenceDiagram
-  participant C as Client
-  participant API as Perry.Api
-  participant JWT as JwtBearer
-  participant S as Service
-  participant DB as PostgreSQL
+flowchart TB
+  REQ["HTTP запрос /api/..."]
+  C["1. CORS — origin :3000"]
+  J["2. JWT Bearer — проверка подписи"]
+  A["3. Authorize — роль Admin?"]
+  H["4. Controller → Service"]
+  DB[("5. PostgreSQL")]
+  R["6. JSON ответ"]
 
-  C->>API: HTTP /api/...
-  API->>JWT: validate Bearer?
-  alt invalid / missing when required
-    JWT-->>C: 401
-  else ok
-    JWT-->>API: claims
-    API->>S: business call
-    S->>DB: EF Core
-    DB-->>S: data
-    S-->>API: DTO
-    API-->>C: JSON 200
-  end
+  REQ --> C --> J --> A --> H --> DB --> R
+
+  classDef a fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef d fill:#2d3e4a,stroke:#8ab4d4,color:#fff
+  class REQ,C,J,A,H,R a
+  class DB d

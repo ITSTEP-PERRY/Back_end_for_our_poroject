@@ -1,9 +1,9 @@
 flowchart TB
-  AUTH["AuthContext<br/>user · login · isAdmin"]
-  CART["CartContext<br/>cart · sessionId · merge"]
-  WISH["WishlistContext<br/>ids · items"]
-  LS["localStorage<br/>perry_token · perry_cart_session · perry_local_admin"]
-  UI["Pages / Widgets"]
+  AUTH["AuthContext<br/>кто я, роль Admin?"]
+  CART["CartContext<br/>корзина + sessionId"]
+  WISH["WishlistContext<br/>избранное"]
+  LS["localStorage<br/>token · cart_session · local_admin"]
+  UI["Страницы и виджеты"]
 
   AUTH --> UI
   CART --> UI
@@ -16,4 +16,4 @@ flowchart TB
   classDef w fill:#2d4a3e,stroke:#7dcea0,color:#fff
   class AUTH a
   class CART c
-  class WISH w
+  class WISH,UI,LS w

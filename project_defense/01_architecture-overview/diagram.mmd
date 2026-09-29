@@ -1,27 +1,19 @@
-flowchart LR
-  B["Browser<br/>localhost:3000"]
-  V["Vite / React SPA"]
-  A["Auth Service<br/>Azure"]
-  P["Perry.Api<br/>:5272"]
-  U["Admin Service<br/>Azure"]
-  DB[("PostgreSQL<br/>Product DB")]
-  UP["Uploads / media"]
+flowchart TB
+  B["1. Browser<br/>localhost:3000"]
+  V["2. Vite + React SPA"]
 
   B --> V
-  V -->|"/api · /uploads"| P
-  V -->|"/auth-api"| A
-  V -->|"/users-api"| U
-  P --> DB
-  P --> UP
+
+  V --> A["3a. Auth Service Azure<br/>/auth-api → login, JWT"]
+  V --> P["3b. Perry.Api :5272<br/>/api → каталог, заказы"]
+  V --> U["3c. Admin Service Azure<br/>/users-api → пользователи"]
+
+  P --> DB[("4. PostgreSQL<br/>Product DB")]
   P -.->|"Internal #97"| A
 
-  classDef client fill:#2d4a3e,stroke:#7dcea0,color:#fff
-  classDef fe fill:#3d4a1e,stroke:#c9d56a,color:#fff
-  classDef api fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef step fill:#1e3a5f,stroke:#5b9fd4,color:#fff
   classDef ext fill:#4a2d3e,stroke:#d48ab0,color:#fff
   classDef db fill:#2d3e4a,stroke:#8ab4d4,color:#fff
-  class B client
-  class V fe
-  class P,UP api
+  class B,V,P step
   class A,U ext
   class DB db
