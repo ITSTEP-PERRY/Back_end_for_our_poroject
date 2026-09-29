@@ -23,7 +23,8 @@ React-витрина (`D:\Perry`, Vite `:3000`) в Docker **не** входит 
 ```bash
 cd My_Amazon2
 cp .env.example .env
-# задайте POSTGRES_PASSWORD и JWT_KEY
+# при необходимости переопределите POSTGRES_PASSWORD и JWT_KEY
+# (в compose уже есть безопасные defaults для CI / локального старта)
 
 docker compose up --build
 # или только БД:
