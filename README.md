@@ -12,10 +12,13 @@
 ## Срез 29.09.2026 — итог дня
 
 Полный отчёт: **[docs/ОТЧЁТ-2026-09-29.md](./docs/ОТЧЁТ-2026-09-29.md)**.  
+**#A08 + #A09:** **[docs/ОТЧЁТ-2026-09-29-A08-A09.md](./docs/ОТЧЁТ-2026-09-29-A08-A09.md)** (PostgreSQL + admin orders).  
 Ветка `feature/categories-facets-figma-storefront`.
 
 | Блок | Что |
 |------|-----|
+| **#A08** | Product API на **PostgreSQL** (Npgsql, docker `postgres`, InitialPostgreSQL) |
+| **#A09** | `GET /api/orders/admin` — pagination, productId/userId, sort, search, paymentType, поля как Mine |
 | **#97 / #107** | `AuthInternalClient` — Internal token + lookup user; admin orders enrichment |
 | **Reviews** | Фикс колонки `Reported` в `ProductReviewGrades` (DbSeeder) |
 | **Dev Admin** | `POST /api/dev/admin-login` (`Admin`/`Admin`) + `auth-internal-status` |
@@ -23,12 +26,14 @@
 | **Categories** | Razor admin tree (`_CategoryAdminTreeNode`) |
 | **Владу** | Текст запроса plaintext: [ЗАПРОС-ВЛАДУ-97.md](./docs/ЗАПРОС-ВЛАДУ-97.md) |
 | **Статус стыков** | [СТЫКИ-ЛОКАЛЬНО.md](./docs/СТЫКИ-ЛОКАЛЬНО.md) |
+| **Mobile plan** | [МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md](./docs/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md) |
 
-Код стыков: коммит `544216e`. Секреты только в локальном `.env` (см. `.env.example`).
+Код стыков: коммит `544216e`+. Секреты только в локальном `.env` (см. `.env.example`).
 
 | Файл | О чём |
 |------|--------|
-| [docs/ОТЧЁТ-2026-09-29.md](./docs/ОТЧЁТ-2026-09-29.md) | **Отчёт 29.09: Internal Auth · Reviews · Dev Admin** |
+| [docs/ОТЧЁТ-2026-09-29-A08-A09.md](./docs/ОТЧЁТ-2026-09-29-A08-A09.md) | **#A08 Postgres · #A09 admin orders** |
+| [docs/ОТЧЁТ-2026-09-29.md](./docs/ОТЧЁТ-2026-09-29.md) | Отчёт 29.09: Internal Auth · Reviews · Dev Admin |
 | [docs/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md](./docs/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md) | **План: Expo/RN витрина на нашем Product + Auth (без переписывания бэка)** |
 | [docs/СТЫКИ-ЛОКАЛЬНО.md](./docs/СТЫКИ-ЛОКАЛЬНО.md) | Готовность стыков у нас + что ждём от Влада |
 | [docs/ЗАПРОС-ВЛАДУ-97.md](./docs/ЗАПРОС-ВЛАДУ-97.md) | Личный запрос plaintext #97 (копипаст) |

@@ -27,7 +27,7 @@ public static class DependencyInjection
                                     "Connection string 'DefaultConnection' is not configured.");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseNpgsql(connectionString));
 
         // Нужен ViewedProductsService (и другим сервисам с доступом к HttpContext).
         // В Api раньше не регистрировали — из‑за этого падал старт.

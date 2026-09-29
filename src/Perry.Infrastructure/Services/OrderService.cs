@@ -33,6 +33,20 @@ public sealed class AdminOrdersQuery
     public DateTime? FromUtc { get; init; }
     public DateTime? ToUtc { get; init; }
     public string? OrderId { get; init; }
+
+    /// <summary>#A09</summary>
+    public Guid? ProductId { get; init; }
+    public Guid? UserId { get; init; }
+    public string? PaymentType { get; init; }
+    /// <summary>email / sku / product name / shipping address / recipient</summary>
+    public string? Search { get; init; }
+    /// <summary>orderDate (default) | totalAmount</summary>
+    public string? SortBy { get; init; }
+    public bool SortDesc { get; init; } = true;
+    public int Page { get; init; } = 1;
+    public int PageSize { get; init; } = 20;
+    /// <summary>UserIds matched by email via Auth Internal (optional).</summary>
+    public IReadOnlyCollection<Guid>? EmailMatchedUserIds { get; init; }
 }
 
 public sealed class AdminOrdersResult
@@ -47,6 +61,9 @@ public sealed class AdminOrdersResult
     public DateTime? PeriodToUtc { get; init; }
     public DateTime? CompareFromUtc { get; init; }
     public DateTime? CompareToUtc { get; init; }
+    public int Page { get; init; }
+    public int PageSize { get; init; }
+    public int TotalPages { get; init; }
 }
 
 public class OrderService : IOrderService
@@ -87,6 +104,9 @@ public class OrderService : IOrderService
 
     public async Task<AdminOrdersResult> GetAdminOrdersAsync(AdminOrdersQuery query, CancellationToken ct = default)
     {
+        var page = query.Page < 1 ? 1 : query.Page;
+        var pageSize = query.PageSize < 1 ? 20 : Math.Min(query.PageSize, 100);
+
         var baseQ = _db.Orders.AsNoTracking().Include(o => o.Items).AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(query.OrderId))
@@ -101,6 +121,39 @@ public class OrderService : IOrderService
         if (query.Status.HasValue)
             baseQ = baseQ.Where(o => o.Status == query.Status.Value);
 
+        if (query.UserId.HasValue)
+            baseQ = baseQ.Where(o => o.UserId == query.UserId.Value);
+
+        if (query.ProductId.HasValue)
+        {
+            var pid = query.ProductId.Value;
+            baseQ = baseQ.Where(o => o.Items.Any(i => i.ProductId == pid));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.PaymentType))
+        {
+            var pay = query.PaymentType.Trim();
+            baseQ = baseQ.Where(o => o.PaymentType != null && o.PaymentType.ToLower() == pay.ToLower());
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            var q = query.Search.Trim().ToLower();
+            var skuProductIds = await _db.Products.AsNoTracking()
+                .Where(p => p.Sku.ToLower().Contains(q))
+                .Select(p => p.Id)
+                .ToListAsync(ct);
+            var emailIds = (query.EmailMatchedUserIds ?? Array.Empty<Guid>()).ToList();
+            baseQ = baseQ.Where(o =>
+                (o.ShippingAddress != null && o.ShippingAddress.ToLower().Contains(q))
+                || (o.RecipientName != null && o.RecipientName.ToLower().Contains(q))
+                || emailIds.Contains(o.UserId)
+                || o.Items.Any(i =>
+                    i.ProductName.ToLower().Contains(q)
+                    || (i.ProductDescription != null && i.ProductDescription.ToLower().Contains(q))
+                    || skuProductIds.Contains(i.ProductId)));
+        }
+
         var hasPeriod = query.FromUtc.HasValue || query.ToUtc.HasValue;
         DateTime? from = query.FromUtc;
         DateTime? to = query.ToUtc;
@@ -113,23 +166,27 @@ public class OrderService : IOrderService
         if (to.HasValue)
             periodQ = periodQ.Where(o => o.OrderDateUtc < to.Value);
 
-        var items = await periodQ
-            .OrderByDescending(o => o.OrderDateUtc)
-            .Take(500)
+        var sortBy = (query.SortBy ?? "orderDate").Trim().ToLowerInvariant();
+        IOrderedQueryable<Order> ordered = sortBy switch
+        {
+            "totalamount" or "amount" or "total" => query.SortDesc
+                ? periodQ.OrderByDescending(o => o.TotalAmount).ThenByDescending(o => o.OrderDateUtc)
+                : periodQ.OrderBy(o => o.TotalAmount).ThenByDescending(o => o.OrderDateUtc),
+            _ => query.SortDesc
+                ? periodQ.OrderByDescending(o => o.OrderDateUtc)
+                : periodQ.OrderBy(o => o.OrderDateUtc)
+        };
+
+        var totalOrders = await periodQ.CountAsync(ct);
+        var totalAmount = await periodQ.SumAsync(o => (decimal?)o.TotalAmount, ct) ?? 0m;
+        var totalPages = totalOrders == 0 ? 0 : (int)Math.Ceiling(totalOrders / (double)pageSize);
+
+        var items = await ordered
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(ct);
 
-        var totalOrders = items.Count;
-        // Для точных агрегатов по фильтру без Take — отдельно
-        var aggQ = baseQ;
-        if (from.HasValue)
-            aggQ = aggQ.Where(o => o.OrderDateUtc >= from.Value);
-        if (to.HasValue)
-            aggQ = aggQ.Where(o => o.OrderDateUtc < to.Value);
-
-        totalOrders = await aggQ.CountAsync(ct);
-        var totalAmount = await aggQ.SumAsync(o => (decimal?)o.TotalAmount, ct) ?? 0m;
-
-        var grouped = await aggQ
+        var grouped = await periodQ
             .GroupBy(o => o.Status)
             .Select(g => new { Status = g.Key, Count = g.Count() })
             .ToListAsync(ct);
@@ -172,7 +229,10 @@ public class OrderService : IOrderService
             PeriodFromUtc = from,
             PeriodToUtc = to,
             CompareFromUtc = cmpFrom,
-            CompareToUtc = cmpTo
+            CompareToUtc = cmpTo,
+            Page = page,
+            PageSize = pageSize,
+            TotalPages = totalPages
         };
     }
 
@@ -195,7 +255,6 @@ public class OrderService : IOrderService
         if (items.Count == 0)
             throw new InvalidOperationException("Корзина пуста.");
 
-        // #A05: клиент может передать адрес/оплату; иначе прежние демо-дефолты
         var address = string.IsNullOrWhiteSpace(shippingAddress)
             ? "Canada, Ontario, Something Street, 1919"
             : shippingAddress.Trim();
@@ -291,17 +350,7 @@ public class OrderService : IOrderService
             ?? throw new InvalidOperationException("Заказ не найден или не принадлежит вам.");
 
         await _cart.ClearAsync(userId, null, ct);
-
         foreach (var item in order.Items)
-        {
-            var product = await _db.Products.FirstOrDefaultAsync(
-                p => p.Id == item.ProductId && p.Status != ProductStatus.Archived, ct);
-
-            if (product is null || product.StockQuantity <= 0)
-                continue;
-
-            var qty = Math.Min(item.Quantity, product.StockQuantity);
-            await _cart.AddAsync(userId, null, product.Id, qty, ct);
-        }
+            await _cart.AddAsync(userId, null, item.ProductId, item.Quantity, ct);
     }
 }

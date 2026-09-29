@@ -31,10 +31,12 @@
 | # | Задача | Метки | Статус | Figma / примечание |
 |---|--------|-------|--------|--------------------|
 | **1** | Solution ASP.NET Core 8: Domain + Infrastructure + Web + Api | BE | ✅ | — |
-| **2** | EF Core модель, миграции, LocalDB `Perry` | BE | ✅ | — |
+| **2** | EF Core модель, миграции → **PostgreSQL** (#A08) | BE | ✅ | было LocalDB; 29.09 Npgsql + `InitialPostgreSQL` |
 | **3** | DbSeeder: категории, товары, отзывы, атрибуты | BE | ✅ | — |
 | **4** | Ребрендинг DuSoleil → **Perry** (namespaces, UI, БД) | FE BE Docs | ✅ | — |
-| **5** | Docker / docker-compose / env для команды | BE Docs | ✅ | `docker-compose`, `.env.example`, гайд |
+| **5** | Docker / docker-compose / env для команды | BE Docs | ✅ | `postgres:16` + `.env.example` · [docker.md](./docker.md) |
+| **A08** | SQL Server → PostgreSQL | BE Docs | ✅ | [карточка](https://trello.com/c/ORMRprbu) · [отчёт](./ОТЧЁТ-2026-09-29-A08-A09.md) |
+| **A09** | `GET /api/orders/admin` — pagination/filters/fields | BE | ✅ | [карточка](https://trello.com/c/ChE2bqrv) · [отчёт](./ОТЧЁТ-2026-09-29-A08-A09.md) |
 | **6** | Получить **edit** на оригинал Figma комиссии для MCP/пиксель-сверки | Design | 🚫 | Blocked · `4d4a4NOMFigwJbKMlOpL2n` |
 
 ---
@@ -235,6 +237,7 @@
 **Закрыто 26.09:** **#94** (Users out of Product API).  
 **#A02** — ✅ Done: merge `backend/main` (PR #13, fixed DB migrations) · [карточка](https://trello.com/c/BgOTO4i6).  
 **Закрыто 28.09:** **#A03** seed orders · **#A04** remove AdminReviewsController · **#A05** checkout shipping/payment · **#A06** `/api/health` · **#A07** popular-by-userId — см. [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md).  
+**Закрыто 29.09:** **#A08** PostgreSQL · **#A09** admin orders filters — [ОТЧЁТ-2026-09-29-A08-A09.md](./ОТЧЁТ-2026-09-29-A08-A09.md).  
 **#95** — ✅ secret HS256 получен; Product читает `.env` / валидирует подпись — [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md). Осталось: plaintext service credential + подтвердить iss/aud на живом токене. **#92** — слайды (Design).  
 **Отзывы (#99–#104)** — ✅ Done: create `POST /api/reviews`, AuthClaims UserId, unique, `/me`, Account «My reviews», tags — [ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md).  
 **Auth follow-up (стыки):** пакет [#105](https://trello.com/c/6W4hdlT1) · Auth сдаёт [#96](https://trello.com/c/dnk4VUUk) iss/aud · [#98](https://trello.com/c/paCSfdu7) claims · [#97](https://trello.com/c/hcmCvKWF) credential · [#106](https://trello.com/c/LIL5NHlr) CORS · затем мы [#107](https://trello.com/c/zuzmLFVt) Product · [#108](https://trello.com/c/dKmess1E) Front smoke — [СТЫКИ-МИКРОСЕРВИСОВ.md](./СТЫКИ-МИКРОСЕРВИСОВ.md).

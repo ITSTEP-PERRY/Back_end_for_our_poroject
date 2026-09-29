@@ -42,20 +42,28 @@ public static class DbSeeder
     }
 
     /// <summary>
-    /// Schema drift: таблица ProductReviewGrades могла появиться без колонки Reported
-    /// (миграция помечена применённой, а ALTER не выполнился). Идемпотентно чиним.
+    /// Schema drift guard for ProductReviewGrades.Reported (PostgreSQL).
+    /// Fresh PG migrations already include the column — no-op when present.
     /// </summary>
     private static async Task EnsureReviewGradeReportedColumnAsync(AppDbContext db)
     {
         await db.Database.ExecuteSqlRawAsync(
             """
-            IF OBJECT_ID(N'dbo.ProductReviewGrades', N'U') IS NOT NULL
-               AND COL_LENGTH(N'dbo.ProductReviewGrades', N'Reported') IS NULL
+            DO $$
             BEGIN
-                ALTER TABLE dbo.ProductReviewGrades
-                    ADD Reported bit NOT NULL
-                        CONSTRAINT DF_ProductReviewGrades_Reported DEFAULT (0);
-            END
+              IF EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'ProductReviewGrades'
+              ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'ProductReviewGrades'
+                  AND column_name = 'Reported'
+              ) THEN
+                ALTER TABLE "ProductReviewGrades"
+                  ADD "Reported" boolean NOT NULL DEFAULT false;
+              END IF;
+            END $$;
             """);
     }
 
