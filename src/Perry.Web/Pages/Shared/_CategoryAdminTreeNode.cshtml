@@ -1,0 +1,42 @@
+@using Perry.Web.Pages.Admin
+@model CategoriesModel.TreeNodeVm
+@{
+    var selectedId = ViewData["SelectedId"] as Guid?;
+    var query = ViewData["Query"] as string;
+    var rootId = ViewData["RootCategoryId"] as Guid?;
+    var pad = 8 + Model.Depth * 18;
+    var hasChildren = Model.Children.Count > 0;
+    var isSelected = selectedId == Model.Id;
+}
+<div class="ap-tree__node" data-depth="@Model.Depth">
+    <div class="ap-tree__row @(isSelected ? "is-selected" : null)" style="padding-left: @(pad)px">
+        <label class="ap-tree__check">
+            <input type="checkbox" name="ids" value="@Model.Id" />
+            <span class="ap-check" aria-hidden="true"></span>
+        </label>
+        <a class="ap-tree__link"
+           asp-page="/Admin/Categories"
+           asp-route-categoryId="@(rootId ?? Model.Id)"
+           asp-route-selectedId="@Model.Id"
+           asp-route-q="@query">
+            @Model.Name
+        </a>
+        @if (Model.Depth == 0)
+        {
+            <button type="button" class="ap-tree__add" data-open-modal="create" title="Create subcategory">+</button>
+        }
+        else if (hasChildren)
+        {
+            <button type="button" class="ap-tree__expand" data-tree-expand aria-expanded="true" title="Toggle">▾</button>
+        }
+    </div>
+    @if (hasChildren)
+    {
+        <div class="ap-tree__children" data-tree-children>
+            @foreach (var child in Model.Children)
+            {
+                @await Html.PartialAsync("_CategoryAdminTreeNode", child, ViewData)
+            }
+        </div>
+    }
+</div>

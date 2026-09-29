@@ -18,6 +18,7 @@ public static class DbSeeder
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
+        await EnsureReviewGradeReportedColumnAsync(db);
     }
 
     public static async Task SeedAsync(IServiceProvider services)
@@ -26,6 +27,7 @@ public static class DbSeeder
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         await db.Database.MigrateAsync();
+        await EnsureReviewGradeReportedColumnAsync(db);
         await EnsureProductSlugsAsync(db);
 
         if (!await db.Products.AnyAsync())
@@ -37,6 +39,24 @@ public static class DbSeeder
         await EnsureProductPageDemoAsync(db);
         await EnsureShopLooksAliveAsync(db);
         await EnsureDemoOrdersAsync(db);
+    }
+
+    /// <summary>
+    /// Schema drift: таблица ProductReviewGrades могла появиться без колонки Reported
+    /// (миграция помечена применённой, а ALTER не выполнился). Идемпотентно чиним.
+    /// </summary>
+    private static async Task EnsureReviewGradeReportedColumnAsync(AppDbContext db)
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            IF OBJECT_ID(N'dbo.ProductReviewGrades', N'U') IS NOT NULL
+               AND COL_LENGTH(N'dbo.ProductReviewGrades', N'Reported') IS NULL
+            BEGIN
+                ALTER TABLE dbo.ProductReviewGrades
+                    ADD Reported bit NOT NULL
+                        CONSTRAINT DF_ProductReviewGrades_Reported DEFAULT (0);
+            END
+            """);
     }
 
     /// <summary>

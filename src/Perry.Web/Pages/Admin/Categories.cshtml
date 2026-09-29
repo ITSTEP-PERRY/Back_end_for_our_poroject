@@ -3,9 +3,12 @@
 @{
     Layout = "_AdminLayout";
     ViewData["Title"] = "Categories";
-    ViewData["SelectedId"] = Model.CategoryId;
+    ViewData["SelectedId"] = Model.SelectedId ?? Model.CategoryId;
     ViewData["Query"] = Model.Q;
     ViewData["BasePage"] = "/Admin/Categories";
+    ViewData["RootCategoryId"] = Model.CategoryId;
+    var isEdit = Model.Mode == "edit" || Model.Mode == "create";
+    var panel = Model.SelectedCategory;
 }
 
 @if (!string.IsNullOrEmpty(Model.Message))
@@ -29,11 +32,15 @@
         <div class="ap-cat__menu" data-cat-menu hidden>
             <a class="ap-cat__item @(!Model.HasCategoryFilter ? "is-selected" : null)"
                asp-page="/Admin/Categories">
-                All roots
+                Choose category...
             </a>
-            @foreach (var node in Model.CategoryTree)
+            @foreach (var root in Model.RootCategories)
             {
-                @await Html.PartialAsync("_CategoryTreeItem", node, ViewData)
+                <a class="ap-cat__item @(Model.CategoryId == root.Id ? "is-selected" : null)"
+                   asp-page="/Admin/Categories"
+                   asp-route-categoryId="@root.Id">
+                    @root.Name
+                </a>
             }
         </div>
     </div>
@@ -42,6 +49,10 @@
         @if (Model.CategoryId is Guid cid)
         {
             <input type="hidden" name="CategoryId" value="@cid" />
+        }
+        @if (Model.SelectedId is Guid sid)
+        {
+            <input type="hidden" name="SelectedId" value="@sid" />
         }
         <img class="ap-search__icon" src="~/icons/search.svg" alt="" width="20" height="16" />
         <input class="ap-search__input" type="search" name="Q" value="@Model.Q" placeholder="Search..." />
@@ -53,16 +64,29 @@
         @if (!Model.HasCategoryFilter)
         {
             <div class="ap-empty">
-                <div class="ap-empty__ph" aria-hidden="true"></div>
-                <p class="ap-empty__text">Choose a category to see its subcategories</p>
+                <div class="ap-empty__illu" aria-hidden="true">
+                    <svg viewBox="0 0 320 160" width="280" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M40 90c20-50 80-70 140-55 55 14 90 10 110 40 25 38-10 70-55 75-40 5-70-5-110 5C75 165 20 140 40 90Z" fill="#1F50AA"/>
+                        <path d="M70 95c15-28 45-35 75-28 28 6 48 4 60 22 14 22-4 40-30 44-24 4-42-2-65 4-28 7-55-12-40-42Z" fill="#0E2042" opacity=".35"/>
+                        <circle cx="168" cy="78" r="28" fill="#B8EA48"/>
+                        <text x="168" y="90" text-anchor="middle" font-size="36" font-weight="800" fill="#0E2042" font-family="Mulish,Segoe UI,sans-serif">?</text>
+                    </svg>
+                </div>
+                <p class="ap-empty__text">No subcategories in the selected category</p>
             </div>
         }
-        else if (Model.Subcategories.Count == 0)
+        else if (Model.TreeRoot is null)
         {
             <div class="ap-empty">
-                <div class="ap-empty__ph" aria-hidden="true"></div>
-                <p class="ap-empty__text">No subcategories in the selected category</p>
-                <button type="button" class="ap-create-card" data-focus-form>
+                <div class="ap-empty__illu" aria-hidden="true">
+                    <svg viewBox="0 0 320 160" width="280" height="140" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M40 90c20-50 80-70 140-55 55 14 90 10 110 40 25 38-10 70-55 75-40 5-70-5-110 5C75 165 20 140 40 90Z" fill="#1F50AA"/>
+                        <circle cx="168" cy="78" r="28" fill="#B8EA48"/>
+                        <text x="168" y="90" text-anchor="middle" font-size="36" font-weight="800" fill="#0E2042" font-family="Mulish,Segoe UI,sans-serif">?</text>
+                    </svg>
+                </div>
+                <p class="ap-empty__text">Subcategory not found</p>
+                <button type="button" class="ap-create-card" data-open-modal="create">
                     <span class="ap-create-card__plus">+</span>
                     <span>Create subcategory</span>
                 </button>
@@ -70,111 +94,191 @@
         }
         else
         {
-            <div class="ap-table ap-table--cats">
-                <div class="ap-table__head">
-                    <span class="ap-table__name">Subcategory</span>
-                    <span class="ap-table__price">Products</span>
-                    <a class="ap-table__add" asp-page="/Admin/Categories"
-                       asp-route-categoryId="@Model.CategoryId"
-                       asp-route-selectedId=""
-                       title="Create subcategory">+</a>
+            <form method="post" asp-page-handler="DeleteMany" id="tree-form" class="ap-tree-wrap">
+                @Html.AntiForgeryToken()
+                <div class="ap-tree-toolbar">
+                    <button type="button" class="ap-link-btn" data-open-modal="create">+ Create subcategory</button>
+                    <button type="submit" class="ap-link-btn ap-link-btn--danger" data-need-checked hidden>Delete selected</button>
                 </div>
-                @foreach (var s in Model.Subcategories)
-                {
-                    var isSelected = Model.SelectedId == s.Id;
-                    <a class="ap-table__row @(isSelected ? "is-selected" : null)"
-                       asp-page="/Admin/Categories"
-                       asp-route-categoryId="@Model.CategoryId"
-                       asp-route-q="@Model.Q"
-                       asp-route-selectedId="@s.Id">
-                        <span class="ap-table__thumb">
-                            @if (!string.IsNullOrEmpty(s.ImageUrl))
-                            {
-                                <img src="@s.ImageUrl" alt="" />
-                            }
-                        </span>
-                        <span class="ap-table__name">
-                            <strong>@s.Name</strong>
-                            <code class="ap-slug">@s.Slug</code>
-                        </span>
-                        <span class="ap-table__price">@s.ProductCount</span>
-                    </a>
-                }
-            </div>
+                <div class="ap-tree" data-admin-tree>
+                    @await Html.PartialAsync("_CategoryAdminTreeNode", Model.TreeRoot, ViewData)
+                </div>
+            </form>
         }
     </section>
 
     <aside class="ap-panel">
-        @if (Model.SelectedCategory is null && !Model.HasCategoryFilter)
+        @if (panel is null)
         {
             <div class="ap-panel__empty">
-                <p>Select a category to see its information</p>
+                <div class="ap-panel__hint">Select a category to see its information</div>
             </div>
         }
         else
         {
-            <form method="post" asp-page-handler="Save" enctype="multipart/form-data" class="ap-panel__form admin-form" id="category-form">
-                <input type="hidden" asp-for="Form.Id" />
-                <h2 class="ap-panel__form-title">
-                    @(Model.Form.Id is null ? "New category" : "Category information")
-                </h2>
-
-                @if (Model.SelectedCategory is not null && Model.Form.Id is not null)
+            <div class="ap-panel__view" data-panel-view>
+                @if (!string.IsNullOrEmpty(panel.ImageUrl))
                 {
-                    <div class="ap-panel__hero @(string.IsNullOrEmpty(Model.SelectedCategory.ImageUrl) ? "is-ph" : null) ap-panel__hero--sm">
-                        @if (!string.IsNullOrEmpty(Model.SelectedCategory.ImageUrl))
-                        {
-                            <img src="@Model.SelectedCategory.ImageUrl" alt="" />
-                        }
+                    <div class="ap-panel__hero ap-panel__hero--sm">
+                        <img src="@panel.ImageUrl" alt="" />
                     </div>
-                    <p class="ap-panel__meta">
-                        Subcategories: @Model.SelectedCategory.SubCount · Products: @Model.SelectedCategory.ProductCount
-                        @if (!string.IsNullOrEmpty(Model.SelectedCategory.ParentName))
-                        {
-                            <span>· Parent: @Model.SelectedCategory.ParentName</span>
-                        }
-                    </p>
                 }
-
-                <label>Name *
-                    <input asp-for="Form.Name" required />
-                </label>
-                <label>Slug
-                    <input asp-for="Form.Slug" placeholder="auto from name" />
-                </label>
-                <label>Parent category
-                    <select asp-for="Form.ParentCategoryId">
-                        <option value="">— root —</option>
-                        @foreach (var c in Model.AllCategories.Where(x => x.IsActive))
-                        {
-                            <option value="@c.Id">@c.Name</option>
-                        }
-                    </select>
-                </label>
-                <div class="form-row form-row--2">
-                    <label>Sort order
-                        <input asp-for="Form.SortOrder" type="number" />
-                    </label>
-                    <label class="checkbox-row">
-                        <input asp-for="Form.IsActive" /> Active
-                    </label>
+                <div class="ap-panel__head">
+                    <h2 class="ap-panel__title">@panel.Name</h2>
                 </div>
-                <label>Image
-                    <input asp-for="Form.Image" type="file" accept="image/*" />
-                </label>
-
-                <div class="ap-panel__actions">
-                    <button type="submit" class="ap-panel__btn">Save</button>
-                    @if (Model.Form.Id is Guid delId)
+                @if (!string.IsNullOrWhiteSpace(panel.Description))
+                {
+                    <p class="ap-panel__desc">@panel.Description</p>
+                }
+                <dl class="ap-panel__meta-list">
+                    <div><dt>Status</dt><dd>@(panel.IsActive ? "Active" : "Not active")</dd></div>
+                    <div><dt>Role</dt><dd>@(panel.ParentCategoryId is null ? "Parent category" : "Child category")</dd></div>
+                    @if (!string.IsNullOrEmpty(panel.ParentName))
                     {
-                        <button type="submit"
-                                class="ap-panel__btn ap-panel__btn--danger"
-                                formaction="?handler=Deactivate&amp;id=@delId"
-                                formmethod="post"
-                                onclick="return confirm('Деактивировать категорию?')">Delete</button>
+                        <div><dt>Parent category</dt><dd>@panel.ParentName</dd></div>
                     }
+                    @if (!string.IsNullOrEmpty(panel.RootName) && panel.RootName != panel.Name)
+                    {
+                        <div><dt>Main category</dt><dd>@panel.RootName</dd></div>
+                    }
+                </dl>
+                <div class="ap-panel__actions ap-panel__actions--pair">
+                    <a class="ap-panel__btn ap-panel__btn--outline"
+                       asp-page="/Admin/Categories"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-selectedId="@panel.Id"
+                       asp-route-mode="edit"
+                       asp-route-q="@Model.Q">Edit</a>
+                    <button type="button" class="ap-panel__btn ap-panel__btn--danger-outline" data-open-modal="delete">Delete</button>
                 </div>
-            </form>
+            </div>
         }
     </aside>
 </div>
+
+@* ----- Create / Edit modal ----- *@
+<dialog class="ap-modal" id="cat-modal" @(isEdit ? "open" : null)>
+    <form method="post" asp-page-handler="Save" enctype="multipart/form-data" class="ap-modal__card">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Form.Id" />
+        <input type="hidden" name="CategoryId" value="@Model.CategoryId" />
+        <input type="hidden" name="SelectedId" value="@Model.SelectedId" />
+        <h2 class="ap-modal__title">
+            @(Model.Form.Id is null
+                ? (Model.CategoryId is null ? "Create category" : "Create subcategory")
+                : (Model.Form.ParentCategoryId is null ? "Edit category" : "Edit subcategory"))
+        </h2>
+
+        <div class="ap-modal__media-row">
+            <label class="ap-modal__upload">
+                @if (!string.IsNullOrEmpty(Model.Form.CurrentImageUrl))
+                {
+                    <img src="@Model.Form.CurrentImageUrl" alt="" />
+                }
+                else
+                {
+                    <span class="ap-modal__upload-plus">+</span>
+                }
+                <input asp-for="Form.Image" type="file" accept="image/*" />
+            </label>
+            <div class="ap-modal__fields">
+                <label>Category name
+                    <input asp-for="Form.Name" placeholder="Enter category name..." required maxlength="120" />
+                </label>
+                <div class="ap-status-toggle" data-status-toggle>
+                    <span>Status</span>
+                    <div class="ap-status-toggle__opts">
+                        <label class="@(Model.Form.IsActive ? "is-on" : null)">
+                            <input type="radio" asp-for="Form.IsActive" value="true" /> Active
+                        </label>
+                        <label class="@(!Model.Form.IsActive ? "is-on" : null)">
+                            <input type="radio" asp-for="Form.IsActive" value="false" /> Not active
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <label>Description
+            <textarea asp-for="Form.Description" rows="4" maxlength="300"
+                      placeholder="Describe your category..." data-char-count></textarea>
+            <span class="ap-char-count"><span data-char-current>0</span> / 300</span>
+        </label>
+
+        <label>Parent category
+            <select asp-for="Form.ParentCategoryId">
+                <option value="">— root (parent category) —</option>
+                @foreach (var c in Model.AllCategories.Where(x => x.IsActive && x.Id != Model.Form.Id))
+                {
+                    <option value="@c.Id">@c.Name</option>
+                }
+            </select>
+        </label>
+
+        <label>Slug
+            <input asp-for="Form.Slug" placeholder="auto from name" />
+        </label>
+        <label>Sort order
+            <input asp-for="Form.SortOrder" type="number" />
+        </label>
+
+        <div class="ap-modal__actions">
+            <a class="ap-panel__btn ap-panel__btn--outline"
+               asp-page="/Admin/Categories"
+               asp-route-categoryId="@Model.CategoryId"
+               asp-route-selectedId="@Model.SelectedId"
+               asp-route-q="@Model.Q">Cancel</a>
+            <button type="submit" class="ap-panel__btn ap-panel__btn--accent">
+                @(Model.Form.Id is null ? "Create" : "Save")
+            </button>
+        </div>
+    </form>
+</dialog>
+
+@if (panel is not null)
+{
+    <dialog class="ap-modal" id="delete-modal">
+        <form method="post" asp-page-handler="Deactivate" class="ap-modal__card ap-modal__card--sm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" value="@panel.Id" />
+            <input type="hidden" name="CategoryId" value="@Model.CategoryId" />
+            <h2 class="ap-modal__title">Are you sure?</h2>
+            <p class="ap-modal__text">You can't recover categories, subcategories; products will be deactivated.</p>
+            <div class="ap-modal__actions">
+                <button type="button" class="ap-panel__btn ap-panel__btn--accent" data-close-modal="delete">Cancel</button>
+                <button type="submit" class="ap-panel__btn ap-panel__btn--danger-outline">Delete</button>
+            </div>
+        </form>
+    </dialog>
+}
+
+@section Scripts {
+<script>
+  document.querySelectorAll('[data-open-modal="create"]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', 'create');
+      url.searchParams.delete('selectedId');
+      window.location.href = url.toString();
+    });
+  });
+  document.querySelectorAll('[data-open-modal="delete"]').forEach((btn) => {
+    btn.addEventListener('click', () => document.getElementById('delete-modal')?.showModal());
+  });
+  document.querySelectorAll('[data-close-modal]').forEach((btn) => {
+    btn.addEventListener('click', () => btn.closest('dialog')?.close());
+  });
+  document.querySelectorAll('[data-char-count]').forEach((ta) => {
+    const cur = ta.parentElement?.querySelector('[data-char-current]');
+    const sync = () => { if (cur) cur.textContent = String(ta.value.length); };
+    ta.addEventListener('input', sync);
+    sync();
+  });
+  const treeForm = document.getElementById('tree-form');
+  const delBtn = treeForm?.querySelector('[data-need-checked]');
+  treeForm?.addEventListener('change', () => {
+    const n = treeForm.querySelectorAll('input[name="ids"]:checked').length;
+    if (delBtn) delBtn.hidden = n === 0;
+  });
+</script>
+}

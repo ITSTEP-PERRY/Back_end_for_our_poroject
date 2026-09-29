@@ -11,8 +11,13 @@ namespace Perry.Api.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orders;
+    private readonly IAuthInternalClient _authInternal;
 
-    public OrdersController(IOrderService orders) => _orders = orders;
+    public OrdersController(IOrderService orders, IAuthInternalClient authInternal)
+    {
+        _orders = orders;
+        _authInternal = authInternal;
+    }
 
     public record CheckoutRequest(
         string? SessionId,
@@ -97,6 +102,18 @@ public class OrdersController : ControllerBase
             OrderId = orderId
         }, ct);
 
+        // #97/#107 — подтянуть display name из Auth Internal, если RecipientName пустой
+        var nameByUser = new Dictionary<Guid, string>();
+        if (_authInternal.IsConfigured)
+        {
+            foreach (var uid in result.Items.Select(o => o.UserId).Distinct())
+            {
+                var u = await _authInternal.GetUserAsync(uid, ct);
+                if (u?.DisplayName is { Length: > 0 } n)
+                    nameByUser[uid] = n;
+            }
+        }
+
         return Ok(new
         {
             items = result.Items.Select(o => new
@@ -107,7 +124,9 @@ public class OrdersController : ControllerBase
                 totalAmount = o.TotalAmount,
                 itemsCount = o.Items.Count,
                 userId = o.UserId,
-                userName = o.RecipientName,
+                userName = !string.IsNullOrWhiteSpace(o.RecipientName)
+                    ? o.RecipientName
+                    : nameByUser.GetValueOrDefault(o.UserId),
                 items = o.Items.Select(i => new
                 {
                     i.ProductId,
