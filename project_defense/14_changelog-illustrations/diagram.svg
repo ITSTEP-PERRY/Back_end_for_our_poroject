@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="960" height="540" fill="#0f1419"/>
+<text x="48" y="48" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="22" font-weight="700">Perry — Sprint highlights</text>
+<rect x="60" y="150" width="200" height="90" rx="10" fill="#1e3a5f" stroke="#5b9fd4" stroke-width="2"/>
+<text x="160" y="201" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">#A08 PostgreSQL</text>
+<rect x="290" y="150" width="200" height="90" rx="10" fill="#2d4a3e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="390" y="201" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">#A09/#A10 Orders</text>
+<rect x="520" y="150" width="200" height="90" rx="10" fill="#3d4a1e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="620" y="201" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Admin Categories</text>
+<rect x="750" y="150" width="170" height="90" rx="10" fill="#4a2d3e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="835" y="201" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">CI green</text>
+</svg>

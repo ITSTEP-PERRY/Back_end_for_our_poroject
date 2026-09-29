@@ -1,0 +1,20 @@
+flowchart TB
+  subgraph ProductAPI["Perry.Api /api"]
+    C[categories]
+    P[products]
+    R[reviews]
+    CA[cart]
+    O[orders]
+    W[wishlist]
+    AD[admin/*]
+    DV[dev/*]
+    H[health]
+  end
+  EXT["users-api → Admin Service<br/>/api/admin/users"]
+
+  ProductAPI --- EXT
+
+  classDef a fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef e fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  class C,P,R,CA,O,W,AD,DV,H a
+  class EXT e

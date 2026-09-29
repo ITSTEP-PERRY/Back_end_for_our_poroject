@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="960" height="540" fill="#0f1419"/>
+<text x="48" y="48" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="22" font-weight="700">Perry — Architecture Overview</text>
+<rect x="40" y="100" width="140" height="70" rx="10" fill="#2d4a3e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="110" y="141" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Browser</text>
+<rect x="220" y="100" width="140" height="70" rx="10" fill="#3d4a1e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="290" y="141" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Vite :3000</text>
+<rect x="400" y="60" width="160" height="60" rx="10" fill="#4a2d3e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="480" y="96" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Auth Azure</text>
+<rect x="400" y="140" width="160" height="60" rx="10" fill="#1e3a5f" stroke="#5b9fd4" stroke-width="2"/>
+<text x="480" y="176" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Product :5272</text>
+<rect x="400" y="220" width="160" height="60" rx="10" fill="#4a3d2d" stroke="#5b9fd4" stroke-width="2"/>
+<text x="480" y="256" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Admin Azure</text>
+<rect x="620" y="140" width="160" height="70" rx="10" fill="#2d3e4a" stroke="#5b9fd4" stroke-width="2"/>
+<text x="700" y="181" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">PostgreSQL</text>
+<rect x="800" y="140" width="120" height="70" rx="10" fill="#3a2d4a" stroke="#5b9fd4" stroke-width="2"/>
+<text x="860" y="181" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Uploads</text>
+</svg>

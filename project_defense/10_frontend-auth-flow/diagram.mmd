@@ -1,0 +1,21 @@
+flowchart TD
+  F["Login form"]
+  D{DEV Admin/Admin?}
+  AUTH["POST /auth-api/api/auth/login"]
+  DEV["POST /api/dev/admin-login"]
+  TOK["localStorage perry_token"]
+  CTX["AuthContext user · isAdmin"]
+  ME["me: Auth /api/auth/me<br/>or /api/dev/me"]
+
+  F --> D
+  D -->|no| AUTH --> TOK
+  D -->|yes| DEV --> TOK
+  TOK --> CTX
+  CTX --> ME
+
+  classDef c fill:#2d4a3e,stroke:#7dcea0,color:#fff
+  classDef a fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  classDef d fill:#3d4a1e,stroke:#c9d56a,color:#fff
+  class F,CTX,TOK c
+  class AUTH,ME a
+  class DEV d

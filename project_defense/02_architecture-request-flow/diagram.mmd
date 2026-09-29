@@ -1,0 +1,27 @@
+flowchart TD
+  U["Browser :3000"]
+  V{"Vite proxy"}
+  SPA["React SPA<br/>HTML / JS / CSS"]
+  P["Perry.Api :5272"]
+  A["Auth Service Azure"]
+  ADM["Admin Service Azure"]
+  DB[("PostgreSQL")]
+
+  U --> V
+  V -->|"/"| SPA
+  V -->|"/api/*"| P
+  V -->|"/uploads/*"| P
+  V -->|"/auth-api/*"| A
+  V -->|"/users-api/*"| ADM
+  P --> DB
+
+  classDef c fill:#2d4a3e,stroke:#7dcea0,color:#fff
+  classDef p fill:#3d4a1e,stroke:#c9d56a,color:#fff
+  classDef a fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef e fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  classDef d fill:#2d3e4a,stroke:#8ab4d4,color:#fff
+  class U c
+  class V,SPA p
+  class P a
+  class A,ADM e
+  class DB d

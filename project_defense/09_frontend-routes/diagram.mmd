@@ -1,0 +1,23 @@
+flowchart LR
+  subgraph Storefront["AppShell"]
+    H["/"]
+    PR["/products"]
+    CA["/cart"]
+    AC["/account/* RequireAuth"]
+  end
+  subgraph Auth["AuthShell"]
+    LI["/login"]
+    RE["/register"]
+    FP["/forgot-password…"]
+  end
+  subgraph Admin["AdminShell isAdmin"]
+    AL["/admin/login"]
+    AD["/admin products categories<br/>reviews orders users"]
+  end
+
+  classDef s fill:#2d4a3e,stroke:#7dcea0,color:#fff
+  classDef a fill:#3d4a1e,stroke:#c9d56a,color:#fff
+  classDef m fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  class H,PR,CA,AC s
+  class LI,RE,FP a
+  class AL,AD m

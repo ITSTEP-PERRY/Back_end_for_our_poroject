@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="960" height="540" fill="#0f1419"/>
+<text x="48" y="48" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="22" font-weight="700">Perry — Auth Flows</text>
+<rect x="60" y="120" width="240" height="80" rx="10" fill="#4a2d3e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="180" y="166" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">A: Auth Service JWT</text>
+<rect x="360" y="120" width="240" height="80" rx="10" fill="#3d4a1e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="480" y="166" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">B: DEV Admin/Admin</text>
+<rect x="660" y="120" width="240" height="80" rx="10" fill="#1e3a5f" stroke="#5b9fd4" stroke-width="2"/>
+<text x="780" y="166" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">C: Internal #97</text>
+<rect x="300" y="300" width="360" height="70" rx="10" fill="#2d3e4a" stroke="#5b9fd4" stroke-width="2"/>
+<text x="480" y="341" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Product API validates HS256</text>
+</svg>

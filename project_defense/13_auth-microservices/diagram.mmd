@@ -1,0 +1,21 @@
+flowchart TB
+  FE["perry-front :3000"]
+  A["Auth Service<br/>JWT · Internal"]
+  P["Product API<br/>catalog · orders"]
+  ADM["Admin Service<br/>users CRUD"]
+  PG[("Product PostgreSQL")]
+
+  FE -->|user JWT| A
+  FE -->|Bearer| P
+  FE -->|Admin JWT| ADM
+  P --> PG
+  P -->|internal token #97| A
+
+  classDef f fill:#3d4a1e,stroke:#c9d56a,color:#fff
+  classDef e fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  classDef p fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef d fill:#2d3e4a,stroke:#8ab4d4,color:#fff
+  class FE f
+  class A,ADM e
+  class P p
+  class PG d

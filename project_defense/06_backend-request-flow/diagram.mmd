@@ -1,0 +1,19 @@
+sequenceDiagram
+  participant C as Client
+  participant API as Perry.Api
+  participant JWT as JwtBearer
+  participant S as Service
+  participant DB as PostgreSQL
+
+  C->>API: HTTP /api/...
+  API->>JWT: validate Bearer?
+  alt invalid / missing when required
+    JWT-->>C: 401
+  else ok
+    JWT-->>API: claims
+    API->>S: business call
+    S->>DB: EF Core
+    DB-->>S: data
+    S-->>API: DTO
+    API-->>C: JSON 200
+  end

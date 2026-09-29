@@ -1,0 +1,21 @@
+flowchart TB
+  subgraph A["A · User login"]
+    L1["POST /auth-api/api/auth/login"]
+    L2["JWT access token"]
+    L3["Product validates HS256<br/>iss · aud · sub · role"]
+    L1 --> L2 --> L3
+  end
+  subgraph B["B · DEV Admin"]
+    D1["Admin / Admin"]
+    D2["POST /api/dev/admin-login"]
+    D3["role=Admin JWT"]
+    D1 --> D2 --> D3
+  end
+  subgraph C["C · Internal #97"]
+    I1["POST /internal/auth/token"]
+    I2["GET /internal/users/id"]
+    I1 --> I2
+  end
+  L3 --> P["Perry.Api"]
+  D3 --> P
+  I2 --> P

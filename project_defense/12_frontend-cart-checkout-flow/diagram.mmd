@@ -1,0 +1,16 @@
+sequenceDiagram
+  participant U as User
+  participant FE as React
+  participant API as Perry.Api
+  participant DB as PostgreSQL
+
+  U->>FE: Add to cart
+  FE->>API: POST /api/cart?sessionId
+  API->>DB: CartItem
+  U->>FE: Login
+  FE->>API: POST /api/cart/merge
+  U->>FE: Checkout
+  FE->>API: POST /api/orders/checkout
+  API->>DB: Order + Items
+  API-->>FE: orderId
+  FE-->>U: /account/orders
