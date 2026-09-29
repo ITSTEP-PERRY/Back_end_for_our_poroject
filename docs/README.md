@@ -4,6 +4,7 @@
 
 ## Актуальные срезы
 
+- [ОТЧЁТ-2026-09-29-A10.md](./ОТЧЁТ-2026-09-29-A10.md) — **#A10 Orders last update**
 - [ОТЧЁТ-2026-09-29-A08-A09.md](./ОТЧЁТ-2026-09-29-A08-A09.md) — **#A08 PostgreSQL · #A09 admin orders**
 - [ОТЧЁТ-2026-09-29.md](./ОТЧЁТ-2026-09-29.md) — стыки Auth Internal · Reviews · Dev Admin
 - [docker.md](./docker.md) — docker compose + PostgreSQL + env

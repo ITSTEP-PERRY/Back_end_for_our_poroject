@@ -181,6 +181,11 @@ public class OrdersController : ControllerBase
         recipientName = o.RecipientName,
         shippingAddress = o.ShippingAddress,
         paymentType = o.PaymentType ?? "Cash",
+        // #A10 — last update (status change); alias lastUpdateUtc for FE
+        createdAtUtc = o.CreatedAtUtc,
+        completedAtUtc = o.CompletedAtUtc,
+        updatedAtUtc = o.UpdatedAtUtc,
+        lastUpdateUtc = o.UpdatedAtUtc,
         items = o.Items.Select(i => new
         {
             i.ProductId,
@@ -214,6 +219,7 @@ public class OrdersController : ControllerBase
         completedAtUtc = o.CompletedAtUtc,
         createdAtUtc = o.CreatedAtUtc,
         updatedAtUtc = o.UpdatedAtUtc,
+        lastUpdateUtc = o.UpdatedAtUtc,
         items = o.Items.Select(i => new
         {
             i.ProductId,

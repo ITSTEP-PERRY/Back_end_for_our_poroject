@@ -31,6 +31,9 @@ public class Order
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// #A10 — last order update (primarily last status change). Set on create and on status updates.
+    /// </summary>
     public DateTime? UpdatedAtUtc { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();

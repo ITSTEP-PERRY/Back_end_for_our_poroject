@@ -291,7 +291,9 @@ public class OrderService : IOrderService
             RecipientName = string.IsNullOrWhiteSpace(recipientName) ? null : recipientName.Trim(),
             ShippingAddress = address,
             PaymentType = pay,
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = DateTime.UtcNow,
+            // #A10 — last update starts at create; refreshed on status change
+            UpdatedAtUtc = DateTime.UtcNow
         };
         _db.Orders.Add(order);
 
@@ -337,6 +339,7 @@ public class OrderService : IOrderService
             ?? throw new ArgumentException("Заказ не найден.");
 
         order.Status = status;
+        // #A10 — track last status change
         order.UpdatedAtUtc = DateTime.UtcNow;
         if (status == OrderStatus.ReadyToPickup)
             order.CompletedAtUtc = DateTime.UtcNow;
