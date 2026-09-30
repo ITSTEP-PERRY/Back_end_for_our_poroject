@@ -64,6 +64,7 @@ public class OrdersController : ControllerBase
                 body.RecipientName ?? AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
                 body.ShippingAddress,
                 body.PaymentType,
+                AuthClaims.GetEmail(User),
                 ct);
             return Ok(MapOrder(order));
         }
@@ -172,6 +173,7 @@ public class OrdersController : ControllerBase
     private static object MapOrder(Domain.Entities.Order o) => new
     {
         o.Id,
+        orderNumber = o.OrderNumber,
         userId = o.UserId,
         orderDateUtc = o.OrderDateUtc,
         status = o.Status.ToString(),
@@ -204,6 +206,7 @@ public class OrdersController : ControllerBase
         IReadOnlyDictionary<Guid, string> emailByUser) => new
     {
         o.Id,
+        orderNumber = o.OrderNumber,
         userId = o.UserId,
         orderDateUtc = o.OrderDateUtc,
         status = o.Status.ToString(),

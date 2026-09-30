@@ -35,6 +35,8 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.HasIndex(x => x.Sku).IsUnique();
         builder.HasIndex(x => x.Slug).IsUnique();
         builder.HasIndex(x => x.CategoryId);
+        // #A11 — SellerId without FK (Auth Service owns users)
+        builder.HasIndex(x => x.SellerId);
         builder.HasIndex(x => x.Brand);
         builder.HasIndex(x => x.Status);
         builder.HasIndex(x => x.Price);

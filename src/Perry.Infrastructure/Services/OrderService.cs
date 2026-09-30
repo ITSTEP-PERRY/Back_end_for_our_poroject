@@ -21,6 +21,7 @@ public interface IOrderService
         string? recipientName = null,
         string? shippingAddress = null,
         string? paymentType = null,
+        string? buyerEmail = null,
         CancellationToken ct = default);
     Task UpdateStatusAsync(Guid orderId, OrderStatus status, CancellationToken ct = default);
     /// <summary>Повторить заказ: очистить корзину и добавить позиции снова (homework RepeatOrder).</summary>
@@ -70,11 +71,19 @@ public class OrderService : IOrderService
 {
     private readonly AppDbContext _db;
     private readonly ICartService _cart;
+    private readonly IEmailSender _email;
+    private readonly IAuthInternalClient _authInternal;
 
-    public OrderService(AppDbContext db, ICartService cart)
+    public OrderService(
+        AppDbContext db,
+        ICartService cart,
+        IEmailSender email,
+        IAuthInternalClient authInternal)
     {
         _db = db;
         _cart = cart;
+        _email = email;
+        _authInternal = authInternal;
     }
 
     public async Task<IReadOnlyList<Order>> GetUserOrdersAsync(Guid userId, CancellationToken ct = default) =>
@@ -112,10 +121,20 @@ public class OrderService : IOrderService
         if (!string.IsNullOrWhiteSpace(query.OrderId))
         {
             var raw = query.OrderId.Trim();
-            if (Guid.TryParse(raw, out var oid))
+            var rawClean = raw.TrimStart('#');
+            if (Guid.TryParse(raw, out var oid) || Guid.TryParse(rawClean, out oid))
+            {
                 baseQ = baseQ.Where(o => o.Id == oid);
+            }
             else
-                baseQ = baseQ.Where(o => o.Id.ToString().Contains(raw));
+            {
+                var needle = ("#" + rawClean).ToUpperInvariant();
+                var loose = rawClean.ToUpperInvariant();
+                baseQ = baseQ.Where(o =>
+                    o.OrderNumber.ToUpper() == needle
+                    || o.OrderNumber.ToUpper().Contains(loose)
+                    || o.Id.ToString().ToLower().Contains(raw.ToLower()));
+            }
         }
 
         if (query.Status.HasValue)
@@ -249,6 +268,7 @@ public class OrderService : IOrderService
         string? recipientName = null,
         string? shippingAddress = null,
         string? paymentType = null,
+        string? buyerEmail = null,
         CancellationToken ct = default)
     {
         var items = await _cart.GetItemsAsync(userId, sessionId, ct);
@@ -280,9 +300,12 @@ public class OrderService : IOrderService
                     $"Недостаточно «{product.Name}». Доступно: {product.StockQuantity}.");
         }
 
+        var orderNumber = await AllocateOrderNumberAsync(ct);
+
         var order = new Order
         {
             Id = Guid.NewGuid(),
+            OrderNumber = orderNumber,
             UserId = userId,
             OrderDateUtc = DateTime.UtcNow,
             TotalAmount = items.Sum(i => i.Quantity * i.Product.Price),
@@ -330,6 +353,20 @@ public class OrderService : IOrderService
 
         await _cart.ClearAsync(userId, sessionId, ct);
         await _db.SaveChangesAsync(ct);
+
+        // #A13 — notify on place order
+        var email = await ResolveBuyerEmailAsync(userId, buyerEmail, ct);
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            await _email.SendEmailAsync(
+                email,
+                $"Perry order {order.OrderNumber} placed",
+                $"Your order {order.OrderNumber} was placed successfully.\n" +
+                $"Status: {order.Status}\nTotal: {order.TotalAmount:0.00}\n" +
+                $"Internal id: {order.Id}",
+                ct);
+        }
+
         return order;
     }
 
@@ -338,6 +375,7 @@ public class OrderService : IOrderService
         var order = await _db.Orders.FirstOrDefaultAsync(o => o.Id == orderId, ct)
             ?? throw new ArgumentException("Заказ не найден.");
 
+        var previous = order.Status;
         order.Status = status;
         // #A10 — track last status change
         order.UpdatedAtUtc = DateTime.UtcNow;
@@ -345,6 +383,50 @@ public class OrderService : IOrderService
             order.CompletedAtUtc = DateTime.UtcNow;
 
         await _db.SaveChangesAsync(ct);
+
+        // #A13 — notify on status change
+        if (previous != status)
+        {
+            var email = await ResolveBuyerEmailAsync(order.UserId, null, ct);
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var number = string.IsNullOrWhiteSpace(order.OrderNumber)
+                    ? order.Id.ToString()
+                    : order.OrderNumber;
+                await _email.SendEmailAsync(
+                    email,
+                    $"Perry order {number}: {status}",
+                    $"Order {number} status changed: {previous} → {status}.\n" +
+                    $"Total: {order.TotalAmount:0.00}",
+                    ct);
+            }
+        }
+    }
+
+    private async Task<string> AllocateOrderNumberAsync(CancellationToken ct)
+    {
+        for (var attempt = 0; attempt < 12; attempt++)
+        {
+            var candidate = OrderNumberGenerator.Next();
+            var exists = await _db.Orders.AnyAsync(o => o.OrderNumber == candidate, ct);
+            if (!exists)
+                return candidate;
+        }
+
+        // Extremely unlikely collision fallback
+        return "#" + Guid.NewGuid().ToString("N")[..7].ToUpperInvariant();
+    }
+
+    private async Task<string?> ResolveBuyerEmailAsync(Guid userId, string? preferred, CancellationToken ct)
+    {
+        if (!string.IsNullOrWhiteSpace(preferred))
+            return preferred.Trim();
+
+        if (!_authInternal.IsConfigured)
+            return null;
+
+        var user = await _authInternal.GetUserAsync(userId, ct);
+        return string.IsNullOrWhiteSpace(user?.Email) ? null : user.Email.Trim();
     }
 
     public async Task RepeatOrderAsync(Guid userId, Guid orderId, CancellationToken ct = default)

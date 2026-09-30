@@ -39,6 +39,7 @@ public static class DbSeeder
         await EnsureProductPageDemoAsync(db);
         await EnsureShopLooksAliveAsync(db);
         await EnsureDemoOrdersAsync(db);
+        await EnsureOrderNumbersAsync(db);
     }
 
     /// <summary>
@@ -140,6 +141,7 @@ public static class DbSeeder
             db.Orders.Add(new Order
             {
                 Id = orderId,
+                OrderNumber = OrderNumberGenerator.Next(),
                 UserId = spec.UserId,
                 OrderDateUtc = orderDate,
                 TotalAmount = items.Sum(i => i.TotalPrice),
@@ -162,6 +164,36 @@ public static class DbSeeder
                 tracked.OrderCount += item.Quantity;
                 tracked.UpdatedAtUtc = now;
             }
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>#A12 — backfill short OrderNumber for rows created before the column existed.</summary>
+    private static async Task EnsureOrderNumbersAsync(AppDbContext db)
+    {
+        var missing = await db.Orders
+            .Where(o => o.OrderNumber == null || o.OrderNumber == "")
+            .ToListAsync();
+        if (missing.Count == 0)
+            return;
+
+        var used = new HashSet<string>(
+            await db.Orders
+                .Where(o => o.OrderNumber != null && o.OrderNumber != "")
+                .Select(o => o.OrderNumber)
+                .ToListAsync(),
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var order in missing)
+        {
+            string next;
+            do
+            {
+                next = OrderNumberGenerator.Next();
+            } while (!used.Add(next));
+
+            order.OrderNumber = next;
         }
 
         await db.SaveChangesAsync();
@@ -871,6 +903,8 @@ public static class DbSeeder
         ReviewCount = reviews,
         IsBestSeller = bestSeller,
         Description = description,
+        // #A11 — demo seller = local Admin guid
+        SellerId = Guid.Parse("d78e94a9-cf1d-43f3-9ecd-643149b9e95a"),
         CreatedAtUtc = DateTime.UtcNow
     };
 

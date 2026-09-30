@@ -32,6 +32,11 @@ public class Product
     /// <summary>Навигационное свойство: категория, к которой относится товар.</summary>
     public Category Category { get; set; } = null!;
 
+    /// <summary>
+    /// #A11 — продавец: UserId из JWT Auth (без FK; пользователи в Auth Service).
+    /// </summary>
+    public Guid? SellerId { get; set; }
+
     /// <summary>Текущая цена продажи.</summary>
     public decimal Price { get; set; }
 

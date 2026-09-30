@@ -146,8 +146,15 @@ public class CartController : ControllerBase
                 AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
                 shippingAddress: null,
                 paymentType: null,
-                ct);
-            return Ok(new { status = "Ok", orderId = order.Id, total = order.TotalAmount });
+                buyerEmail: AuthClaims.GetEmail(User),
+                ct: ct);
+            return Ok(new
+            {
+                status = "Ok",
+                orderId = order.Id,
+                orderNumber = order.OrderNumber,
+                total = order.TotalAmount
+            });
         }
         catch (Exception ex)
         {
