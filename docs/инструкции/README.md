@@ -1,0 +1,15 @@
+# Инструкции
+
+| Документ | О чём |
+|----------|--------|
+| [КАК-ЗАПУСКАТЬ.md](./КАК-ЗАПУСКАТЬ.md) | Desktop + Mobile (ярлыки) |
+| [docker.md](./docker.md) | PostgreSQL + `docker compose` + API |
+| [deployment.md](./deployment.md) | Деплой |
+| [ci-cd.md](./ci-cd.md) | CI/CD |
+| [troubleshooting.md](./troubleshooting.md) | Типовые сбои |
+| [Git-WORKFLOW.md](./Git-WORKFLOW.md) | Git |
+| [SMOKE-ЗАЩИТА.md](./SMOKE-ЗАЩИТА.md) | Чеклист демо |
+| [SMTP-НАСТРОЙКА.md](./SMTP-НАСТРОЙКА.md) · [РЕЧЬ-SMTP-ДЕМО.md](./РЕЧЬ-SMTP-ДЕМО.md) | Почта на защите |
+| [КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Разбор solution |
+| [ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Forgot / reset |
+| [TRELLO-TODO.md](./TRELLO-TODO.md) · [КОМАНДА-КАРТОЧКИ-TRELLO.md](./КОМАНДА-КАРТОЧКИ-TRELLO.md) | Доска |
