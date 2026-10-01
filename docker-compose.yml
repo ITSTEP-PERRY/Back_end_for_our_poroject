@@ -1,20 +1,29 @@
-# Perry — локальный стек для команды
-# SQL Server + Perry.Api
+# Perry — локальный стек
+# PostgreSQL + Perry.Api (+ optional Web)
 #
-# cp .env.example .env   # задайте SA_PASSWORD
+# cp .env.example .env
 # docker compose up --build
+#
+# Defaults ниже — только для CI / быстрого локального старта.
+# В проде задайте POSTGRES_PASSWORD и JWT_KEY через .env / secrets.
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: perry-sql
+  postgres:
+    image: postgres:16-alpine
+    container_name: perry-postgres
     environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?SA_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-perry}
+      POSTGRES_USER: ${POSTGRES_USER:-perry}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - perry_sql_data:/var/opt/mssql
+      - perry_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-perry} -d $${POSTGRES_DB:-perry}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build:
@@ -22,14 +31,22 @@ services:
       dockerfile: src/Perry.Api/Dockerfile
     container_name: perry-api
     depends_on:
-      - sqlserver
+      postgres:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
-      Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
-      Jwt__Issuer: Perry
-      Jwt__Audience: Perry
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-perry};Username=${POSTGRES_USER:-perry};Password=${POSTGRES_PASSWORD:-changeme}"
+      Jwt__Key: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
+      Jwt__SigningSecret: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
+      Jwt__Issuer: ${JWT_ISSUER:-Perry.AuthService}
+      Jwt__Audience: ${JWT_AUDIENCE:-Perry.Client}
+      Jwt__SkipSignatureValidation: ${JWT_SKIP_SIGNATURE:-false}
+      Jwt__MapInboundClaims: "false"
+      Jwt__RoleClaimType: role
+      Jwt__NameClaimType: sub
+      AuthService__BaseUrl: ${AUTH_SERVICE_BASE_URL:-https://perry-auth-service.orangeplant-910928aa.swedencentral.azurecontainerapps.io}
+      AuthService__ServiceName: ${AUTH_SERVICE_NAME:-local-service}
       Smtp__UseStub: ${SMTP_USE_STUB:-true}
       Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
       Smtp__Port: ${SMTP_PORT:-587}
@@ -46,12 +63,14 @@ services:
       dockerfile: src/Perry.Web/Dockerfile
     container_name: perry-web
     depends_on:
-      - api
-      - sqlserver
+      api:
+        condition: service_started
+      postgres:
+        condition: service_healthy
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-perry};Username=${POSTGRES_USER:-perry};Password=${POSTGRES_PASSWORD:-changeme}"
       Smtp__UseStub: ${SMTP_USE_STUB:-true}
       Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
       Smtp__Port: ${SMTP_PORT:-587}
@@ -63,4 +82,4 @@ services:
       - "5000:8080"
 
 volumes:
-  perry_sql_data:
+  perry_pg_data:

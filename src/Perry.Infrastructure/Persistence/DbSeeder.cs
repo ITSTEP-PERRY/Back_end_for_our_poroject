@@ -18,6 +18,7 @@ public static class DbSeeder
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         await db.Database.MigrateAsync();
+        await EnsureReviewGradeReportedColumnAsync(db);
     }
 
     public static async Task SeedAsync(IServiceProvider services)
@@ -26,6 +27,7 @@ public static class DbSeeder
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         await db.Database.MigrateAsync();
+        await EnsureReviewGradeReportedColumnAsync(db);
         await EnsureProductSlugsAsync(db);
 
         if (!await db.Products.AnyAsync())
@@ -37,6 +39,33 @@ public static class DbSeeder
         await EnsureProductPageDemoAsync(db);
         await EnsureShopLooksAliveAsync(db);
         await EnsureDemoOrdersAsync(db);
+        await EnsureOrderNumbersAsync(db);
+    }
+
+    /// <summary>
+    /// Schema drift guard for ProductReviewGrades.Reported (PostgreSQL).
+    /// Fresh PG migrations already include the column — no-op when present.
+    /// </summary>
+    private static async Task EnsureReviewGradeReportedColumnAsync(AppDbContext db)
+    {
+        await db.Database.ExecuteSqlRawAsync(
+            """
+            DO $$
+            BEGIN
+              IF EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'ProductReviewGrades'
+              ) AND NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public'
+                  AND table_name = 'ProductReviewGrades'
+                  AND column_name = 'Reported'
+              ) THEN
+                ALTER TABLE "ProductReviewGrades"
+                  ADD "Reported" boolean NOT NULL DEFAULT false;
+              END IF;
+            END $$;
+            """);
     }
 
     /// <summary>
@@ -112,6 +141,7 @@ public static class DbSeeder
             db.Orders.Add(new Order
             {
                 Id = orderId,
+                OrderNumber = OrderNumberGenerator.Next(),
                 UserId = spec.UserId,
                 OrderDateUtc = orderDate,
                 TotalAmount = items.Sum(i => i.TotalPrice),
@@ -134,6 +164,36 @@ public static class DbSeeder
                 tracked.OrderCount += item.Quantity;
                 tracked.UpdatedAtUtc = now;
             }
+        }
+
+        await db.SaveChangesAsync();
+    }
+
+    /// <summary>#A12 — backfill short OrderNumber for rows created before the column existed.</summary>
+    private static async Task EnsureOrderNumbersAsync(AppDbContext db)
+    {
+        var missing = await db.Orders
+            .Where(o => o.OrderNumber == null || o.OrderNumber == "")
+            .ToListAsync();
+        if (missing.Count == 0)
+            return;
+
+        var used = new HashSet<string>(
+            await db.Orders
+                .Where(o => o.OrderNumber != null && o.OrderNumber != "")
+                .Select(o => o.OrderNumber)
+                .ToListAsync(),
+            StringComparer.OrdinalIgnoreCase);
+
+        foreach (var order in missing)
+        {
+            string next;
+            do
+            {
+                next = OrderNumberGenerator.Next();
+            } while (!used.Add(next));
+
+            order.OrderNumber = next;
         }
 
         await db.SaveChangesAsync();
@@ -322,6 +382,8 @@ public static class DbSeeder
         {
             Id = reviewId,
             ProductId = productId,
+            // Distinct seed UserId so unique (UserId, ProductId) holds across bulk reviews.
+            UserId = Guid.NewGuid(),
             AuthorName = authors[seed % authors.Length],
             Rating = rating,
             Title = titles[(seed / 3) % titles.Length],
@@ -391,6 +453,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
+                UserId = Guid.Parse("11111111-1111-1111-1111-111111111101"),
                 AuthorName = "Louisa Hines",
                 Rating = 5,
                 Title = "It's true to size and has pockets",
@@ -402,6 +465,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
+                UserId = Guid.Parse("11111111-1111-1111-1111-111111111102"),
                 AuthorName = "Sylvia Kennedy",
                 Rating = 5,
                 Title = "Elegant",
@@ -413,6 +477,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
+                UserId = Guid.Parse("11111111-1111-1111-1111-111111111103"),
                 AuthorName = "Cecilia Small",
                 Rating = 3,
                 Title = "Shift dress",
@@ -631,6 +696,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = roku.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222201"),
             AuthorName = "Alex M.",
             Rating = 5,
             Title = "Easy to use",
@@ -642,6 +708,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = roku.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222202"),
             AuthorName = "Jordan K.",
             Rating = 4,
             Title = "Great value",
@@ -654,6 +721,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222203"),
             AuthorName = "Louisa Hines",
             Rating = 5,
             Title = "It's true to size and has pockets",
@@ -665,6 +733,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222204"),
             AuthorName = "Sylvia Kennedy",
             Rating = 5,
             Title = "Elegant",
@@ -676,6 +745,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
+            UserId = Guid.Parse("22222222-2222-2222-2222-222222222205"),
             AuthorName = "Cecilia Small",
             Rating = 3,
             Title = "Shift dress",
@@ -833,6 +903,8 @@ public static class DbSeeder
         ReviewCount = reviews,
         IsBestSeller = bestSeller,
         Description = description,
+        // #A11 — demo seller = local Admin guid
+        SellerId = Guid.Parse("d78e94a9-cf1d-43f3-9ecd-643149b9e95a"),
         CreatedAtUtc = DateTime.UtcNow
     };
 

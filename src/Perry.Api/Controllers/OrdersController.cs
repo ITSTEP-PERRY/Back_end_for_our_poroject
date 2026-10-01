@@ -11,8 +11,13 @@ namespace Perry.Api.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly IOrderService _orders;
+    private readonly IAuthInternalClient _authInternal;
 
-    public OrdersController(IOrderService orders) => _orders = orders;
+    public OrdersController(IOrderService orders, IAuthInternalClient authInternal)
+    {
+        _orders = orders;
+        _authInternal = authInternal;
+    }
 
     public record CheckoutRequest(
         string? SessionId,
@@ -59,6 +64,7 @@ public class OrdersController : ControllerBase
                 body.RecipientName ?? AuthClaims.GetDisplayName(User) ?? AuthClaims.GetEmail(User),
                 body.ShippingAddress,
                 body.PaymentType,
+                AuthClaims.GetEmail(User),
                 ct);
             return Ok(MapOrder(order));
         }
@@ -68,6 +74,11 @@ public class OrdersController : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Admin orders (#A09): pagination, productId/userId, sort by totalAmount,
+    /// search (shipping / product name / sku / recipient≈email), paymentType.
+    /// Items shape includes the same fields as <see cref="Mine"/>.
+    /// </summary>
     [Authorize(Roles = "Admin")]
     [HttpGet("admin")]
     public async Task<IActionResult> All(
@@ -75,7 +86,16 @@ public class OrdersController : ControllerBase
         [FromQuery] DateTime? fromUtc,
         [FromQuery] DateTime? toUtc,
         [FromQuery] string? orderId,
-        CancellationToken ct)
+        [FromQuery] Guid? productId,
+        [FromQuery] Guid? userId,
+        [FromQuery] string? paymentType,
+        [FromQuery] string? q,
+        [FromQuery] string? search,
+        [FromQuery] string? sortBy,
+        [FromQuery] bool sortDesc = true,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken ct = default)
     {
         OrderStatus? parsed = null;
         if (!string.IsNullOrWhiteSpace(status))
@@ -94,28 +114,37 @@ public class OrdersController : ControllerBase
             Status = parsed,
             FromUtc = fromUtc,
             ToUtc = toUtc,
-            OrderId = orderId
+            OrderId = orderId,
+            ProductId = productId,
+            UserId = userId,
+            PaymentType = paymentType,
+            Search = search ?? q,
+            SortBy = sortBy,
+            SortDesc = sortDesc,
+            Page = page,
+            PageSize = pageSize
         }, ct);
+
+        var nameByUser = new Dictionary<Guid, string>();
+        var emailByUser = new Dictionary<Guid, string>();
+        if (_authInternal.IsConfigured)
+        {
+            foreach (var uid in result.Items.Select(o => o.UserId).Distinct())
+            {
+                var u = await _authInternal.GetUserAsync(uid, ct);
+                if (u?.DisplayName is { Length: > 0 } n)
+                    nameByUser[uid] = n;
+                if (u?.Email is { Length: > 0 } e)
+                    emailByUser[uid] = e;
+            }
+        }
 
         return Ok(new
         {
-            items = result.Items.Select(o => new
-            {
-                o.Id,
-                orderDateUtc = o.OrderDateUtc,
-                status = o.Status.ToString(),
-                totalAmount = o.TotalAmount,
-                itemsCount = o.Items.Count,
-                userId = o.UserId,
-                userName = o.RecipientName,
-                items = o.Items.Select(i => new
-                {
-                    i.ProductId,
-                    productName = i.ProductName,
-                    i.Quantity,
-                    unitPrice = i.ProductPrice
-                })
-            }),
+            items = result.Items.Select(o => MapAdminOrder(o, nameByUser, emailByUser)),
+            page = result.Page,
+            pageSize = result.PageSize,
+            totalPages = result.TotalPages,
             totalOrders = result.TotalOrders,
             totalAmount = result.TotalAmount,
             statusCounts = result.StatusCounts,
@@ -144,6 +173,7 @@ public class OrdersController : ControllerBase
     private static object MapOrder(Domain.Entities.Order o) => new
     {
         o.Id,
+        orderNumber = o.OrderNumber,
         userId = o.UserId,
         orderDateUtc = o.OrderDateUtc,
         status = o.Status.ToString(),
@@ -153,6 +183,11 @@ public class OrdersController : ControllerBase
         recipientName = o.RecipientName,
         shippingAddress = o.ShippingAddress,
         paymentType = o.PaymentType ?? "Cash",
+        // #A10 — last update (status change); alias lastUpdateUtc for FE
+        createdAtUtc = o.CreatedAtUtc,
+        completedAtUtc = o.CompletedAtUtc,
+        updatedAtUtc = o.UpdatedAtUtc,
+        lastUpdateUtc = o.UpdatedAtUtc,
         items = o.Items.Select(i => new
         {
             i.ProductId,
@@ -162,6 +197,42 @@ public class OrdersController : ControllerBase
             unitPrice = i.ProductPrice,
             lineTotal = i.TotalPrice,
             imageUrl = i.ProductImageUrl
+        })
+    };
+
+    private static object MapAdminOrder(
+        Domain.Entities.Order o,
+        IReadOnlyDictionary<Guid, string> nameByUser,
+        IReadOnlyDictionary<Guid, string> emailByUser) => new
+    {
+        o.Id,
+        orderNumber = o.OrderNumber,
+        userId = o.UserId,
+        orderDateUtc = o.OrderDateUtc,
+        status = o.Status.ToString(),
+        totalAmount = o.TotalAmount,
+        itemsCount = o.ItemsCount > 0 ? o.ItemsCount : o.Items.Count,
+        userName = !string.IsNullOrWhiteSpace(o.RecipientName)
+            ? o.RecipientName
+            : nameByUser.GetValueOrDefault(o.UserId),
+        recipientName = o.RecipientName,
+        userEmail = emailByUser.GetValueOrDefault(o.UserId),
+        shippingAddress = o.ShippingAddress,
+        paymentType = o.PaymentType ?? "Cash",
+        completedAtUtc = o.CompletedAtUtc,
+        createdAtUtc = o.CreatedAtUtc,
+        updatedAtUtc = o.UpdatedAtUtc,
+        lastUpdateUtc = o.UpdatedAtUtc,
+        items = o.Items.Select(i => new
+        {
+            i.ProductId,
+            productName = i.ProductName,
+            productDescription = i.ProductDescription,
+            i.Quantity,
+            unitPrice = i.ProductPrice,
+            lineTotal = i.TotalPrice,
+            imageUrl = i.ProductImageUrl,
+            categoryName = i.CategoryName
         })
     };
 }

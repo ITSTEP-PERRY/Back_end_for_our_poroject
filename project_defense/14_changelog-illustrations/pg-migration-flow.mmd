@@ -1,0 +1,6 @@
+flowchart LR
+  OLD["SQL Server"] --> MIG["EF InitialPostgreSQL"]
+  MIG --> PG[("PostgreSQL 16")]
+  API["Perry.Api"] --> PG
+  SEED["DbSeeder"] --> PG
+  COMPOSE["docker-compose"] --> PG

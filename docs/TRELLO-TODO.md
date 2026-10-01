@@ -8,9 +8,9 @@
 1. Создайте доску: колонки `Backlog` → `To Do` → `In Progress` → `Review` → `Done`.
 2. Создайте карточку на каждую задачу ниже (номер = ID карточки).
 3. Метки (labels): `FE` · `BE` · `Admin` · `Mobile` · `Design` · `Docs` · `P0` / `P1` / `P2`.
-4. Статус — синхронизирован с доской **ITSTEP-PERRY** на **25.09.2026**.
+4. Статус — синхронизирован с доской **ITSTEP-PERRY** на **28.09.2026**.
 Легенда статуса: ✅ Done · 🟡 Partial · ⬜ To Do / Backlog · 🚫 Blocked · 🔵 In Progress · 🟣 Review
-Срез дня: [ИЗМЕНЕНИЯ-2026-09-25.md](./ИЗМЕНЕНИЯ-2026-09-25.md)
+Срез дня: [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md) · 26.09: [ИЗМЕНЕНИЯ-2026-09-26.md](./ИЗМЕНЕНИЯ-2026-09-26.md) · Auth: [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md)
 
 ---
 
@@ -31,10 +31,12 @@
 | # | Задача | Метки | Статус | Figma / примечание |
 |---|--------|-------|--------|--------------------|
 | **1** | Solution ASP.NET Core 8: Domain + Infrastructure + Web + Api | BE | ✅ | — |
-| **2** | EF Core модель, миграции, LocalDB `Perry` | BE | ✅ | — |
+| **2** | EF Core модель, миграции → **PostgreSQL** (#A08) | BE | ✅ | было LocalDB; 29.09 Npgsql + `InitialPostgreSQL` |
 | **3** | DbSeeder: категории, товары, отзывы, атрибуты | BE | ✅ | — |
 | **4** | Ребрендинг DuSoleil → **Perry** (namespaces, UI, БД) | FE BE Docs | ✅ | — |
-| **5** | Docker / docker-compose / env для команды | BE Docs | ✅ | `docker-compose`, `.env.example`, гайд |
+| **5** | Docker / docker-compose / env для команды | BE Docs | ✅ | `postgres:16` + `.env.example` · [docker.md](./docker.md) |
+| **A08** | SQL Server → PostgreSQL | BE Docs | ✅ | [карточка](https://trello.com/c/ORMRprbu) · [отчёт](./ОТЧЁТ-2026-09-29-A08-A09.md) |
+| **A09** | `GET /api/orders/admin` — pagination/filters/fields | BE | ✅ | [карточка](https://trello.com/c/ChE2bqrv) · [отчёт](./ОТЧЁТ-2026-09-29-A08-A09.md) |
 | **6** | Получить **edit** на оригинал Figma комиссии для MCP/пиксель-сверки | Design | 🚫 | Blocked · `4d4a4NOMFigwJbKMlOpL2n` |
 
 ---
@@ -206,7 +208,7 @@
 |---|--------|-------|--------|------------|
 | **90** | Product API: statistics (views / popular / orders) | BE | 🟣 | Код ✅ · на доске Review |
 | **91** | Product Wishlist: CRUD + admin stats по месяцам | FE BE Admin | 🟣 | Код ✅ · на доске Review |
-| **93** | Admin Orders: статусы, фильтры, stats + compare % | BE FE Admin P1 | ✅ | 25.09 · [ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) |
+| **93** | Admin Orders: статусы, фильтры, stats + compare % | BE FE Admin P1 | 🟣 | Review · автор фичи проверяет · [ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) |
 
 ---
 
@@ -215,7 +217,7 @@
 | Колонка | Номера |
 |---------|--------|
 | **Done** | 1–5, 7–24, 26–41, 43–44, 46, 48–73, 76–78, 80, 83–84, 86–89 |
-| **Review** | 90, 91 |
+| **Review** | 90, 91, **93** |
 | **To Do** | 92 |
 | **Backlog** | 25, 42, 45, 74, 75, 79, 81, 85 |
 | **Blocked** | 6, 47, 82 |
@@ -230,7 +232,16 @@
 | **P2** | **#74** **#75** **#45** **#42** **#85** | Не блокер |
 | **Blocked** | **#6** **#47** **#82** | Внешний доступ / зависимости |
 
-**Закрыто 25.09:** #15, #16, #32, #41, #43, #62, #73, **#93**.
+**Закрыто 25.09:** #15, #16, #32, #41, #43, #62, #73.  
+**#93** — в Review: автор предложения сверяет реализацию с желаемым контрактом.  
+**Закрыто 26.09:** **#94** (Users out of Product API).  
+**#A02** — ✅ Done: merge `backend/main` (PR #13, fixed DB migrations) · [карточка](https://trello.com/c/BgOTO4i6).  
+**Закрыто 28.09:** **#A03** seed orders · **#A04** remove AdminReviewsController · **#A05** checkout shipping/payment · **#A06** `/api/health` · **#A07** popular-by-userId — см. [ИЗМЕНЕНИЯ-2026-09-28.md](./ИЗМЕНЕНИЯ-2026-09-28.md).  
+**Закрыто 29.09:** **#A08** PostgreSQL · **#A09** admin orders filters — [ОТЧЁТ-2026-09-29-A08-A09.md](./ОТЧЁТ-2026-09-29-A08-A09.md).  
+**#A10** — ✅ Orders last update (`updatedAtUtc` / `lastUpdateUtc` on create + status) — [ОТЧЁТ-2026-09-29-A10.md](./ОТЧЁТ-2026-09-29-A10.md) · [карточка](https://trello.com/c/ZBJZpgnW).  
+**#95** — ✅ secret HS256 получен; Product читает `.env` / валидирует подпись — [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [AUTH-INTEGRATION.md](./AUTH-INTEGRATION.md). Осталось: plaintext service credential + подтвердить iss/aud на живом токене. **#92** — слайды (Design).  
+**Отзывы (#99–#104)** — ✅ Done: create `POST /api/reviews`, AuthClaims UserId, unique, `/me`, Account «My reviews», tags — [ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md).  
+**Auth follow-up (стыки):** пакет [#105](https://trello.com/c/6W4hdlT1) · Auth сдаёт [#96](https://trello.com/c/dnk4VUUk) iss/aud · [#98](https://trello.com/c/paCSfdu7) claims · [#97](https://trello.com/c/hcmCvKWF) credential · [#106](https://trello.com/c/LIL5NHlr) CORS · затем мы [#107](https://trello.com/c/zuzmLFVt) Product · [#108](https://trello.com/c/dKmess1E) Front smoke — [СТЫКИ-МИКРОСЕРВИСОВ.md](./СТЫКИ-МИКРОСЕРВИСОВ.md).
 
 ---
 

@@ -1,8 +1,10 @@
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Auth;
 using Perry.Api.Utils;
 using Perry.Domain.Utils;
 
@@ -536,12 +538,17 @@ public class ProductsController : ControllerBase
         IReadOnlyList<AboutInput>? AboutItems = null,
         IReadOnlyList<AttrInput>? Attributes = null);
 
+    [Authorize(Roles = "Admin,Seller")]
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateProductRequest body,
         [FromServices] IProductService products,
         CancellationToken ct)
     {
+        var sellerId = AuthClaims.GetUserId(User);
+        if (sellerId is null)
+            return Unauthorized(new { error = "SellerId (JWT sub) required." });
+
         if (string.IsNullOrWhiteSpace(body.Name) || body.CategoryId == Guid.Empty)
             return BadRequest(new { error = "Name и CategoryId обязательны." });
 
@@ -560,6 +567,8 @@ public class ProductsController : ControllerBase
             Sku = sku,
             Brand = body.Brand?.Trim() ?? "Perry",
             CategoryId = body.CategoryId,
+            // #A11 — seller from JWT claims
+            SellerId = sellerId.Value,
             Price = body.Price,
             OldPrice = body.OldPrice,
             StockQuantity = body.StockQuantity,
@@ -577,7 +586,7 @@ public class ProductsController : ControllerBase
         ApplyAboutAndAttrs(entity.Id, body.AboutItems, body.Attributes);
 
         await _db.SaveChangesAsync(ct);
-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, new { entity.Id, entity.Slug });
+        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, new { entity.Id, entity.Slug, sellerId = entity.SellerId });
     }
 
     [HttpPut("{id:guid}")]

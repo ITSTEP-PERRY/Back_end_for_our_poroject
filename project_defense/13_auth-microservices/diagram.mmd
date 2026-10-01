@@ -1,0 +1,18 @@
+flowchart TB
+  FE["Фронт perry-front :3000"]
+
+  FE -->|"1. login"| AUTH["Auth Service<br/>выдаёт user JWT"]
+  FE -->|"2. каталог / заказы<br/>Bearer JWT"| PROD["Product API :5272"]
+  FE -->|"3. админ Users<br/>Admin JWT"| ADM["Admin Service"]
+
+  PROD -->|"данные"| PG[("PostgreSQL Product")]
+  PROD -.->|"4. Internal #97<br/>имена пользователей"| AUTH
+
+  classDef f fill:#3d4a1e,stroke:#c9d56a,color:#fff
+  classDef e fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  classDef p fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef d fill:#2d3e4a,stroke:#8ab4d4,color:#fff
+  class FE f
+  class AUTH,ADM e
+  class PROD p
+  class PG d

@@ -1,5 +1,21 @@
 # Perry
 
+## Быстрый запуск витрины (две иконки)
+
+В репозитории **perry-front** (рядом с этим бэкендом):
+
+| Ярлык | URL |
+|-------|-----|
+| **Perry Desktop** | http://localhost:3000 |
+| **Perry Mobile** | http://localhost:8081 |
+
+После clone фронта: `powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1`.  
+Этот API должен слушать **:5272**. CORS для Expo Web (`:8081`) добавлен 01.10.2026.
+
+**Отчёт 01.10.2026 (mobile + CORS):** [docs/ОТЧЁТ-2026-10-01.md](./docs/ОТЧЁТ-2026-10-01.md)
+
+---
+
 Дипломный маркетплейс **Perry** на **ASP.NET Core 8** — витрина + админка + REST API.
 Рабочее название совпадает с фронтом команды: [perry-front](https://github.com/ITSTEP-PERRY/perry-front.git).
 Проекты решения: `Perry.Domain`, `Perry.Infrastructure`, `Perry.Web`, `Perry.Api`.
@@ -9,8 +25,37 @@
 **Единая хроника работы:** [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)  
 Оглавление: [docs/README.md](./docs/README.md)
 
+## Срез 29.09.2026 — итог дня
+
+Полный отчёт: **[docs/ОТЧЁТ-2026-09-29.md](./docs/ОТЧЁТ-2026-09-29.md)**.  
+**#A08 + #A09:** **[docs/ОТЧЁТ-2026-09-29-A08-A09.md](./docs/ОТЧЁТ-2026-09-29-A08-A09.md)** (PostgreSQL + admin orders).  
+**#A10:** **[docs/ОТЧЁТ-2026-09-29-A10.md](./docs/ОТЧЁТ-2026-09-29-A10.md)** (Orders last update / status change).  
+Ветка `feature/categories-facets-figma-storefront`.
+
+| Блок | Что |
+|------|-----|
+| **#A08** | Product API на **PostgreSQL** (Npgsql, docker `postgres`, InitialPostgreSQL) |
+| **#A09** | `GET /api/orders/admin` — pagination, productId/userId, sort, search, paymentType, поля как Mine |
+| **#A10** | Orders `updatedAtUtc` / `lastUpdateUtc` — create + status change + API Mine/Admin |
+| **#97 / #107** | `AuthInternalClient` — Internal token + lookup user; admin orders enrichment |
+| **Reviews** | Фикс колонки `Reported` в `ProductReviewGrades` (DbSeeder) |
+| **Dev Admin** | `POST /api/dev/admin-login` (`Admin`/`Admin`) + `auth-internal-status` |
+| **#98** | `AuthClaims` расширен под типичные claim names |
+| **Categories** | Razor admin tree (`_CategoryAdminTreeNode`) |
+| **Владу** | Текст запроса plaintext: [ЗАПРОС-ВЛАДУ-97.md](./docs/ЗАПРОС-ВЛАДУ-97.md) |
+| **Статус стыков** | [СТЫКИ-ЛОКАЛЬНО.md](./docs/СТЫКИ-ЛОКАЛЬНО.md) |
+| **Mobile plan** | [МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md](./docs/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md) |
+
+Код стыков: коммит `544216e`+. Секреты только в локальном `.env` (см. `.env.example`).
+
 | Файл | О чём |
 |------|--------|
+| [docs/ОТЧЁТ-2026-09-29-A10.md](./docs/ОТЧЁТ-2026-09-29-A10.md) | **#A10 Orders last update** |
+| [docs/ОТЧЁТ-2026-09-29-A08-A09.md](./docs/ОТЧЁТ-2026-09-29-A08-A09.md) | **#A08 Postgres · #A09 admin orders** |
+| [docs/ОТЧЁТ-2026-09-29.md](./docs/ОТЧЁТ-2026-09-29.md) | Отчёт 29.09: Internal Auth · Reviews · Dev Admin |
+| [docs/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md](./docs/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md) | **План: Expo/RN витрина на нашем Product + Auth (без переписывания бэка)** |
+| [docs/СТЫКИ-ЛОКАЛЬНО.md](./docs/СТЫКИ-ЛОКАЛЬНО.md) | Готовность стыков у нас + что ждём от Влада |
+| [docs/ЗАПРОС-ВЛАДУ-97.md](./docs/ЗАПРОС-ВЛАДУ-97.md) | Личный запрос plaintext #97 (копипаст) |
 | [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) | Последовательность всей работы + запуск + бэклог |
 | [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Карточки Trello (актуальные статусы) |
 | [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Инструкция: Wishlist / Orders / Settings |
@@ -23,9 +68,18 @@
 | [docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md) | Срез 25.09: Admin Orders #93 (фильтры + compare %) |
 | [docs/ИЗМЕНЕНИЯ-2026-09-26.md](./docs/ИЗМЕНЕНИЯ-2026-09-26.md) | Срез 26.09: #94 без Users, FE→Auth |
 | [docs/ОТЧЁТ-2026-09-26.md](./docs/ОТЧЁТ-2026-09-26.md) | Подробный отчёт + конфликт фронт-архитектур |
+| [docs/ОТЧЁТ-2026-09-28.md](./docs/ОТЧЁТ-2026-09-28.md) | Отчёт 28.09: #A03–#A07 · #95 · #99–#104 |
+| [docs/СТЫКИ-МИКРОСЕРВИСОВ.md](./docs/СТЫКИ-МИКРОСЕРВИСОВ.md) | Для команды: стыки Auth↔Product, Done / To Do |
+| [docs/РЕШЕНИЕ-СТЫКОВ-С-КОДОМ.md](./docs/РЕШЕНИЕ-СТЫКОВ-С-КОДОМ.md) | Гайд с кодом: что куда вставить (#96–#108) |
+| [docs/СООБЩЕНИЕ-В-ЧАТ-СТЫКИ.md](./docs/СООБЩЕНИЕ-В-ЧАТ-СТЫКИ.md) | Текст в Telegram + ссылки Trello |
+| [docs/ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md) | Срез 28.09: #A03–#A07 + CI fix |
+| [docs/ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./docs/ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) | #95 JWT secret от Auth |
+| [docs/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./docs/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md) | Отзывы #99–#104 |
 | [docs/AUTH-INTEGRATION.md](./docs/AUTH-INTEGRATION.md) | Auth Service ↔ Product API ↔ FE |
 | [docs/ВОПРОСЫ-КОМАНДЕ.md](./docs/ВОПРОСЫ-КОМАНДЕ.md) | Вопросы Владу / Яне / Product |
 | [docs/СВЕСТИ-ДВЕ-ЛИНИИ.md](./docs/СВЕСТИ-ДВЕ-ЛИНИИ.md) | Figma-порт vs архитектура Яны |
+| [docs/НАША-АДМИНКА.md](./docs/НАША-АДМИНКА.md) | Локальная React `/admin` (не пушим страницы в perry-front) |
+| [docs/РЕШЕНИЕ-ФРОНТ-АДМИН.md](./docs/РЕШЕНИЕ-ФРОНТ-АДМИН.md) | Что команде / что держим у себя |
 | [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
 | [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
 | [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
@@ -45,6 +99,19 @@ dotnet run --project src/Perry.Web --launch-profile http
 - API: `dotnet run --project src/Perry.Api` → `/swagger`
 
 БД: `(localdb)\mssqllocaldb` → `Perry`.
+
+## Срез 28.09.2026 — итог дня
+
+Полный отчёт: [ОТЧЁТ-2026-09-28.md](./docs/ОТЧЁТ-2026-09-28.md). Ветка `feature/categories-facets-figma-storefront`.
+
+| Блок | Что |
+|------|-----|
+| **#A03–#A07** | Seed orders · ReviewController · checkout · `/api/health` · popular-by-user · CI green |
+| **#95** | JWT HS256 `Jwt:SigningSecret` из `.env` |
+| **#99–#104** | Create + AuthClaims · unique · `/me` · Account UI · tags |
+| Auth next | #96 iss/aud · #97 credential · #98 claims |
+
+Срезы: [ИЗМЕНЕНИЯ-2026-09-28.md](./docs/ИЗМЕНЕНИЯ-2026-09-28.md) · [ИЗМЕНЕНИЯ-2026-09-28-auth-95.md](./docs/ИЗМЕНЕНИЯ-2026-09-28-auth-95.md) · [ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md](./docs/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md).
 
 ## Срез 25.09.2026 — что сделано
 

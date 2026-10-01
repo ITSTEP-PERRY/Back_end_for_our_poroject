@@ -1,0 +1,26 @@
+flowchart TB
+  subgraph COL1["A · Покупатель"]
+    direction TB
+    A1["POST /auth-api/.../login"]
+    A2["получает JWT"]
+    A3["Bearer → Product API<br/>проверка HS256"]
+    A1 --> A2 --> A3
+  end
+
+  subgraph COL2["B · DEV Admin"]
+    direction TB
+    B1["логин Admin / Admin"]
+    B2["POST /api/dev/admin-login"]
+    B3["JWT с role=Admin"]
+    B1 --> B2 --> B3
+  end
+
+  subgraph COL3["C · Internal #97"]
+    direction TB
+    C1["Product → Auth<br/>POST /internal/auth/token"]
+    C2["GET /internal/users/{id}"]
+    C1 --> C2
+  end
+
+  classDef x fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  class A1,A2,A3,B1,B2,B3,C1,C2 x

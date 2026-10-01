@@ -20,8 +20,12 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
+      # Compose defaults for CI (override locally via .env)
+      POSTGRES_DB: perry
+      POSTGRES_USER: perry
+      POSTGRES_PASSWORD: changeme
+      JWT_KEY: changeme-dev-jwt-signing-key-32chars
       SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-      JWT_KEY: ${{ secrets.JWT_KEY }}
 
     steps:
       - name: Checkout repository
@@ -158,7 +162,9 @@ jobs:
 
       - name: Scan repository for secrets
         run: |
+          # Scan working tree (not full git history): legacy .env was removed from tree
+          # but still exists in old commits and would fail a historical scan forever.
           docker run --rm \
             -v "${{ github.workspace }}:/repo" \
             ghcr.io/gitleaks/gitleaks:latest \
-            git /repo --redact
+            dir /repo --redact --config /repo/.gitleaks.toml

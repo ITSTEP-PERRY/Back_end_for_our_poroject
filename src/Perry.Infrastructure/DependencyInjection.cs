@@ -5,7 +5,9 @@ using Perry.Infrastructure.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Perry.Infrastructure.Interfaces;
+using Perry.Infrastructure.Options;
 using Perry.Infrastructure.Repositories;
 
 namespace Perry.Infrastructure;
@@ -25,7 +27,7 @@ public static class DependencyInjection
                                     "Connection string 'DefaultConnection' is not configured.");
 
         services.AddDbContext<AppDbContext>(options =>
-            options.UseSqlServer(connectionString));
+            options.UseNpgsql(connectionString));
 
         // Нужен ViewedProductsService (и другим сервисам с доступом к HttpContext).
         // В Api раньше не регистрировали — из‑за этого падал старт.
@@ -46,6 +48,18 @@ public static class DependencyInjection
         // #15: коды/токены в БД (scoped + AppDbContext), не MemoryCache
         services.AddScoped<IEmailCodeService, EmailCodeService>();
         services.AddScoped<IPasswordResetService, PasswordResetService>();
+
+        // #97 / #107 — Auth Internal (service-to-service). Credential только из env.
+        services.Configure<AuthServiceOptions>(configuration.GetSection(AuthServiceOptions.SectionName));
+        services.AddHttpClient<IAuthInternalClient, AuthInternalClient>((sp, client) =>
+        {
+            var opts = sp.GetRequiredService<IOptions<AuthServiceOptions>>().Value;
+            var baseUrl = (opts.BaseUrl ?? "").TrimEnd('/') + "/";
+            if (string.IsNullOrWhiteSpace(baseUrl) || baseUrl == "/")
+                baseUrl = "https://perry-auth-service.orangeplant-910928aa.swedencentral.azurecontainerapps.io/";
+            client.BaseAddress = new Uri(baseUrl);
+            client.Timeout = TimeSpan.FromSeconds(15);
+        });
 
         // Пока SMTP-заглушка (код в лог). Позже Smtp:UseStub=false + App Password.
         var useStub = configuration.GetValue("Smtp:UseStub", true);

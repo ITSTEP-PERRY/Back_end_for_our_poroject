@@ -9,6 +9,11 @@ public class Order
 {
     public Guid Id { get; set; }
 
+    /// <summary>
+    /// #A12 — короткий номер для UI (пример <c>#AT456BB</c>). PK остаётся <see cref="Id"/>.
+    /// </summary>
+    public string OrderNumber { get; set; } = string.Empty;
+
     /// <summary>Id пользователя из Perry Auth JWT.</summary>
     public Guid UserId { get; set; }
 
@@ -31,6 +36,9 @@ public class Order
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// #A10 — last order update (primarily last status change). Set on create and on status updates.
+    /// </summary>
     public DateTime? UpdatedAtUtc { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();

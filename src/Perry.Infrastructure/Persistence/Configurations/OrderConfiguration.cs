@@ -15,6 +15,9 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         builder.Property(x => x.RecipientName).HasMaxLength(200);
         builder.Property(x => x.ShippingAddress).HasMaxLength(500);
         builder.Property(x => x.PaymentType).HasMaxLength(50);
+        // #A12 — short display number (unique); Guid Id stays PK
+        builder.Property(x => x.OrderNumber).HasMaxLength(16).IsRequired();
+        builder.HasIndex(x => x.OrderNumber).IsUnique();
         // UserId without FK — users live in Auth Service (#94)
         builder.HasIndex(x => x.UserId);
         builder.HasIndex(x => x.OrderDateUtc);

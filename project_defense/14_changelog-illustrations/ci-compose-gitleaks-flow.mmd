@@ -1,0 +1,7 @@
+flowchart TD
+  FAIL["CI red"] --> F1["compose defaults"]
+  FAIL --> F2["gitleaks dir scan"]
+  FAIL --> F3["Publish skip"]
+  F1 --> OK["CI green"]
+  F2 --> OK
+  F3 --> OK

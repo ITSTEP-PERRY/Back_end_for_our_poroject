@@ -1,0 +1,16 @@
+flowchart TB
+  API["Perry.Api<br/>Controllers, JWT, Swagger"]
+  INF["Perry.Infrastructure<br/>EF, Services, Storage"]
+  DOM["Perry.Domain<br/>Entities, без EF"]
+
+  API -->|"вызывает"| INF
+  INF -->|"использует"| DOM
+  API -->|"DTO / типы"| DOM
+
+  WEB["Perry.Web — legacy Razor<br/>не основной UI"]
+  WEB -.-> INF
+
+  classDef a fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef w fill:#4a3d2d,stroke:#d4b48a,color:#fff
+  class API,INF,DOM a
+  class WEB w

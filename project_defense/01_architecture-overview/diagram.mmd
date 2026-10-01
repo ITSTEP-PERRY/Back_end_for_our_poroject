@@ -1,0 +1,19 @@
+flowchart TB
+  B["1. Browser<br/>localhost:3000"]
+  V["2. Vite + React SPA"]
+
+  B --> V
+
+  V --> A["3a. Auth Service Azure<br/>/auth-api → login, JWT"]
+  V --> P["3b. Perry.Api :5272<br/>/api → каталог, заказы"]
+  V --> U["3c. Admin Service Azure<br/>/users-api → пользователи"]
+
+  P --> DB[("4. PostgreSQL<br/>Product DB")]
+  P -.->|"Internal #97"| A
+
+  classDef step fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef ext fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  classDef db fill:#2d3e4a,stroke:#8ab4d4,color:#fff
+  class B,V,P step
+  class A,U ext
+  class DB db
