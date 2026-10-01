@@ -1,5 +1,21 @@
 # Perry
 
+## Быстрый запуск витрины (две иконки)
+
+В репозитории **perry-front** (рядом с этим бэкендом):
+
+| Ярлык | URL |
+|-------|-----|
+| **Perry Desktop** | http://localhost:3000 |
+| **Perry Mobile** | http://localhost:8081 |
+
+После clone фронта: `powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1`.  
+Этот API должен слушать **:5272**. CORS для Expo Web (`:8081`) добавлен 01.10.2026.
+
+**Отчёт 01.10.2026 (mobile + CORS):** [docs/ОТЧЁТ-2026-10-01.md](./docs/ОТЧЁТ-2026-10-01.md)
+
+---
+
 Дипломный маркетплейс **Perry** на **ASP.NET Core 8** — витрина + админка + REST API.
 Рабочее название совпадает с фронтом команды: [perry-front](https://github.com/ITSTEP-PERRY/perry-front.git).
 Проекты решения: `Perry.Domain`, `Perry.Infrastructure`, `Perry.Web`, `Perry.Api`.
