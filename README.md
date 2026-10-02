@@ -57,6 +57,7 @@
 | Документ | О чём |
 |----------|--------|
 | [инструкции/КАК-ЗАПУСКАТЬ.md](./docs/инструкции/КАК-ЗАПУСКАТЬ.md) | Desktop + Mobile (ярлыки) |
+| [инструкции/НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md](./docs/инструкции/НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md) | Как залить фото витрины у себя |
 | [инструкции/docker.md](./docs/инструкции/docker.md) | PostgreSQL + docker compose + env |
 | [инструкции/deployment.md](./docs/инструкции/deployment.md) | Деплой |
 | [инструкции/ci-cd.md](./docs/инструкции/ci-cd.md) | CI/CD |

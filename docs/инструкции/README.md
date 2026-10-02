@@ -5,6 +5,7 @@
 | Документ | О чём |
 |----------|--------|
 | [КАК-ЗАПУСКАТЬ.md](./КАК-ЗАПУСКАТЬ.md) | Desktop + Mobile (ярлыки) |
+| [НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md](./НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md) | Как залить фото витрины у себя (DummyJSON) |
 | [docker.md](./docker.md) | PostgreSQL + `docker compose` + API |
 | [deployment.md](./deployment.md) | Деплой |
 | [ci-cd.md](./ci-cd.md) | CI/CD |
