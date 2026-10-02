@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json;
 using Perry.Domain.Entities;
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Services;
@@ -9,9 +11,24 @@ namespace Perry.Infrastructure.Persistence;
 /// <summary>
 /// Заполняет БД демо-данными при первом запуске (если таблица Products пустая).
 /// Нужно для тестирования главной и карточки товара.
+/// Фото витрины — реалистичные CDN-URL из DummyJSON (cdn.dummyjson.com).
 /// </summary>
 public static class DbSeeder
 {
+    private sealed record DummyPack(
+        int Id,
+        string Category,
+        string Title,
+        string Brand,
+        decimal Price,
+        string Description,
+        decimal Rating,
+        int Stock,
+        string Thumbnail,
+        IReadOnlyList<string> Images);
+
+    private static IReadOnlyList<DummyPack>? _dummyCatalog;
+
     /// <summary>Только применить EF-миграции (для API / Azure при старте).</summary>
     public static async Task MigrateAsync(IServiceProvider services)
     {
@@ -30,16 +47,244 @@ public static class DbSeeder
         await EnsureReviewGradeReportedColumnAsync(db);
         await EnsureProductSlugsAsync(db);
 
+        var catalog = await LoadDummyCatalogAsync();
+
         if (!await db.Products.AnyAsync())
         {
-            await SeedDemoCatalogAsync(db);
+            await SeedDemoCatalogAsync(db, catalog);
         }
 
+        await EnsureDummyJsonCategoriesAsync(db);
+        await EnsureDummyJsonProductsAsync(db, catalog);
         await EnsureCatalogFilterAttributesAsync(db);
-        await EnsureProductPageDemoAsync(db);
-        await EnsureShopLooksAliveAsync(db);
+        await EnsureProductPageDemoAsync(db, catalog);
+        await EnsureShopLooksAliveAsync(db, catalog);
         await EnsureDemoOrdersAsync(db);
         await EnsureOrderNumbersAsync(db);
+    }
+
+    /// <summary>
+    /// Каталог DummyJSON: сначала сеть, иначе встроенный JSON (~194 товара с CDN-фото).
+    /// </summary>
+    private static async Task<IReadOnlyList<DummyPack>> LoadDummyCatalogAsync()
+    {
+        if (_dummyCatalog is { Count: > 0 })
+            return _dummyCatalog;
+
+        try
+        {
+            using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(12) };
+            await using var stream = await http.GetStreamAsync("https://dummyjson.com/products?limit=0");
+            using var doc = await JsonDocument.ParseAsync(stream);
+            var packs = ParseDummyProducts(doc.RootElement);
+            if (packs.Count > 0)
+            {
+                _dummyCatalog = packs;
+                return packs;
+            }
+        }
+        catch
+        {
+            // offline / firewall — берём embedded snapshot
+        }
+
+        await using var embedded = Assembly.GetExecutingAssembly()
+            .GetManifestResourceStream("Perry.Infrastructure.Persistence.dummyjson-products.json");
+        if (embedded is null)
+            return _dummyCatalog = Array.Empty<DummyPack>();
+
+        using var embeddedDoc = await JsonDocument.ParseAsync(embedded);
+        _dummyCatalog = ParseDummyProducts(embeddedDoc.RootElement);
+        return _dummyCatalog;
+    }
+
+    private static IReadOnlyList<DummyPack> ParseDummyProducts(JsonElement root)
+    {
+        var list = new List<DummyPack>();
+        // Embedded snapshot is a raw array; live API wraps { products: [...] }.
+        IEnumerable<JsonElement> items = root.ValueKind == JsonValueKind.Array
+            ? root.EnumerateArray()
+            : root.TryGetProperty("products", out var products) && products.ValueKind == JsonValueKind.Array
+                ? products.EnumerateArray()
+                : Array.Empty<JsonElement>();
+
+        foreach (var p in items)
+        {
+            var id = p.TryGetProperty("id", out var idEl) && idEl.TryGetInt32(out var idVal) ? idVal : 0;
+            var category = p.TryGetProperty("c", out var cEl) ? cEl.GetString()
+                : p.TryGetProperty("category", out var catEl) ? catEl.GetString()
+                : null;
+            var title = p.TryGetProperty("t", out var tEl) ? tEl.GetString()
+                : p.TryGetProperty("title", out var titleEl) ? titleEl.GetString()
+                : null;
+            var thumb = p.TryGetProperty("th", out var thEl) ? thEl.GetString()
+                : p.TryGetProperty("thumbnail", out var thumbEl) ? thumbEl.GetString()
+                : null;
+            var brand = p.TryGetProperty("brand", out var brandEl) ? brandEl.GetString() : null;
+            var description = p.TryGetProperty("desc", out var descEl) ? descEl.GetString()
+                : p.TryGetProperty("description", out var descriptionEl) ? descriptionEl.GetString()
+                : null;
+            var price = 0m;
+            if (p.TryGetProperty("price", out var priceEl))
+            {
+                if (priceEl.ValueKind == JsonValueKind.Number) price = priceEl.GetDecimal();
+                else if (priceEl.ValueKind == JsonValueKind.String && decimal.TryParse(priceEl.GetString(), out var parsed)) price = parsed;
+            }
+            var rating = 4.0m;
+            if (p.TryGetProperty("rating", out var ratingEl) && ratingEl.ValueKind == JsonValueKind.Number)
+                rating = Math.Round(ratingEl.GetDecimal(), 1);
+            var stock = 50;
+            if (p.TryGetProperty("stock", out var stockEl) && stockEl.TryGetInt32(out var stockVal))
+                stock = stockVal;
+
+            var images = new List<string>();
+            if (p.TryGetProperty("i", out var iEl) && iEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var img in iEl.EnumerateArray())
+                {
+                    var u = img.GetString();
+                    if (!string.IsNullOrWhiteSpace(u)) images.Add(u!);
+                }
+            }
+            else if (p.TryGetProperty("images", out var imagesEl) && imagesEl.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var img in imagesEl.EnumerateArray())
+                {
+                    var u = img.GetString();
+                    if (!string.IsNullOrWhiteSpace(u)) images.Add(u!);
+                }
+            }
+
+            if (images.Count == 0 && !string.IsNullOrWhiteSpace(thumb))
+                images.Add(thumb!);
+            if (images.Count == 0 || string.IsNullOrWhiteSpace(category) || string.IsNullOrWhiteSpace(title))
+                continue;
+            if (id <= 0)
+                id = Math.Abs(HashCode.Combine(category, title));
+
+            list.Add(new DummyPack(
+                id,
+                category!,
+                title!,
+                string.IsNullOrWhiteSpace(brand) ? "Perry" : brand!,
+                price > 0 ? price : 19.99m,
+                string.IsNullOrWhiteSpace(description) ? title! : description!,
+                rating > 0 ? rating : 4.0m,
+                Math.Max(0, stock),
+                thumb ?? images[0],
+                images));
+        }
+
+        return list;
+    }
+
+    private static bool IsPlaceholderUrl(string? url) =>
+        string.IsNullOrWhiteSpace(url)
+        || url.Contains("picsum.photos", StringComparison.OrdinalIgnoreCase)
+        || url.Contains("placehold.co", StringComparison.OrdinalIgnoreCase)
+        || url.Contains("via.placeholder", StringComparison.OrdinalIgnoreCase)
+        || url.Contains("images.unsplash.com", StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsManagedDemoUrl(string? url) =>
+        IsPlaceholderUrl(url)
+        || (!string.IsNullOrWhiteSpace(url)
+            && !url.StartsWith("/uploads", StringComparison.OrdinalIgnoreCase)
+            && !url.Contains("cdn.dummyjson.com", StringComparison.OrdinalIgnoreCase));
+
+    private static IReadOnlyList<string> GalleryUrls(DummyPack pack)
+    {
+        if (pack.Images.Count > 0) return pack.Images;
+        return string.IsNullOrWhiteSpace(pack.Thumbnail) ? Array.Empty<string>() : new[] { pack.Thumbnail };
+    }
+
+    private static DummyPack? PickDummyPack(IReadOnlyList<DummyPack> catalog, Product product, int index)
+    {
+        if (catalog.Count == 0) return null;
+
+        var preferred = PreferredDummyCategories(product);
+        var pool = preferred.Length == 0
+            ? catalog
+            : catalog.Where(p => preferred.Contains(p.Category, StringComparer.OrdinalIgnoreCase)).ToList();
+        if (pool.Count == 0) pool = catalog;
+
+        var seed = Math.Abs(HashCode.Combine(product.Id, product.Sku, index));
+        return pool[seed % pool.Count];
+    }
+
+    private static string[] PreferredDummyCategories(Product p)
+    {
+        var slug = p.Category?.Slug ?? "";
+        var name = (p.Name + " " + p.Brand + " " + slug).ToLowerInvariant();
+
+        if (name.Contains("roku") || name.Contains("stream") || name.Contains("tablet"))
+            return ["tablets", "smartphones", "mobile-accessories"];
+        if (name.Contains("headphone") || name.Contains("headset") || name.Contains("earbud"))
+            return ["mobile-accessories"];
+        if (name.Contains("keyboard") || name.Contains("laptop") || name.Contains("pc"))
+            return ["laptops", "mobile-accessories", "tablets"];
+        if (name.Contains("phone") || name.Contains("iphone") || name.Contains("samsung"))
+            return ["smartphones", "mobile-accessories"];
+        if (name.Contains("shoe") || name.Contains("aqua") || name.Contains("sock"))
+            return ["mens-shoes", "womens-shoes", "sports-accessories"];
+        if (name.Contains("hat") || name.Contains("sunglass"))
+            return ["sunglasses", "womens-bags"];
+        if (name.Contains("dress"))
+            return ["womens-dresses", "tops"];
+        if (name.Contains("tee") || name.Contains("t-shirt") || name.Contains("shirt") || name.Contains("blouse") || name.Contains("top"))
+            return ["tops", "mens-shirts", "womens-dresses"];
+        if (name.Contains("watch") || name.Contains("bag") || name.Contains("jewel"))
+            return ["womens-watches", "mens-watches", "womens-bags", "womens-jewellery"];
+        if (name.Contains("beauty") || name.Contains("fragrance") || name.Contains("skin"))
+            return ["beauty", "fragrances", "skin-care"];
+        if (name.Contains("home") || name.Contains("kitchen") || name.Contains("furniture") || name.Contains("grocery"))
+            return ["furniture", "home-decoration", "kitchen-accessories", "groceries"];
+
+        if (slug.Contains("beauty"))
+            return ["beauty", "fragrances", "skin-care"];
+        if (slug.Contains("home") || slug.Contains("kitchen"))
+            return ["furniture", "home-decoration", "kitchen-accessories", "groceries"];
+        if (slug.Contains("electronic") || slug.Contains("pc") || slug.Contains("stream"))
+            return ["smartphones", "laptops", "tablets", "mobile-accessories"];
+        if (slug.Contains("fashion") || slug.Contains("women") || slug.Contains("casual") || slug.Contains("shirt"))
+            return ["womens-dresses", "tops", "womens-shoes", "womens-bags", "womens-watches"];
+
+        return [];
+    }
+
+    private static string PickCategoryImage(IReadOnlyList<DummyPack> catalog, Category c)
+    {
+        if (catalog.Count == 0)
+            return CategoryVisuals(c.Slug, c.Name).Image;
+
+        var probe = new Product
+        {
+            Id = c.Id,
+            Sku = c.Slug,
+            Name = c.Name,
+            Brand = "",
+            Category = c
+        };
+        var pack = PickDummyPack(catalog, probe, 0);
+        if (pack is null)
+            return CategoryVisuals(c.Slug, c.Name).Image;
+        return pack.Thumbnail;
+    }
+
+    private static string PickCategoryIcon(IReadOnlyList<DummyPack> catalog, Category c)
+    {
+        if (catalog.Count == 0)
+            return CategoryVisuals(c.Slug, c.Name).Icon;
+
+        var probe = new Product
+        {
+            Id = c.Id,
+            Sku = c.Slug + "-icon",
+            Name = c.Name,
+            Brand = "",
+            Category = c
+        };
+        var pack = PickDummyPack(catalog, probe, 1);
+        return pack?.Thumbnail ?? PickCategoryImage(catalog, c);
     }
 
     /// <summary>
@@ -200,25 +445,24 @@ public static class DbSeeder
     }
 
     /// <summary>
-    /// Категорийные фото + тематические картинки товаров + случайные отзывы,
+    /// Категорийные фото + DummyJSON-галереи товаров + отзывы,
     /// чтобы витрина выглядела как живой магазин (для уже существующей БД тоже).
     /// </summary>
-    private static async Task EnsureShopLooksAliveAsync(AppDbContext db)
+    private static async Task EnsureShopLooksAliveAsync(AppDbContext db, IReadOnlyList<DummyPack> catalog)
     {
         var changed = false;
 
         var categories = await db.Categories.ToListAsync();
         foreach (var c in categories)
         {
-            var urls = CategoryVisuals(c.Slug, c.Name);
-            if (string.IsNullOrWhiteSpace(c.ImageUrl))
+            if (IsManagedDemoUrl(c.ImageUrl))
             {
-                c.ImageUrl = urls.Image;
+                c.ImageUrl = PickCategoryImage(catalog, c);
                 changed = true;
             }
-            if (string.IsNullOrWhiteSpace(c.IconUrl))
+            if (IsManagedDemoUrl(c.IconUrl))
             {
-                c.IconUrl = urls.Icon;
+                c.IconUrl = PickCategoryIcon(catalog, c);
                 changed = true;
             }
             if (string.IsNullOrWhiteSpace(c.Description))
@@ -231,33 +475,59 @@ public static class DbSeeder
         var products = await db.Products
             .Include(p => p.Images)
             .Include(p => p.Reviews).ThenInclude(r => r.Tags)
+            .Include(p => p.Reviews).ThenInclude(r => r.Images)
             .Include(p => p.Category)
             .ToListAsync();
 
+        var productIndex = 0;
         foreach (var p in products)
         {
+            var pack = PickDummyPack(catalog, p, productIndex++) ?? catalog.FirstOrDefault();
             var theme = ImageThemeFor(p);
-            if (p.Images.Count == 0)
+            var gallery = pack is null ? Array.Empty<string>() : GalleryUrls(pack);
+
+            if (gallery.Count > 0)
             {
-                AddImages(db, p.Id, theme);
-                changed = true;
-            }
-            else
-            {
-                // Заменяем «пустые» picsum без темы категории на более узнаваемые seed-URL.
-                foreach (var img in p.Images.OrderBy(i => i.SortOrder).Take(4))
+                if (p.Images.Count == 0)
                 {
-                    if (string.IsNullOrWhiteSpace(img.Url) || img.Url.Contains("picsum.photos/seed/" + theme, StringComparison.Ordinal))
-                        continue;
-                    if (img.Url.Contains("picsum.photos", StringComparison.OrdinalIgnoreCase)
-                        && !img.Url.Contains($"seed/{theme}", StringComparison.OrdinalIgnoreCase))
+                    AddImages(db, p.Id, gallery, pack!.Title);
+                    changed = true;
+                }
+                else if (p.Images.Any(i => IsManagedDemoUrl(i.Url)))
+                {
+                    var ordered = p.Images.OrderBy(i => i.SortOrder).ToList();
+                    for (var i = 0; i < ordered.Count; i++)
                     {
-                        var idx = img.SortOrder;
-                        img.Url = $"https://picsum.photos/seed/{theme}{idx}/640/640";
-                        img.AltText = theme;
+                        if (!IsManagedDemoUrl(ordered[i].Url))
+                            continue;
+                        ordered[i].Url = gallery[i % gallery.Count];
+                        ordered[i].AltText = pack!.Title;
+                        ordered[i].IsPrimary = i == 0;
+                        changed = true;
+                    }
+
+                    var targetCount = Math.Min(4, gallery.Count);
+                    while (p.Images.Count < targetCount)
+                    {
+                        var i = p.Images.Count;
+                        db.ProductImages.Add(new ProductImage
+                        {
+                            Id = Guid.NewGuid(),
+                            ProductId = p.Id,
+                            Url = gallery[i % gallery.Count],
+                            SortOrder = i,
+                            IsPrimary = i == 0 && p.Images.Count == 0,
+                            IsVideo = false,
+                            AltText = pack!.Title
+                        });
                         changed = true;
                     }
                 }
+            }
+            else if (p.Images.Count == 0)
+            {
+                AddImages(db, p.Id, theme);
+                changed = true;
             }
 
             if (p.Reviews.Count < 4)
@@ -266,7 +536,7 @@ public static class DbSeeder
                 var toAdd = need - p.Reviews.Count;
                 for (var i = 0; i < toAdd; i++)
                 {
-                    var review = RandomReview(p.Id, theme, p.Reviews.Count + i);
+                    var review = RandomReview(p.Id, theme, p.Reviews.Count + i, pack?.Thumbnail);
                     db.ProductReviews.Add(review);
                     p.Reviews.Add(review);
                     foreach (var tag in review.Tags)
@@ -278,6 +548,18 @@ public static class DbSeeder
                     }
                 }
                 changed = true;
+            }
+            else
+            {
+                foreach (var review in p.Reviews)
+                {
+                    foreach (var img in review.Images.Where(i => IsPlaceholderUrl(i.Url)))
+                    {
+                        img.Url = pack?.Thumbnail
+                            ?? $"https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp";
+                        changed = true;
+                    }
+                }
             }
 
             // Синхронизируем счётчики с реальными одобренными отзывами (витрина + карточка).
@@ -296,6 +578,94 @@ public static class DbSeeder
         }
 
         if (changed)
+            await db.SaveChangesAsync();
+    }
+
+    /// <summary>Доп. разделы под DummyJSON (Beauty / Home), если их ещё нет.</summary>
+    private static async Task EnsureDummyJsonCategoriesAsync(AppDbContext db)
+    {
+        var changed = false;
+        async Task<Category> Ensure(string name, string slug, int sort, Guid? parentId = null)
+        {
+            var existing = await db.Categories.FirstOrDefaultAsync(c => c.Slug == slug);
+            if (existing is not null) return existing;
+            var cat = Cat(name, slug, sort, parentId);
+            db.Categories.Add(cat);
+            changed = true;
+            return cat;
+        }
+
+        await Ensure("Beauty", "beauty", 3);
+        await Ensure("Home & Kitchen", "home-kitchen", 4);
+        if (changed)
+            await db.SaveChangesAsync();
+    }
+
+    /// <summary>
+    /// Импорт всех товаров DummyJSON (~194) в дерево категорий Perry по тематике разделов.
+    /// SKU = DJ-{id}, идемпотентно.
+    /// </summary>
+    private static async Task EnsureDummyJsonProductsAsync(AppDbContext db, IReadOnlyList<DummyPack> catalog)
+    {
+        if (catalog.Count == 0) return;
+
+        var categories = await db.Categories.ToListAsync();
+        Guid ResolveCategoryId(string dummyCategory)
+        {
+            string slug = dummyCategory.ToLowerInvariant() switch
+            {
+                "smartphones" or "tablets" or "mobile-accessories" => "pcs-accessories",
+                "laptops" => "pcs-accessories",
+                "mens-shirts" or "tops" => "t-shirts",
+                "womens-dresses" => "casual-womens-clothing",
+                "womens-shoes" or "mens-shoes" or "sports-accessories" => "fashion",
+                "sunglasses" or "womens-bags" or "womens-jewellery"
+                    or "womens-watches" or "mens-watches" => "womens-fashion",
+                "beauty" or "fragrances" or "skin-care" => "beauty",
+                "furniture" or "home-decoration" or "kitchen-accessories" or "groceries" => "home-kitchen",
+                "motorcycle" or "vehicle" => "electronics",
+                _ => "electronics"
+            };
+
+            var hit = categories.FirstOrDefault(c => c.Slug == slug)
+                ?? categories.FirstOrDefault(c => c.Slug == "electronics")
+                ?? categories.First();
+            return hit.Id;
+        }
+
+        var existingSkus = await db.Products
+            .Where(p => p.Sku.StartsWith("DJ-"))
+            .Select(p => p.Sku)
+            .ToListAsync();
+        var known = new HashSet<string>(existingSkus, StringComparer.OrdinalIgnoreCase);
+
+        var added = 0;
+        foreach (var pack in catalog)
+        {
+            var sku = $"DJ-{pack.Id:D3}";
+            if (!known.Add(sku))
+                continue;
+
+            var product = Product(
+                name: pack.Title,
+                sku: sku,
+                brand: pack.Brand,
+                categoryId: ResolveCategoryId(pack.Category),
+                price: pack.Price,
+                oldPrice: pack.Price > 20 ? Math.Round(pack.Price * 1.25m, 2) : null,
+                stock: pack.Stock,
+                rating: pack.Rating,
+                reviews: 12 + (pack.Id % 40),
+                bestSeller: pack.Rating >= 4.5m || pack.Id % 7 == 0,
+                description: pack.Description);
+
+            product.Slug = SlugHelper.FromName($"{pack.Title}-{pack.Id}");
+            db.Products.Add(product);
+            AddImages(db, product.Id, GalleryUrls(pack), pack.Title);
+            added++;
+        }
+
+        if (added > 0)
             await db.SaveChangesAsync();
     }
 
@@ -342,7 +712,7 @@ public static class DbSeeder
         return chars.Length == 0 ? "perry" : new string(chars).ToLowerInvariant();
     }
 
-    private static ProductReview RandomReview(Guid productId, string theme, int index)
+    private static ProductReview RandomReview(Guid productId, string theme, int index, string? photoUrl = null)
     {
         var authors = new[]
         {
@@ -409,7 +779,9 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ReviewId = reviewId,
-                Url = $"https://picsum.photos/seed/{theme}-rev{index}/160/160"
+                Url = !string.IsNullOrWhiteSpace(photoUrl)
+                    ? photoUrl!
+                    : $"https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/thumbnail.webp"
             });
         }
 
@@ -417,7 +789,7 @@ public static class DbSeeder
     }
 
     /// <summary>Дополняет dress демо-данными Product Page (about / reviews), если БД уже была.</summary>
-    private static async Task EnsureProductPageDemoAsync(AppDbContext db)
+    private static async Task EnsureProductPageDemoAsync(AppDbContext db, IReadOnlyList<DummyPack> catalog)
     {
         var dress = await db.Products
             .Include(p => p.AboutItems)
@@ -425,6 +797,10 @@ public static class DbSeeder
             .Include(p => p.Attributes)
             .FirstOrDefaultAsync(p => p.Name.Contains("Dress") || p.Sku == "DKT-DR-2024" || p.Sku == "5498209487628");
         if (dress is null) return;
+
+        var dressPhoto = catalog.FirstOrDefault(p => p.Category == "womens-dresses")?.Thumbnail
+            ?? catalog.FirstOrDefault()?.Thumbnail
+            ?? "https://cdn.dummyjson.com/product-images/womens-dresses/black-women-s-gown/thumbnail.webp";
 
         var changed = false;
         if (!dress.AboutItems.Any())
@@ -496,7 +872,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ReviewId = r2.Id,
-                Url = "https://picsum.photos/seed/dress-review/160/160"
+                Url = dressPhoto
             });
             dress.AverageRating = 4m;
             dress.ReviewCount = Math.Max(dress.ReviewCount, 3);
@@ -507,7 +883,7 @@ public static class DbSeeder
             await db.SaveChangesAsync();
     }
 
-    private static async Task SeedDemoCatalogAsync(AppDbContext db)
+    private static async Task SeedDemoCatalogAsync(AppDbContext db, IReadOnlyList<DummyPack> catalog)
     {
         // --- Категории (дерево как в макете) ---
         var electronics = Cat("Electronics", "electronics", 1);
@@ -657,16 +1033,36 @@ public static class DbSeeder
         db.Products.AddRange(roku, tee1, tee2, tee3, tee4, dress, shoes, headset, keyboard, hat);
         await db.SaveChangesAsync();
 
-        AddImages(db, roku.Id, "roku");
-        AddImages(db, tee1.Id, "tshirt");
-        AddImages(db, tee2.Id, "tee");
-        AddImages(db, tee3.Id, "croptee");
-        AddImages(db, tee4.Id, "oversize");
-        AddImages(db, dress.Id, "dress");
-        AddImages(db, shoes.Id, "shoes");
-        AddImages(db, headset.Id, "headphones");
-        AddImages(db, keyboard.Id, "keyboard");
-        AddImages(db, hat.Id, "hat");
+        void SeedGallery(Product product, params string[] preferredCats)
+        {
+            var pool = preferredCats.Length == 0
+                ? catalog
+                : catalog.Where(p => preferredCats.Contains(p.Category, StringComparer.OrdinalIgnoreCase)).ToList();
+            if (pool.Count == 0) pool = catalog.ToList();
+            var pack = pool.Count == 0
+                ? null
+                : pool[Math.Abs(product.Sku.GetHashCode()) % pool.Count];
+            if (pack is null)
+            {
+                AddImages(db, product.Id, ImageThemeFor(product));
+                return;
+            }
+            AddImages(db, product.Id, GalleryUrls(pack), pack.Title);
+        }
+
+        SeedGallery(roku, "tablets", "smartphones", "mobile-accessories");
+        SeedGallery(tee1, "tops", "mens-shirts");
+        SeedGallery(tee2, "tops", "mens-shirts");
+        SeedGallery(tee3, "tops");
+        SeedGallery(tee4, "tops", "mens-shirts");
+        SeedGallery(dress, "womens-dresses");
+        SeedGallery(shoes, "mens-shoes", "womens-shoes", "sports-accessories");
+        SeedGallery(headset, "mobile-accessories");
+        SeedGallery(keyboard, "laptops", "mobile-accessories");
+        SeedGallery(hat, "sunglasses", "womens-bags");
+
+        var dressPhoto = catalog.FirstOrDefault(p => p.Category == "womens-dresses")?.Thumbnail
+            ?? "https://cdn.dummyjson.com/product-images/womens-dresses/black-women-s-gown/thumbnail.webp";
 
         db.ProductAttributes.AddRange(
             Attr(roku.Id, "Brand", "Roku", 1),
@@ -769,7 +1165,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ReviewId = dressReview2.Id,
-            Url = $"https://picsum.photos/seed/dress-review/160/160"
+            Url = dressPhoto
         });
 
         // Align dress card numbers with Product Page mockup vibe.
@@ -910,17 +1306,42 @@ public static class DbSeeder
 
     private static void AddImages(AppDbContext db, Guid productId, string seed)
     {
+        // Fallback only if DummyJSON catalog is empty.
         for (var i = 0; i < 4; i++)
         {
             db.ProductImages.Add(new ProductImage
             {
                 Id = Guid.NewGuid(),
                 ProductId = productId,
-                Url = $"https://picsum.photos/seed/{seed}{i}/640/640",
+                Url = $"https://cdn.dummyjson.com/product-images/beauty/essence-mascara-lash-princess/{Math.Min(i + 1, 1)}.webp",
                 SortOrder = i,
                 IsPrimary = i == 0,
                 IsVideo = false,
                 AltText = seed
+            });
+        }
+    }
+
+    private static void AddImages(AppDbContext db, Guid productId, IReadOnlyList<string> urls, string altText)
+    {
+        if (urls.Count == 0)
+        {
+            AddImages(db, productId, altText);
+            return;
+        }
+
+        var count = Math.Min(4, Math.Max(1, urls.Count));
+        for (var i = 0; i < count; i++)
+        {
+            db.ProductImages.Add(new ProductImage
+            {
+                Id = Guid.NewGuid(),
+                ProductId = productId,
+                Url = urls[i % urls.Count],
+                SortOrder = i,
+                IsPrimary = i == 0,
+                IsVideo = false,
+                AltText = altText
             });
         }
     }

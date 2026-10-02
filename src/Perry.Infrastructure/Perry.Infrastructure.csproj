@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -30,4 +30,10 @@
     <None Include="Persistence\_archive_SqlServerMigrations\**" />
   </ItemGroup>
 
+  <ItemGroup>
+    <EmbeddedResource Include="Persistence\dummyjson-products.json" LogicalName="Perry.Infrastructure.Persistence.dummyjson-products.json" />
+  </ItemGroup>
+
 </Project>
+
+
