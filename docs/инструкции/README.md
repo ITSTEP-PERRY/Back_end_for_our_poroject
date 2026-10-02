@@ -6,6 +6,8 @@
 |----------|--------|
 | [КАК-ЗАПУСКАТЬ.md](./КАК-ЗАПУСКАТЬ.md) | Desktop + Mobile (ярлыки) |
 | [НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md](./НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md) | Как залить фото витрины у себя (DummyJSON) |
+| [MB01-BACKEND-ДЛЯ-ИЛОНЫ.md](./MB01-BACKEND-ДЛЯ-ИЛОНЫ.md) | **Илона:** Login / Main / List / PDP → Auth + Product |
+| [ГАЙД-ИЛОНА-НА-ОСНОВЕ-НАШЕЙ-МОБИЛКИ.md](./ГАЙД-ИЛОНА-НА-ОСНОВЕ-НАШЕЙ-МОБИЛКИ.md) | **Илона:** порт с Expo `mobile/` в её RN CLI |
 | [docker.md](./docker.md) | PostgreSQL + `docker compose` + API |
 | [deployment.md](./deployment.md) | Деплой |
 | [ci-cd.md](./ci-cd.md) | CI/CD |
