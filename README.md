@@ -9,11 +9,14 @@
 | **Витрина (React)** | https://github.com/ITSTEP-PERRY/perry-front |
 | **Auth Service** | https://github.com/ITSTEP-PERRY/Backend-client |
 | **Командный mirror API** | https://github.com/ITSTEP-PERRY/Back_end_for_our_poroject |
+| **Защита: Product API (без админки)** | **[project_defense/DEFENSE_BACKEND.md](./project_defense/DEFENSE_BACKEND.md)** |
+| **Словарик аббревиатур** | [GLOSSARY-BACKEND.md](./project_defense/GLOSSARY-BACKEND.md) · [СЛОВАРИК-БЭКЕНД.md](./project_defense/СЛОВАРИК-БЭКЕНД.md) |
 
 ---
 
 ## Как читать (гайд для студента)
 
+0. **Отчёт перед комиссией (бэкенд):** **[project_defense/DEFENSE_BACKEND.md](./project_defense/DEFENSE_BACKEND.md)** — архитектура, слайды, Trello Done, словарик в конце файла · индекс материалов защиты: [project_defense/README.md](./project_defense/README.md)  
 1. **[docs/ГАЙД-ДЛЯ-СТУДЕНТА.md](./docs/ГАЙД-ДЛЯ-СТУДЕНТА.md)** — шаги, как собрать похожий проект  
 2. Ниже — **вся документация по дням**, затем **по темам**, затем **скрины с описанием**  
 3. Этапы целиком: **[docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)**  
