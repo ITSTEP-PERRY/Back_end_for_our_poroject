@@ -11,9 +11,11 @@
 | File | Description |
 |------|-------------|
 | `README.md` | Этот индекс |
+| **`DEFENSE_BACKEND.md`** | **Отчёт перед комиссией: Product API без админки** + Done-карточки Trello (BE) |
+| **`СЛОВАРИК-БЭКЕНД.md`** | Аббревиатуры и жаргон для бэкендера (JWT, EF, CORS, #94…) |
 | `ARCHITECTURE_DIAGRAMS.md` | Сводка всех диаграмм + Mermaid |
 | `TECH_OVERVIEW.md` | Стек технологий |
-| `DEFENSE_SPEECH.md` | Черновик устной речи |
+| `DEFENSE_SPEECH.md` | Черновик устной речи (общий FE+API) |
 | `DEFENSE_QA.md` | Типовые вопросы комиссии |
 
 ---
