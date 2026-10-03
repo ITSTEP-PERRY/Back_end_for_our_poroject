@@ -1,22 +1,21 @@
 ﻿# Perry (Product API)
 
-## Быстрый запуск — одна иконка
+## Быстрый запуск с ярлыка (после clone)
 
-| Ярлык / скрипт | Что запускает | URL |
-|----------------|---------------|-----|
-| **Perry API** · `start-api.cmd` | PostgreSQL (Docker) + Product API | http://localhost:5272/swagger |
+1. Установите **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** и **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (Docker должен быть запущен).  
+2. `git clone https://github.com/Teslyar75/My_Amazon2.git` → откройте папку клона.  
+3. Дважды кликните **`Создать-ярлык.cmd`** — на рабочем столе появится **Perry API**.  
+4. Дважды кликните **Perry API** → ждите `Now listening` → откройте http://localhost:5272/swagger  
 
-После clone один раз:
+Без ярлыка можно сразу кликнуть `start-api.cmd` / `Запуск-API.cmd` в корне клона.
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1
-```
+| Файл | Зачем |
+|------|--------|
+| `Создать-ярлык.cmd` | Один раз: ярлык на рабочий стол |
+| `start-api.cmd` | Postgres + API `:5272` |
+| `Запуск-API.cmd` | Алиас → `start-api.cmd` |
 
-Иконка появится в корне репо и на рабочем столе. Либо двойной клик по `start-api.cmd` / `Запуск-API.cmd`.
-
-Нужны: **Docker Desktop**, **.NET 8 SDK**. Health: http://localhost:5272/api/health  
-
-**Подробная инструкция:** [docs/инструкции/КАК-ЗАПУСКАТЬ-API.md](./docs/инструкции/КАК-ЗАПУСКАТЬ-API.md)
+Health: http://localhost:5272/api/health · **Инструкция:** [docs/инструкции/КАК-ЗАПУСКАТЬ-API.md](./docs/инструкции/КАК-ЗАПУСКАТЬ-API.md)
 
 ---
 
