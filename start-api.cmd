@@ -99,6 +99,21 @@ if not errorlevel 1 (
 echo.
 
 echo [3/3] Starting Perry.Api...
+
+REM Already running? (second click / leftover process)
+powershell -NoProfile -Command "try { $r = Invoke-WebRequest -Uri 'http://localhost:5272/api/health' -UseBasicParsing -TimeoutSec 2; if ($r.StatusCode -eq 200) { exit 0 } else { exit 1 } } catch { exit 1 }"
+if not errorlevel 1 (
+  echo     API already running on :5272 - nothing to start.
+  echo     Swagger: http://localhost:5272/swagger
+  start "" "http://localhost:5272/swagger"
+  echo.
+  pause
+  exit /b 0
+)
+
+REM Port busy by a dead/stuck process - free it
+powershell -NoProfile -Command "$c = Get-NetTCPConnection -LocalPort 5272 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1; if ($c) { Stop-Process -Id $c.OwningProcess -Force -ErrorAction SilentlyContinue; Start-Sleep -Seconds 1 }"
+
 echo      Keep this window open. Stop: Ctrl+C
 echo.
 dotnet run --project src\Perry.Api --launch-profile http
