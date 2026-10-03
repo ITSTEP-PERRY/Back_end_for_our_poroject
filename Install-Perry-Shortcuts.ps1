@@ -1,5 +1,6 @@
 ﻿# Creates Desktop shortcuts: Perry API / Desktop / Mobile.
-# Run via: Create-Shortcuts.cmd  (or double-click)
+# Uses cmd.exe /k so the console window stays open.
+# Run via: Create-Shortcuts.cmd
 
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
@@ -8,6 +9,8 @@ if ([string]::IsNullOrWhiteSpace($root)) {
 }
 
 $sh = New-Object -ComObject WScript.Shell
+$comspec = $env:ComSpec
+if ([string]::IsNullOrWhiteSpace($comspec)) { $comspec = "$env:SystemRoot\System32\cmd.exe" }
 
 $targets = @(
   @{ Name = "Perry API.lnk";     Cmd = "start-api.cmd";     Icon = "shell32.dll,13" },
@@ -33,7 +36,6 @@ foreach ($candidate in @(
   }
 }
 
-# Russian OneDrive desktop folder name (built without non-ASCII source bytes)
 $ruDesktop = "OneDrive\" + [string]::new(@(
   [char]0x0420, [char]0x0430, [char]0x0431, [char]0x043E, [char]0x0447, [char]0x0438,
   [char]0x0439, [char]0x0020, [char]0x0441, [char]0x0442, [char]0x043E, [char]0x043B
@@ -50,7 +52,9 @@ foreach ($dir in $dirs) {
     $cmdPath = Join-Path $root $t.Cmd
     $path = Join-Path $dir $t.Name
     $lnk = $sh.CreateShortcut($path)
-    $lnk.TargetPath = $cmdPath
+    # /k keeps the window open if the script exits
+    $lnk.TargetPath = $comspec
+    $lnk.Arguments = "/k `"$cmdPath`""
     $lnk.WorkingDirectory = $root
     $lnk.WindowStyle = 1
     $lnk.Description = $t.Name.Replace(".lnk", "")
