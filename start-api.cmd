@@ -90,6 +90,12 @@ if not exist ".env" if exist ".env.example" (
 ) else (
   echo [2/3] .env OK
 )
+REM If old .env still has PASTE_ placeholder, refresh JWT lines for local demo
+findstr /C:"PASTE_AUTH_Jwt_SigningSecret_HERE" ".env" >nul 2>&1
+if not errorlevel 1 (
+  echo     Updating JWT placeholder in .env for local demo...
+  powershell -NoProfile -Command "(Get-Content -Raw '.env') -replace 'PASTE_AUTH_Jwt_SigningSecret_HERE','changeme-dev-jwt-signing-key-32chars' | Set-Content -NoNewline '.env'"
+)
 echo.
 
 echo [3/3] Starting Perry.Api...

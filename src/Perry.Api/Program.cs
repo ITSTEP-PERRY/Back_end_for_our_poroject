@@ -89,10 +89,21 @@ if (string.IsNullOrWhiteSpace(jwt.Issuer))
     jwt.Issuer = builder.Configuration["Jwt:Issuer"] ?? "Perry.AuthService";
 if (string.IsNullOrWhiteSpace(jwt.Audience))
     jwt.Audience = builder.Configuration["Jwt:Audience"] ?? "Perry.Client";
-if (string.IsNullOrWhiteSpace(jwt.SigningSecret) && !jwt.SkipSignatureValidation)
-    throw new InvalidOperationException("JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key / .env).");
-if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
-    jwt.SigningSecret = "dev-placeholder-not-used-when-skip-signature";
+// Treat unfilled .env.example placeholders as missing
+static bool IsMissingJwtSecret(string? s) =>
+    string.IsNullOrWhiteSpace(s)
+    || s.Contains("PASTE_", StringComparison.OrdinalIgnoreCase)
+    || s.Contains("YOUR_", StringComparison.OrdinalIgnoreCase);
+if (IsMissingJwtSecret(jwt.SigningSecret))
+{
+    const string localDevSecret = "changeme-dev-jwt-signing-key-32chars";
+    if (builder.Environment.IsDevelopment())
+        jwt.SigningSecret = localDevSecret;
+    else if (!jwt.SkipSignatureValidation)
+        throw new InvalidOperationException("JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key / .env).");
+    else
+        jwt.SigningSecret = "dev-placeholder-not-used-when-skip-signature";
+}
 
 builder.Services.AddJwtAuthentication(jwt);
 
