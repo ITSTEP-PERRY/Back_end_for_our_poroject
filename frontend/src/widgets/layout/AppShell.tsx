@@ -1,12 +1,31 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { categoriesApi } from "../../api";
+import { resolveMediaUrl } from "../../api/media";
 import type { CategoryDto } from "../../api/types";
 import { useAuth } from "../../app/AuthContext";
 import { useCart } from "../../app/CartContext";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 
 const LEGAL_PATHS = new Set(["/privacy", "/terms", "/license"]);
+
+/** Figma sandwich menu category icons (icon-park / material names → local assets). */
+function categoryMenuIcon(cat: CategoryDto): string {
+  const fromApi = resolveMediaUrl(cat.iconUrl);
+  if (fromApi) return fromApi;
+  const key = `${cat.slug ?? ""} ${cat.name ?? ""}`.toLowerCase();
+  if (key.includes("fashion") || key.includes("women") || key.includes("shirt") || key.includes("dress") || key.includes("tee"))
+    return "/icons/admin/hanger.svg";
+  if (key.includes("electronic") || key.includes("pc") || key.includes("stream") || key.includes("accessories"))
+    return "/icons/admin/electronics.svg";
+  if (key.includes("beauty") || key.includes("cosmetic"))
+    return "/icons/admin/beauty.svg";
+  if (key.includes("sport"))
+    return "/icons/admin/sport.svg";
+  if (key.includes("home") || key.includes("kitchen") || key.includes("furniture") || key.includes("household"))
+    return "/icons/admin/home.svg";
+  return "/icons/catalog.svg";
+}
 
 function flattenCategories(nodes: CategoryDto[], depth = 0): { cat: CategoryDto; depth: number }[] {
   const out: { cat: CategoryDto; depth: number }[] = [];
@@ -126,74 +145,116 @@ export function AppShell() {
           onClick={closeMenu}
         />
         <nav className={`mobile-nav ${menuOpen ? "is-open" : ""}`} aria-label="Catalog menu" data-figma="1860:2944">
-          <NavLink to="/" onClick={closeMenu}>
-            Home
-          </NavLink>
-          <NavLink to="/products" onClick={closeMenu}>
-            Catalog
+          {user ? (
+            <div className="mobile-nav__auth" data-figma="2004:5947">
+              <div className="mobile-nav__avatar" aria-hidden>
+                {user.avatar ? (
+                  <img src={resolveMediaUrl(user.avatar) || user.avatar} alt="" />
+                ) : (
+                  <img src="/icons/account.svg" alt="" width={28} height={28} />
+                )}
+              </div>
+              <div className="mobile-nav__auth-text">
+                <div className="mobile-nav__auth-title">{user.name || user.login}</div>
+                <div className="mobile-nav__auth-sub">{isAdmin ? "Administrator" : "Customer"}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="mobile-nav__auth" data-figma="1860:3778">
+              <div className="mobile-nav__avatar mobile-nav__avatar--guest" aria-hidden>
+                <img src="/icons/account.svg" alt="" width={28} height={28} />
+              </div>
+              <div className="mobile-nav__auth-text">
+                <div className="mobile-nav__auth-title">Not signed in</div>
+                <div className="mobile-nav__auth-sub">Log in to enjoy a more pleasant experience</div>
+              </div>
+            </div>
+          )}
+
+          {!user && (
+            <div className="mobile-nav__auth-actions">
+              <Link to="/register" className="mobile-nav__btn mobile-nav__btn--primary" onClick={closeMenu}>
+                Sign up
+              </Link>
+              <Link to="/login" className="mobile-nav__btn mobile-nav__btn--secondary" onClick={closeMenu}>
+                Log in
+              </Link>
+            </div>
+          )}
+
+          <div className="mobile-nav__divider" />
+
+          <NavLink to="/products" className="mobile-nav__row" onClick={closeMenu}>
+            <img src="/icons/catalog.svg" alt="" width={24} height={24} />
+            <span>Product catalog</span>
           </NavLink>
           {flatCats.map(({ cat, depth }) => (
             <NavLink
               key={cat.id}
               to={`/products?categoryId=${cat.id}`}
+              className="mobile-nav__row"
               onClick={closeMenu}
-              style={{ paddingLeft: 8 + depth * 12 }}
+              style={{ paddingLeft: 12 + depth * 14 }}
             >
-              {cat.name}
+              {depth === 0 ? (
+                <img src={categoryMenuIcon(cat)} alt="" width={24} height={24} />
+              ) : (
+                <span className="mobile-nav__row-spacer" aria-hidden />
+              )}
+              <span>{cat.name}</span>
             </NavLink>
           ))}
-          <NavLink to="/cart" onClick={closeMenu}>
-            Cart
+
+          <div className="mobile-nav__divider" />
+
+          <NavLink to="/" className="mobile-nav__row" onClick={closeMenu}>
+            <img src="/icons/home.svg" alt="" width={24} height={24} />
+            <span>Home</span>
           </NavLink>
-          {user ? (
+          <NavLink to="/cart" className="mobile-nav__row" onClick={closeMenu}>
+            <img src="/icons/cart.svg" alt="" width={24} height={24} />
+            <span>Cart</span>
+          </NavLink>
+          {user && (
             <>
-              <NavLink to="/account/orders" onClick={closeMenu}>
-                My orders
+              <NavLink to="/account/orders" className="mobile-nav__row" onClick={closeMenu}>
+                <img src="/icons/reviews.svg" alt="" width={24} height={24} />
+                <span>My orders</span>
               </NavLink>
-              <NavLink to="/account/wishlist" onClick={closeMenu}>
-                Wishlist
+              <NavLink to="/account/wishlist" className="mobile-nav__row" onClick={closeMenu}>
+                <img src="/icons/star.svg" alt="" width={24} height={24} />
+                <span>Wishlist</span>
               </NavLink>
-              <NavLink to="/account/reviews" onClick={closeMenu}>
-                My reviews
+              <NavLink to="/account/reviews" className="mobile-nav__row" onClick={closeMenu}>
+                <img src="/icons/reviews.svg" alt="" width={24} height={24} />
+                <span>My reviews</span>
               </NavLink>
-              <NavLink to="/account/settings" onClick={closeMenu}>
-                Account settings
+              <NavLink to="/account/settings" className="mobile-nav__row" onClick={closeMenu}>
+                <img src="/icons/account.svg" alt="" width={24} height={24} />
+                <span>Account settings</span>
               </NavLink>
               {isAdmin && (
-                <NavLink to="/admin/products" onClick={closeMenu}>
-                  Admin
+                <NavLink to="/admin/products" className="mobile-nav__row" onClick={closeMenu}>
+                  <img src="/icons/admin/pencil.svg" alt="" width={24} height={24} />
+                  <span>Admin</span>
                 </NavLink>
               )}
               <button
                 type="button"
-                className="header-link"
-                style={{ background: "transparent", border: 0, textAlign: "left", padding: "10px 12px", cursor: "pointer", color: "inherit", fontWeight: 600 }}
+                className="mobile-nav__row mobile-nav__row--button"
                 onClick={() => {
                   logout();
                   closeMenu();
                   navigate("/");
                 }}
               >
-                Log out
+                <img src="/icons/logout.svg" alt="" width={24} height={24} />
+                <span>Log out</span>
               </button>
-            </>
-          ) : (
-            <>
-              <NavLink to="/login" onClick={closeMenu}>
-                Log in
-              </NavLink>
-              <NavLink to="/register" onClick={closeMenu}>
-                Create account
-              </NavLink>
             </>
           )}
           {!isMobile && (
-            <button
-              type="button"
-              className="header-link"
-              style={{ background: "transparent", border: 0, textAlign: "left", padding: "10px 12px", cursor: "pointer", color: "var(--link)", fontWeight: 600 }}
-              onClick={closeMenu}
-            >
+            <button type="button" className="mobile-nav__close" onClick={closeMenu}>
               Close menu
             </button>
           )}
