@@ -41,7 +41,8 @@
   --figma-search-h: 40px;
   --figma-dot: 8px;
   --figma-dot-active-w: 92px;
-  --home-pad: clamp(16px, calc((100vw - var(--figma-content)) / 2), var(--figma-pad));
+  /* 17–19″ (~1600–1920): щедрее боковые поля; на 1920 — как в Figma (160px) */
+  --home-pad: clamp(56px, calc((100vw - 1440px) / 2), var(--figma-pad));
   --home-gap: var(--figma-cat-gap);
   --home-cols: 6;
   --font: "Mulish", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -74,7 +75,7 @@ button, input, select { font: inherit; }
 .header-inner {
   max-width: none;
   margin: 0 auto;
-  padding: 0 var(--home-pad, clamp(16px, calc((100vw - 1600px) / 2), 160px));
+  padding: 0 var(--home-pad, clamp(56px, calc((100vw - 1440px) / 2), 160px));
   min-height: clamp(56px, 5vw, var(--figma-header-h, 64px));
   height: auto;
   display: grid;
@@ -1822,7 +1823,7 @@ button.tag {
 .footer-inner {
   max-width: none;
   margin: 0 auto;
-  padding: clamp(28px, 3.5vw, 48px) var(--home-pad, clamp(16px, calc((100vw - 1600px) / 2), 160px)) 20px;
+  padding: clamp(28px, 3.5vw, 48px) var(--home-pad, clamp(56px, calc((100vw - 1440px) / 2), 160px)) 20px;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -1906,7 +1907,7 @@ button.tag {
   border-top: 0;
   max-width: none;
   margin: 0;
-  padding: 10px var(--home-pad, clamp(16px, calc((100vw - 1600px) / 2), 160px));
+  padding: 10px var(--home-pad, clamp(56px, calc((100vw - 1440px) / 2), 160px));
   display: flex;
   justify-content: center;
   align-items: center;
