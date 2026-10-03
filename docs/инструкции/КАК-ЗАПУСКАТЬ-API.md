@@ -154,6 +154,7 @@ GET http://localhost:5272/api/products?page=1&pageSize=1
 |---------|-------------|
 | `docker` не находится / pipe error | Запустить **Docker Desktop**, подождать ~30 с, повторить |
 | Порт `5432` занят | Остановить другой Postgres или сменить порт в `docker-compose.yml` и connection string |
+| `container name "/perry-postgres" is already in use` | Старый контейнер мешает. В PowerShell: `docker rm -f perry-postgres`, потом снова **Perry API**. Скрипт `start-api.cmd` после `git pull` сам переиспользует/пересоздаёт контейнер |
 | Порт `5272` занят | Закрыть старый `dotnet run` / другой процесс на 5272 |
 | API стартует, `database` не `up` | `docker compose ps` — контейнер `perry-postgres` должен быть healthy |
 | JWT / 401 на защищённых методах | Совпадение `Jwt__SigningSecret` с Auth; либо перелогин на витрине (просроченный токен) |
