@@ -8,8 +8,10 @@ Product API + **актуальная** Desktop-витрина (Figma) + Mobile (
 
 1. Установите **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)**, **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**, **[Node.js 18+](https://nodejs.org/)**.  
 2. `git clone https://github.com/Teslyar75/My_Amazon2.git` → откройте папку клона.  
-3. Дважды кликните **`Создать-ярлык.cmd`**.  
-4. Порядок запуска: **Perry API** → затем **Perry Desktop** и/или **Perry Mobile**.
+3. Дважды кликните **`Create-Shortcuts.cmd`** (или `Создать-ярлык.cmd`).  
+4. Порядок запуска: **Perry API** → затем **Perry Desktop** и/или **Perry Mobile**.  
+
+Если скрипт ярлыков ругался на кодировку — сделайте `git pull` и используйте именно **`Create-Shortcuts.cmd`** (ASCII, без поломки PowerShell).
 
 | Ярлык / скрипт | Что | URL |
 |----------------|-----|-----|

@@ -1,5 +1,5 @@
-# Creates Desktop shortcuts for API / Desktop UI / Mobile.
-# Double-click: Создать-ярлык.cmd
+﻿# Creates Desktop shortcuts: Perry API / Desktop / Mobile.
+# Run via: Create-Shortcuts.cmd  (or double-click)
 
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
@@ -10,26 +10,40 @@ if ([string]::IsNullOrWhiteSpace($root)) {
 $sh = New-Object -ComObject WScript.Shell
 
 $targets = @(
-  @{ Name = "Perry API.lnk";      Cmd = "start-api.cmd";     Icon = "shell32.dll,13" },
-  @{ Name = "Perry Desktop.lnk";  Cmd = "start-desktop.cmd"; Icon = "shell32.dll,14" },
-  @{ Name = "Perry Mobile.lnk";   Cmd = "start-mobile.cmd";  Icon = "shell32.dll,15" }
+  @{ Name = "Perry API.lnk";     Cmd = "start-api.cmd";     Icon = "shell32.dll,13" },
+  @{ Name = "Perry Desktop.lnk"; Cmd = "start-desktop.cmd"; Icon = "shell32.dll,14" },
+  @{ Name = "Perry Mobile.lnk";  Cmd = "start-mobile.cmd";  Icon = "shell32.dll,15" }
 )
 
 foreach ($t in $targets) {
   $cmdPath = Join-Path $root $t.Cmd
   if (-not (Test-Path -LiteralPath $cmdPath)) {
-    throw "Не найден $($t.Cmd) в $root"
+    throw "Missing file: $cmdPath"
   }
 }
 
-$desktopDirs = @(
-  [Environment]::GetFolderPath("Desktop"),
-  (Join-Path $env:USERPROFILE "Desktop"),
-  (Join-Path $env:USERPROFILE "OneDrive\Desktop"),
-  (Join-Path $env:USERPROFILE "OneDrive\Рабочий стол")
-) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
+$desktopDirs = New-Object System.Collections.Generic.List[string]
+foreach ($candidate in @(
+    [Environment]::GetFolderPath("Desktop"),
+    (Join-Path $env:USERPROFILE "Desktop"),
+    (Join-Path $env:USERPROFILE "OneDrive\Desktop")
+  )) {
+  if ($candidate -and (Test-Path -LiteralPath $candidate) -and -not $desktopDirs.Contains($candidate)) {
+    $desktopDirs.Add($candidate) | Out-Null
+  }
+}
 
-$dirs = @($root) + $desktopDirs | Select-Object -Unique
+# Russian OneDrive desktop folder name (built without non-ASCII source bytes)
+$ruDesktop = "OneDrive\" + [string]::new(@(
+  [char]0x0420, [char]0x0430, [char]0x0431, [char]0x043E, [char]0x0447, [char]0x0438,
+  [char]0x0439, [char]0x0020, [char]0x0441, [char]0x0442, [char]0x043E, [char]0x043B
+))
+$ruPath = Join-Path $env:USERPROFILE $ruDesktop
+if ((Test-Path -LiteralPath $ruPath) -and -not $desktopDirs.Contains($ruPath)) {
+  $desktopDirs.Add($ruPath) | Out-Null
+}
+
+$dirs = @($root) + $desktopDirs.ToArray() | Select-Object -Unique
 
 foreach ($dir in $dirs) {
   foreach ($t in $targets) {
@@ -47,9 +61,10 @@ foreach ($dir in $dirs) {
 }
 
 Write-Host ""
-Write-Host "Ярлыки готовы:"
+Write-Host "Shortcuts ready:"
 Write-Host "  Perry API      -> http://localhost:5272/swagger"
-Write-Host "  Perry Desktop  -> http://localhost:3000   (Figma UI)"
+Write-Host "  Perry Desktop  -> http://localhost:3000"
 Write-Host "  Perry Mobile   -> http://localhost:8081"
 Write-Host ""
-Write-Host "Сначала API, потом Desktop/Mobile. Нужны: Docker, .NET 8, Node.js 18+."
+Write-Host "Start API first, then Desktop/Mobile."
+Write-Host "Need: Docker Desktop, .NET 8 SDK, Node.js 18+."
