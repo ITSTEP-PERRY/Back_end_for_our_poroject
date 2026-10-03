@@ -15,7 +15,12 @@ type AuthState = {
   user: AuthUser | null;
   loading: boolean;
   login: (login: string, password: string) => Promise<void>;
-  register: (data: { name: string; email: string; login: string; password: string }) => Promise<void>;
+  /** Step 1 only — no JWT until verify-email + complete-registration + login. */
+  register: (data: {
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 };
@@ -56,10 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (data: { name: string; email: string; login: string; password: string }) => {
-      const res = await authApi.register(data);
-      await setToken(res.token);
-      setUser(res.user);
+    async (data: { email: string; password: string; confirmPassword: string }) => {
+      await authApi.register(data);
     },
     [],
   );

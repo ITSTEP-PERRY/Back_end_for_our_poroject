@@ -287,21 +287,57 @@ export const authApi = {
     });
     return normalizeAuthResponse(raw);
   },
-  /** Упрощённый register → Auth multi-step; для совместимости UI отправляем на register. */
-  register: async (body: { name: string; email: string; login: string; password: string }) => {
+  /**
+   * Auth multi-step step 1: POST /api/auth/register
+   * Body: { email, password, confirmPassword } → no JWT; email verification required.
+   */
+  register: async (body: { email: string; password: string; confirmPassword: string }) => {
     localStorage.removeItem(LOCAL_ADMIN_FLAG);
-    const raw = await apiFetch<Record<string, unknown>>("/auth/register", {
+    return apiFetch<{
+      userId: string;
+      email: string;
+      requiresEmailVerification: boolean;
+      codeExpiresInSeconds: number;
+    }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
         email: body.email,
         password: body.password,
-        name: body.name,
-        login: body.login,
+        confirmPassword: body.confirmPassword,
       }),
       base: "auth",
     });
-    return normalizeAuthResponse(raw);
   },
+  /** Step 2: verify email code → registrationToken for complete-registration. */
+  verifyEmail: (email: string, code: string) =>
+    apiFetch<{ emailVerified: boolean; email: string; registrationToken: string }>(
+      "/auth/verify-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, code }),
+        base: "auth",
+      },
+    ),
+  resendVerificationCode: (email: string) =>
+    apiFetch<{ status?: string }>("/auth/resend-verification-code", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      base: "auth",
+    }),
+  /** Step 3: first/last name → account ready; then login for JWT. */
+  completeRegistration: (body: {
+    registrationToken: string;
+    firstName: string;
+    lastName: string;
+  }) =>
+    apiFetch<{ registrationCompleted: boolean; user: Record<string, unknown> }>(
+      "/auth/complete-registration",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+        base: "auth",
+      },
+    ),
   me: async () => {
     if (import.meta.env.DEV && localStorage.getItem(LOCAL_ADMIN_FLAG) === "1") {
       const raw = await apiFetch<Record<string, unknown>>("/dev/me");

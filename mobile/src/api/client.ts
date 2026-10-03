@@ -103,15 +103,30 @@ export async function apiFetch<T = unknown>(
   }
 
   if (!res.ok) {
-    let msg = `HTTP ${res.status}`;
-    if (data && typeof data === "object") {
-      const o = data as { error?: string; message?: string; title?: string };
-      const fromBody = o.error || o.message || o.title;
-      if (fromBody) msg = String(fromBody);
-    }
-    throw new ApiError(res.status, msg, data);
+    throw new ApiError(res.status, formatApiErrorMessage(data) || `HTTP ${res.status}`, data);
   }
   return data as T;
+}
+
+function formatApiErrorMessage(data: unknown): string {
+  if (!data || typeof data !== "object") {
+    return typeof data === "string" ? data.trim() : "";
+  }
+  const o = data as {
+    error?: string;
+    message?: string;
+    title?: string;
+    errors?: Record<string, string[] | string>;
+  };
+  const fieldErrors: string[] = [];
+  if (o.errors && typeof o.errors === "object") {
+    for (const msgs of Object.values(o.errors)) {
+      if (Array.isArray(msgs)) fieldErrors.push(...msgs.map(String));
+      else if (msgs) fieldErrors.push(String(msgs));
+    }
+  }
+  if (fieldErrors.length) return fieldErrors.join(" ");
+  return String(o.error || o.message || o.title || "").trim();
 }
 
 export function getProductOrigin(): string {

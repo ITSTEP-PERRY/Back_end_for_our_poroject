@@ -83,18 +83,18 @@ export const router = createBrowserRouter([
   },
   {
     element: <AuthShell backTo="/login" backLabel="← Back" />,
+    children: [{ path: "forgot-password", element: <ForgotPasswordPage /> }],
+  },
+  {
+    element: <AuthShell backTo="/register" backLabel="← Back" />,
     children: [
-      { path: "forgot-password", element: <ForgotPasswordPage /> },
       { path: "verify-code", element: <VerifyCodePage /> },
+      { path: "finishing-touches", element: <FinishingTouchesPage /> },
     ],
   },
   {
     element: <AuthShell backTo="/forgot-password" backLabel="← Back" />,
     children: [{ path: "reset-password", element: <ResetPasswordPage /> }],
-  },
-  {
-    element: <AuthShell backTo="/register" backLabel="← Back" />,
-    children: [{ path: "finishing-touches", element: <FinishingTouchesPage /> }],
   },
   /** Прежняя админка (скрины sprint-2026-09-19) — полный функционал */
   { path: "/admin/login", element: <AdminLoginPage /> },

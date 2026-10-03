@@ -161,17 +161,34 @@ export async function apiFetch<T = unknown>(
 
   const data = await parseJson(res);
   if (!res.ok) {
-    const fromBody =
-      (data && typeof data === "object" && "error" in data && String((data as { error: string }).error)) ||
-      (data && typeof data === "object" && "message" in data && String((data as { message: string }).message)) ||
-      (data && typeof data === "object" && "title" in data && String((data as { title: string }).title)) ||
-      "";
     const msg =
-      (fromBody && fromBody.trim()) ||
+      formatApiErrorMessage(data) ||
       friendlyStatusMessage(res.status, base) ||
       res.statusText ||
       `Request failed (HTTP ${res.status})`;
     throw new ApiError(res.status, msg, data);
   }
   return data as T;
+}
+
+/** Auth ProblemDetails: { message, errors: { field: string[] } } */
+function formatApiErrorMessage(data: unknown): string {
+  if (!data || typeof data !== "object") {
+    return typeof data === "string" ? data.trim() : "";
+  }
+  const o = data as {
+    error?: string;
+    message?: string;
+    title?: string;
+    errors?: Record<string, string[] | string>;
+  };
+  const fieldErrors: string[] = [];
+  if (o.errors && typeof o.errors === "object") {
+    for (const msgs of Object.values(o.errors)) {
+      if (Array.isArray(msgs)) fieldErrors.push(...msgs.map(String));
+      else if (msgs) fieldErrors.push(String(msgs));
+    }
+  }
+  if (fieldErrors.length) return fieldErrors.join(" ");
+  return String(o.error || o.message || o.title || "").trim();
 }

@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
+import { savePendingRegistration } from "../../api/pendingRegistration";
 import { AuthField, AuthModal } from "../../widgets/auth/AuthModal";
 import { PasswordField } from "../../widgets/auth/PasswordField";
 
@@ -19,13 +20,17 @@ export function RegisterPage() {
       setError("Passwords must match");
       return;
     }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
       const login = email.trim();
-      const name = login.includes("@") ? login.split("@")[0] : login;
-      await register({ name, email: login, login, password });
-      navigate("/finishing-touches");
+      savePendingRegistration({ email: login, password });
+      await register({ email: login, password, confirmPassword: confirm });
+      navigate(`/verify-code?email=${encodeURIComponent(login)}&context=register`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Register failed");
     } finally {

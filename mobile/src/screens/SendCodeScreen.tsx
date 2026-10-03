@@ -12,6 +12,11 @@ import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { authApi } from "../api";
+import {
+  clearPendingRegistration,
+  loadPendingRegistration,
+} from "../api/pendingRegistration";
+import { useAuth } from "../auth/AuthContext";
 import { colors } from "../theme/colors";
 import type { RootStackParamList } from "../navigation/types";
 
@@ -22,17 +27,13 @@ const RESEND_COOLDOWN = 30;
 
 /**
  * Figma: iPhone 13 & 14 - Send code · node `2446:4913`
- * https://www.figma.com/design/cF0bKFsmenH6rrshGV0yO7/?node-id=2446-4913
- * Модалка «Enter verification code» поверх dimmed backdrop — тот же card-паттерн, что в LoginScreen.
- *
- * Нет отдельного backend endpoint для верификации кода (стек использует
- * authApi.forgot как "отправить код на email", как в ForgotPasswordScreen),
- * поэтому Confirm просто подтверждает ввод 6 цифр локально и возвращает
- * пользователя к Login — реальный вызов API происходит на Resend/первичной
- * отправке, чтобы auth-логика оставалась рабочей и не ломала backend-контракт.
+ * Register: verify-email → complete-registration → login.
+ * Forgot: resend via forgot-password; confirm returns to Login.
  */
 export function SendCodeScreen({ navigation, route }: Props) {
   const email = route.params?.email ?? "";
+  const isRegister = route.params?.context === "register";
+  const { login } = useAuth();
   const insets = useSafeAreaInsets();
   const [digits, setDigits] = useState<string[]>(Array(CODE_LENGTH).fill(""));
   const [busy, setBusy] = useState(false);
@@ -73,8 +74,26 @@ export function SendCodeScreen({ navigation, route }: Props) {
     setBusy(true);
     setError(null);
     try {
-      // Нет отдельного /auth/verify-code — подтверждаем локально и возвращаемся к Login.
-      navigation.replace("Login");
+      if (!isRegister) {
+        navigation.replace("Login");
+        return;
+      }
+      const pending = loadPendingRegistration();
+      if (!pending?.email || !pending.password) {
+        throw new Error("Registration session expired — sign up again");
+      }
+      const verified = await authApi.verifyEmail(pending.email, code);
+      if (!verified.registrationToken) {
+        throw new Error("No registration token — try again");
+      }
+      await authApi.completeRegistration({
+        registrationToken: verified.registrationToken,
+        firstName: pending.firstName,
+        lastName: pending.lastName,
+      });
+      await login(pending.email, pending.password);
+      clearPendingRegistration();
+      navigation.popToTop();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Confirmation failed");
     } finally {
@@ -87,7 +106,11 @@ export function SendCodeScreen({ navigation, route }: Props) {
     setResending(true);
     setError(null);
     try {
-      await authApi.forgot(email);
+      if (isRegister) {
+        await authApi.resendVerificationCode(email);
+      } else {
+        await authApi.forgot(email);
+      }
       setCooldown(RESEND_COOLDOWN);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Could not resend code");

@@ -1,14 +1,24 @@
 import { type ClipboardEvent, type FormEvent, useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { authApi } from "../../api";
+import {
+  clearPendingRegistration,
+  loadPendingRegistration,
+  updatePendingRegistration,
+} from "../../api/pendingRegistration";
+import { useAuth } from "../../app/AuthContext";
 import { AuthField, AuthModal } from "../../widgets/auth/AuthModal";
 import { PasswordField } from "../../widgets/auth/PasswordField";
 
 export function VerifyCodePage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
-  const email = params.get("email") || "";
+  const email = params.get("email") || loadPendingRegistration()?.email || "";
+  const context = params.get("context") || "forgot";
+  const isRegister = context === "register";
   const [digits, setDigits] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
   const [seconds, setSeconds] = useState(60);
   const refs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -48,20 +58,55 @@ export function VerifyCodePage() {
     applyCode(e.clipboardData.getData("text"));
   };
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const code = digits.join("");
     if (code.length < 6) {
       setError("Incorrect code, try again");
       return;
     }
+    if (!email) {
+      setError("Email is missing — start registration again");
+      return;
+    }
     setError(null);
-    navigate("/auth/success?kind=verify");
+    if (!isRegister) {
+      navigate("/auth/success?kind=verify");
+      return;
+    }
+    setBusy(true);
+    try {
+      const res = await authApi.verifyEmail(email, code);
+      if (!res.registrationToken) {
+        throw new Error("No registration token from Auth — try again");
+      }
+      updatePendingRegistration({ registrationToken: res.registrationToken });
+      navigate("/finishing-touches");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Verification failed");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const onResend = async () => {
+    if (seconds > 0 || !email) return;
+    setError(null);
+    try {
+      if (isRegister) {
+        await authApi.resendVerificationCode(email);
+      } else {
+        await authApi.forgot(email);
+      }
+      setSeconds(60);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not resend code");
+    }
   };
 
   return (
     <AuthModal data-figma="1393:2003">
-      <form className="login-form" onSubmit={onSubmit} data-verify-form>
+      <form className="login-form" onSubmit={(e) => void onSubmit(e)} data-verify-form>
         <div className="login-form__titles">
           <h1>Send code</h1>
           <h2>Enter the code to confirm your email</h2>
@@ -90,8 +135,8 @@ export function VerifyCodePage() {
           </div>
           {error && <p className="code-error">{error}</p>}
         </div>
-        <button type="submit" className="perry-btn">
-          Continue
+        <button type="submit" className="perry-btn" disabled={busy}>
+          {busy ? "…" : "Continue"}
         </button>
       </form>
       <div className="resend-wrap">
@@ -99,7 +144,7 @@ export function VerifyCodePage() {
           type="button"
           className="resend-link"
           disabled={seconds > 0}
-          onClick={() => setSeconds(60)}
+          onClick={() => void onResend()}
         >
           Resend code
         </button>
@@ -109,7 +154,12 @@ export function VerifyCodePage() {
           </span>
         )}
       </div>
-      {email && <p className="dev-code-hint">Dev stub — code sent to {email}</p>}
+      {email && (
+        <p className="dev-code-hint">
+          Code sent to {email}
+          {isRegister ? " — check inbox / spam" : ""}
+        </p>
+      )}
     </AuthModal>
   );
 }
@@ -183,24 +233,50 @@ export function ResetPasswordPage() {
 
 export function FinishingTouchesPage() {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [first, setFirst] = useState("");
   const [last, setLast] = useState("");
   const [firstError, setFirstError] = useState<string | null>(null);
   const [lastError, setLastError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const onSubmit = (e: FormEvent) => {
+  const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const fErr = !first.trim() ? "First name is required" : null;
     const lErr = !last.trim() ? "Last name is required" : null;
     setFirstError(fErr);
     setLastError(lErr);
     if (fErr || lErr) return;
-    navigate("/auth/success?kind=register");
+
+    const pending = loadPendingRegistration();
+    if (!pending?.registrationToken) {
+      setError("Registration session expired — start again from Create account");
+      return;
+    }
+
+    setBusy(true);
+    setError(null);
+    try {
+      await authApi.completeRegistration({
+        registrationToken: pending.registrationToken,
+        firstName: first.trim(),
+        lastName: last.trim(),
+      });
+      await login(pending.email, pending.password);
+      clearPendingRegistration();
+      navigate("/auth/success?kind=register");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not finish registration");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <AuthModal data-figma="4251:33099">
-      <form className="login-form" onSubmit={onSubmit} data-finishing-form>
+      {error && <div className="auth-alert">{error}</div>}
+      <form className="login-form" onSubmit={(e) => void onSubmit(e)} data-finishing-form>
         <div className="login-form__titles">
           <h1>Finishing touches</h1>
           <h2>Enter your first and last name</h2>
@@ -225,8 +301,8 @@ export function FinishingTouchesPage() {
             />
           </AuthField>
         </div>
-        <button type="submit" className="perry-btn">
-          Create account
+        <button type="submit" className="perry-btn" disabled={busy}>
+          {busy ? "…" : "Create account"}
         </button>
       </form>
     </AuthModal>

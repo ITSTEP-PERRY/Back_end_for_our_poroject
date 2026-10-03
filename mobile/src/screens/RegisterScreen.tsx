@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { FloatingLabelInput } from "../components/FloatingLabelInput";
 import { useAuth } from "../auth/AuthContext";
+import { savePendingRegistration } from "../api/pendingRegistration";
 import { colors } from "../theme/colors";
 import { navigateShop } from "../navigation/navigationRef";
 import type { RootStackParamList } from "../navigation/types";
@@ -60,9 +61,14 @@ export function RegisterScreen({ navigation }: Props) {
     setError(null);
     try {
       const login = email.trim();
-      const fullName = `${name.trim()} ${surname.trim()}`.trim();
-      await register({ name: fullName, email: login, login, password });
-      navigation.goBack();
+      savePendingRegistration({
+        email: login,
+        password,
+        firstName: name.trim(),
+        lastName: surname.trim(),
+      });
+      await register({ email: login, password, confirmPassword });
+      navigation.replace("SendCode", { email: login, context: "register" });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Register failed");
     } finally {

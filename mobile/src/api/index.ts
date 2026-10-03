@@ -171,20 +171,54 @@ export const authApi = {
     });
     return normalizeAuthResponse(raw);
   },
-  register: async (body: { name: string; email: string; login: string; password: string }) => {
+  /**
+   * Auth multi-step step 1: { email, password, confirmPassword } — no JWT yet.
+   */
+  register: async (body: { email: string; password: string; confirmPassword: string }) => {
     await setLocalAdminFlag(false);
-    const raw = await apiFetch<Record<string, unknown>>("/auth/register", {
+    return apiFetch<{
+      userId: string;
+      email: string;
+      requiresEmailVerification: boolean;
+      codeExpiresInSeconds: number;
+    }>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
         email: body.email,
         password: body.password,
-        name: body.name,
-        login: body.login,
+        confirmPassword: body.confirmPassword,
       }),
       base: "auth",
     });
-    return normalizeAuthResponse(raw);
   },
+  verifyEmail: (email: string, code: string) =>
+    apiFetch<{ emailVerified: boolean; email: string; registrationToken: string }>(
+      "/auth/verify-email",
+      {
+        method: "POST",
+        body: JSON.stringify({ email, code }),
+        base: "auth",
+      },
+    ),
+  resendVerificationCode: (email: string) =>
+    apiFetch<{ status?: string }>("/auth/resend-verification-code", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+      base: "auth",
+    }),
+  completeRegistration: (body: {
+    registrationToken: string;
+    firstName: string;
+    lastName: string;
+  }) =>
+    apiFetch<{ registrationCompleted: boolean; user: Record<string, unknown> }>(
+      "/auth/complete-registration",
+      {
+        method: "POST",
+        body: JSON.stringify(body),
+        base: "auth",
+      },
+    ),
   me: async () => {
     if (__DEV__ && (await isLocalAdmin())) {
       const raw = await apiFetch<Record<string, unknown>>("/dev/me");
