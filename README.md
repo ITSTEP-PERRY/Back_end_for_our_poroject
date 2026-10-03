@@ -14,7 +14,9 @@ powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1
 
 Иконка появится в корне репо и на рабочем столе. Либо двойной клик по `start-api.cmd` / `Запуск-API.cmd`.
 
-Нужны: **Docker Desktop**, **.NET 8 SDK**. Health: http://localhost:5272/api/health
+Нужны: **Docker Desktop**, **.NET 8 SDK**. Health: http://localhost:5272/api/health  
+
+**Подробная инструкция:** [docs/инструкции/КАК-ЗАПУСКАТЬ-API.md](./docs/инструкции/КАК-ЗАПУСКАТЬ-API.md)
 
 ---
 
@@ -79,7 +81,8 @@ powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1
 
 | Документ | О чём |
 |----------|--------|
-| [инструкции/КАК-ЗАПУСКАТЬ.md](./docs/инструкции/КАК-ЗАПУСКАТЬ.md) | Desktop + Mobile (ярлыки) |
+| [инструкции/КАК-ЗАПУСКАТЬ-API.md](./docs/инструкции/КАК-ЗАПУСКАТЬ-API.md) | **Запуск этого репо (Product API)** |
+| [инструкции/КАК-ЗАПУСКАТЬ.md](./docs/инструкции/КАК-ЗАПУСКАТЬ.md) | Desktop + Mobile витрина (ярлыки FE) |
 | [инструкции/НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md](./docs/инструкции/НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md) | Как залить фото витрины у себя |
 | [инструкции/docker.md](./docs/инструкции/docker.md) | PostgreSQL + docker compose + env |
 | [инструкции/deployment.md](./docs/инструкции/deployment.md) | Деплой |
