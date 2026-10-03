@@ -42,5 +42,9 @@ Desktop.ini
 .figma-tmp/
 .tmp/
 
+## Vibe-prompts local progress
+vibe-prompts/.vibe-sequence-state.json
+
+
 
 **.env

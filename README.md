@@ -23,6 +23,23 @@ Product API + **актуальная** Desktop-витрина (Figma) + Mobile (
 
 ---
 
+## Вайбкодинг — пакет документов
+
+Собрать Perry с нуля через Cursor / ИИ: папка **[`vibe-prompts/`](./vibe-prompts/README.md)**.
+
+| Документ | О чём |
+|----------|--------|
+| **[vibe-prompts/README.md](./vibe-prompts/README.md)** | Оглавление промптов `00`→`12`, правила стека |
+| [PITFALLS.md](./vibe-prompts/PITFALLS.md) | Грабли дизайна и стыков (цены, Auth, reviews, footer) |
+| [AGENTS-AND-SEQUENCE.md](./vibe-prompts/AGENTS-AND-SEQUENCE.md) | Сколько агентов и порядок фаз |
+| [HOW-TO-RUN-SEQUENCE.md](./vibe-prompts/HOW-TO-RUN-SEQUENCE.md) | Как гонять сценарий по шагам |
+| [run-vibe-sequence.cmd](./vibe-prompts/run-vibe-sequence.cmd) | Автосценарий: копирует промпт в буфер → вставка в Agent |
+| [Отчёт 03.10.2026](./docs/журнал/2026-10-03.md) | День появления пакета (Auth · отзывы · цены · vibe-prompts) |
+
+Старт: двойной клик **`vibe-prompts/run-vibe-sequence.cmd`** (или читай `PITFALLS` → `00-vision` → далее по ссылкам).
+
+---
+
 Бэкенд: **ASP.NET Core 8** (`Perry.Domain` · `Perry.Infrastructure` · `Perry.Api`).  
 UI: папки **`frontend/`** (React/Vite под Figma) и **`mobile/`** (Expo).
 
@@ -33,6 +50,7 @@ UI: папки **`frontend/`** (React/Vite под Figma) и **`mobile/`** (Expo)
 | **Командный mirror API** | https://github.com/ITSTEP-PERRY/Back_end_for_our_poroject |
 | **Защита: Product API (без админки)** | **[project_defense/DEFENSE_BACKEND.md](./project_defense/DEFENSE_BACKEND.md)** |
 | **Словарик аббревиатур** | [GLOSSARY-BACKEND.md](./project_defense/GLOSSARY-BACKEND.md) · [СЛОВАРИК-БЭКЕНД.md](./project_defense/СЛОВАРИК-БЭКЕНД.md) |
+| **Вайбкодинг** | **[vibe-prompts/](./vibe-prompts/README.md)** |
 
 ---
 
@@ -40,10 +58,11 @@ UI: папки **`frontend/`** (React/Vite под Figma) и **`mobile/`** (Expo)
 
 0. **Отчёт перед комиссией (бэкенд):** **[project_defense/DEFENSE_BACKEND.md](./project_defense/DEFENSE_BACKEND.md)** — архитектура, слайды, Trello Done, словарик в конце файла · индекс материалов защиты: [project_defense/README.md](./project_defense/README.md)  
 1. **[docs/ГАЙД-ДЛЯ-СТУДЕНТА.md](./docs/ГАЙД-ДЛЯ-СТУДЕНТА.md)** — шаги, как собрать похожий проект  
-2. Ниже — **вся документация по дням**, затем **по темам**, затем **скрины с описанием**  
-3. Этапы целиком: **[docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)**  
-4. Папки: `журнал/` · `инструкции/` · `стыки/` · `продукт/` · `screenshots/`
-5. **Готовность (02.10):** [продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-02.md](./docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-02.md) · [ЧТО-ЕЩЁ-СДЕЛАТЬ.md](./docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md)
+2. **Вайбкодинг (промпты для ИИ):** **[vibe-prompts/README.md](./vibe-prompts/README.md)**  
+3. Ниже — **вся документация по дням**, затем **по темам**, затем **скрины с описанием**  
+4. Этапы целиком: **[docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)**  
+5. Папки: `журнал/` · `инструкции/` · `стыки/` · `продукт/` · `screenshots/` · `vibe-prompts/`  
+6. **Готовность (02.10):** [продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-02.md](./docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-02.md) · [ЧТО-ЕЩЁ-СДЕЛАТЬ.md](./docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md)
 
 ---
 
@@ -72,12 +91,23 @@ UI: папки **`frontend/`** (React/Vite под Figma) и **`mobile/`** (Expo)
 | 01.10.2026 | Mobile: аудит ссылок и навигации | [журнал/2026-10-01-mobile-аудит.md](./docs/журнал/2026-10-01-mobile-аудит.md) |
 | **02.10.2026** | DummyJSON: реальные фото витрин по разделам | [журнал/2026-10-02.md](./docs/журнал/2026-10-02.md) |
 | 02.10.2026 | Готовность проекта + открытый бэклог | [готовность](./docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-02.md) · [бэклог](./docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md) |
+| **03.10.2026** | Auth · отзывы · цены · vibe-prompts | [журнал/2026-10-03.md](./docs/журнал/2026-10-03.md) |
 
 Оглавление журнала: [docs/журнал/README.md](./docs/журнал/README.md).
 
 ---
 
 ## 2. Документация по темам
+
+### Вайбкодинг
+
+| Документ | О чём |
+|----------|--------|
+| [vibe-prompts/README.md](./vibe-prompts/README.md) | Пакет промптов для сборки Perry через ИИ |
+| [vibe-prompts/PITFALLS.md](./vibe-prompts/PITFALLS.md) | Сложности дизайна и интеграции |
+| [vibe-prompts/AGENTS-AND-SEQUENCE.md](./vibe-prompts/AGENTS-AND-SEQUENCE.md) | Агенты и порядок фаз |
+| [vibe-prompts/HOW-TO-RUN-SEQUENCE.md](./vibe-prompts/HOW-TO-RUN-SEQUENCE.md) | Скрипт последовательного запуска |
+| [vibe-prompts/run-vibe-sequence.cmd](./vibe-prompts/run-vibe-sequence.cmd) | Старт сценария |
 
 ### Запуск и эксплуатация
 
