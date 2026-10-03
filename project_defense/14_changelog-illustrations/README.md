@@ -11,8 +11,11 @@
 | `admin-orders-flow.png` | #A09 / #A10 заказы |
 | `admin-categories-flow.png` | Админ-категории |
 | `ci-compose-gitleaks-flow.png` | CI |
+| `dummyjson-media-flow.md` / `.mmd` | Фото витрины из DummyJSON CDN |
+| `admin-product-images-flow.md` / `.mmd` | Новый товар + imageUrls в админке |
 
-Все копии для слайдов также в `../views_project/` (01–18).
+Все копии для слайдов также в `../views_project/` (01–18).  
+Схемы медиа также встроены в [`../DEFENSE_BACKEND.md`](../DEFENSE_BACKEND.md) §10 «Медиа».
 
 ---
 
@@ -22,3 +25,4 @@
 2. **Заказы** — admin filters + `lastUpdateUtc` на create/status.
 3. **Категории UI** — дерево с чекбоксами, CRUD-модалки под Figma.
 4. **Качество** — починен CI (compose env + gitleaks tree scan).
+5. **Медиа** — DummyJSON CDN при seed; админ добавляет товар с URL картинок.

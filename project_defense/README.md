@@ -16,7 +16,8 @@
 | `ARCHITECTURE_DIAGRAMS.md` | Сводка всех диаграмм + Mermaid |
 | `TECH_OVERVIEW.md` | Стек технологий |
 | `DEFENSE_SPEECH.md` | Черновик устной речи (общий FE+API) |
-| `DEFENSE_QA.md` | Типовые вопросы комиссии |
+| `DEFENSE_QA.md` | Типовые вопросы комиссии (общие) |
+| **`qa/`** | **Q&A по членам команды** (Сергей / Влад / Яна / Илона / sanyamart13) |
 
 ---
 
@@ -52,7 +53,8 @@
 | Папка | Описание |
 |-------|----------|
 | `13_auth-microservices/` | Auth Service + Admin Users Service + Product (стыки #94–#97) |
-| `14_changelog-illustrations/` | Иллюстрации ключевых доработок (PG, admin orders, categories, CI) |
+| `14_changelog-illustrations/` | Иллюстрации доработок + **DummyJSON-медиа** + **admin product/images** |
+| `qa/` | Q&A по членам команды для комиссии |
 
 ---
 

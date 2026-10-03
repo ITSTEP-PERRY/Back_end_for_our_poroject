@@ -4,7 +4,7 @@
 **Роль:** весь **бэкенд витрины / покупателя** — [Product API](#product-api) ([`Perry.Api`](#perry-api)) + [PostgreSQL](#postgresql) + стык с [Auth](#auth).  
 **Не зона отчёта:** админ-панель ([UI](#ui-ux) `/admin`, [Admin Service](#admin-service), DEV `Admin/Admin`).
 
-**Слайды** встроены ниже как **Mermaid** (рендерятся в GitHub / VS Code Markdown Preview / Cursor). Рядом — PNG из папок `01_`…`14_` (удобно кинуть на экран).
+**Слайды** встроены ниже как **Mermaid** (рендерятся в GitHub / VS Code Markdown Preview / Cursor). PNG-файлы остаются в папках `01_`…`14_` (для слайдов); в этом документе схемы только Mermaid, без дубля картинкой.
 
 **Словарик:** клик по сокращению (например [JWT](#jwt)) — прыжок в конец этого же файла. Пути к коду (AuthClaims.cs) открывают исходники.
 
@@ -45,8 +45,6 @@
 ---
 
 ## Слайд 1 — Общая архитектура
-
-![Слайд 01 PNG](./01_architecture-overview/diagram.png)
 
 ```mermaid
 flowchart TB
@@ -94,8 +92,6 @@ flowchart TB
 
 ## Слайд 2 — Куда уходит каждый URL (прокси)
 
-![Слайд 02 PNG](./02_architecture-request-flow/diagram.png)
-
 ```mermaid
 flowchart TB
   B["Browser → http://localhost:3000"]
@@ -139,8 +135,6 @@ flowchart TB
 
 ## Слайд 3 — Структура solution (слои кода)
 
-![Слайд 03 PNG](./03_backend-structure/diagram.png)
-
 ```mermaid
 flowchart TB
   API["Perry.Api<br/>Controllers, JWT, Swagger"]
@@ -182,8 +176,6 @@ flowchart TB
 ---
 
 ## Слайд 4 — Слой базы данных
-
-![Слайд 04 PNG](./04_backend-database-layer/diagram.png)
 
 ```mermaid
 flowchart TB
@@ -233,8 +225,6 @@ flowchart TB
 
 ## Слайд 4b — Миграция на [PostgreSQL](#postgresql) ([#A08](#trello-a08))
 
-![PG migration PNG](./14_changelog-illustrations/pg-migration-flow.png)
-
 ```mermaid
 flowchart LR
   OLD["SQL Server"] --> MIG["EF InitialPostgreSQL"]
@@ -249,8 +239,6 @@ flowchart LR
 ---
 
 ## Слайд 5 — Маршруты [API](#api) (что показывать)
-
-![Слайд 05 PNG](./05_backend-routes/diagram.png)
 
 ```mermaid
 flowchart LR
@@ -303,8 +291,6 @@ flowchart LR
 
 ## Слайд 6 — Путь одного [HTTP](#http)-запроса
 
-![Слайд 06 PNG](./06_backend-request-flow/diagram.png)
-
 ```mermaid
 flowchart TB
   REQ["HTTP запрос /api/..."]
@@ -355,8 +341,6 @@ flowchart TB
 ---
 
 ## Слайд 7 — Три потока [Auth](#auth) (что моё)
-
-![Слайд 07 PNG](./07_backend-auth-flow/diagram.png)
 
 ```mermaid
 flowchart TB
@@ -426,8 +410,6 @@ if (userId is null) return Unauthorized();
 
 ## Слайд 8 — Микросервисы [Auth](#auth) ↔ Product
 
-![Слайд 13 PNG](./13_auth-microservices/diagram.png)
-
 ```mermaid
 flowchart TB
   FE["Фронт perry-front :3000"]
@@ -464,8 +446,6 @@ flowchart TB
 ---
 
 ## Слайд 9 — Корзина → заказ (главный сценарий)
-
-![Слайд 12 PNG](./12_frontend-cart-checkout-flow/diagram.png)
 
 ```mermaid
 flowchart TB
@@ -529,9 +509,47 @@ flowchart TB
 ### Медиа
 
 - Абсолютный `https://…` ([DummyJSON](#dummyjson) [CDN](#cdn) и т.п.) — отдаём как есть.  
-- Относительный `/uploads/…` — файл с диска Api; клиент склеивает с origin `:5272`.
+- Относительный `/uploads/…` — файл с диска Api (`wwwroot/uploads`); клиент склеивает с origin `:5272`.  
+- Base64 в `ProductImages.Url` — отдача через `GET /api/products/image/{id}`.
 
 **Фраза:** «Каталог публичный; персональные действия — только с [JWT](#jwt).»
+
+#### Как получили фото «реального» товара ([DummyJSON](#dummyjson))
+
+При старте Api в Development [DbSeeder](#dbseeder) подтягивает каталог DummyJSON (сеть `dummyjson.com/products` или встроенный `dummyjson-products.json`), мапит категории Perry, создаёт товары `SKU = DJ-xxx` и пишет в `ProductImages` готовые URL вида `https://cdn.dummyjson.com/product-images/...`. Плейсхолдеры при refresh заменяются на CDN; уже заданные `/uploads/...` и cdn.dummyjson **не трогаем**.
+
+```mermaid
+flowchart TD
+  A[Старт Perry.Api Development] --> B[DbSeeder]
+  B --> C{Каталог DummyJSON}
+  C -->|сеть| D["GET dummyjson.com/products"]
+  C -->|offline| E[Embedded JSON]
+  D --> F[Parse → DummyPack]
+  E --> F
+  F --> G[EnsureDummyJsonProducts + refresh demo URLs]
+  G --> H["Products DJ-* + ProductImages"]
+  H --> I[(PostgreSQL)]
+  I --> J["GET /api/products → imageUrl"]
+  J --> K[Browser / Mobile грузит CDN]
+```
+
+#### Как добавляют новый товар и изображения
+
+Админ UI `AdminProductEditPage` (`/admin/products/new` или `/:id`) собирает форму и до 10 URL (`imageUrls`). Front: `POST/PUT /api/products` с [JWT](#jwt) ролей `Admin`/`Seller`. Api создаёт/обновляет `Product` и через `ApplyImages` пишет `ProductImages` (primary, sortOrder). Витрина читает те же URL.
+
+```mermaid
+flowchart TD
+  A["Admin /admin/products/new"] --> B[Форма + imageUrls]
+  B --> C["POST /api/products + Bearer"]
+  C --> D[ProductsController]
+  D --> E[Product + ApplyImages]
+  E --> F[(PostgreSQL ProductImages)]
+  F --> G[Витрина / Mobile]
+  G --> H{Url}
+  H -->|https| I[CDN / внешний хост]
+  H -->|/uploads| J[wwwroot/uploads]
+  H -->|base64| K["/api/products/image/id"]
+```
 
 ---
 
@@ -1423,4 +1441,3 @@ Product как сервис получает service-token и читает пр�
 ---
 
 *Кириллический ярлык:* [СЛОВАРИК-БЭКЕНД.md](./СЛОВАРИК-БЭКЕНД.md) → ведёт сюда.
-
