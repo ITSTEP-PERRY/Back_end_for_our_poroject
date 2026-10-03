@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { productsApi, reviewsApi } from "../api";
+import { authorInitial, resolveReviewAuthor } from "../utils/reviewAuthor";
 import { ApiError } from "../api/client";
 import type { ProductDetail, ProductListItem, ProductReview } from "../api/types";
 import { useAuth } from "../app/AuthContext";
@@ -243,7 +244,7 @@ export function ProductPage() {
             : product!.reviewCount,
         reviews: [
           {
-            authorName: created.authorName,
+            authorName: resolveReviewAuthor(created.authorName, user),
             rating: created.rating,
             title: created.title,
             body: created.body,
@@ -257,7 +258,14 @@ export function ProductPage() {
       setShowReviewForm(false);
       setMsg("Review published");
     } catch (e) {
-      setReviewError(e instanceof Error ? e.message : "Could not submit review");
+      const status = e instanceof ApiError ? e.status : 0;
+      if (status === 409) {
+        setReviewError("You already left a review for this product.");
+      } else if (status === 401) {
+        setReviewError("Please sign in again (regular account is enough — Admin is not required).");
+      } else {
+        setReviewError(e instanceof Error ? e.message : "Could not submit review");
+      }
     } finally {
       setReviewBusy(false);
     }
@@ -583,9 +591,9 @@ export function ProductPage() {
                         <div className="review-card__head">
                           <div className="review-card__author">
                             <span className="review-avatar" aria-hidden="true">
-                              {r.authorName.charAt(0)}
+                              {authorInitial(r.authorName, user)}
                             </span>
-                            <strong>{r.authorName}</strong>
+                            <strong>{resolveReviewAuthor(r.authorName, user)}</strong>
                           </div>
                           <time>{new Date(r.createdAtUtc).toLocaleDateString()}</time>
                         </div>
@@ -619,7 +627,7 @@ export function ProductPage() {
                                   setLightbox({
                                     images: r.images,
                                     index: photoIdx,
-                                    alt: `Review by ${r.authorName}`,
+                                    alt: `Review by ${resolveReviewAuthor(r.authorName, user)}`,
                                   })
                                 }
                               >

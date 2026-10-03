@@ -107,11 +107,16 @@ function resolveUrl(path: string, base: "product" | "auth" | "users"): string {
 
 function friendlyStatusMessage(status: number, base: "product" | "auth" | "users"): string {
   if (status === 401) {
-    return base === "users"
-      ? "Unauthorized — need Admin JWT (re-login)."
-      : "Unauthorized — log in again as Admin.";
+    if (base === "users") return "Unauthorized — Admin Users API needs an Admin JWT.";
+    if (base === "auth") return "Unauthorized — sign in again.";
+    // Product: reviews/cart/orders — any signed-in user, not Admin-only.
+    return "Unauthorized — sign in again (regular account is enough).";
   }
-  if (status === 403) return "Forbidden — Admin role required.";
+  if (status === 403) {
+    return base === "product" || base === "auth"
+      ? "Forbidden — you do not have access."
+      : "Forbidden — Admin role required.";
+  }
   if (status === 404) {
     return base === "users"
       ? "Users API not found (perry-admin-service)."

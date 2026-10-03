@@ -122,11 +122,26 @@ public sealed class AuthInternalUserDto
     [JsonPropertyName("fullName")]
     public string? FullName { get; set; }
 
+    [JsonPropertyName("firstName")]
+    public string? FirstName { get; set; }
+
+    [JsonPropertyName("lastName")]
+    public string? LastName { get; set; }
+
     [JsonPropertyName("role")]
     public string? Role { get; set; }
 
-    public string? DisplayName =>
-        !string.IsNullOrWhiteSpace(Name) ? Name
-        : !string.IsNullOrWhiteSpace(FullName) ? FullName
-        : Email;
+    public string? DisplayName
+    {
+        get
+        {
+            var fromParts = string.Join(
+                " ",
+                new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+            if (!string.IsNullOrWhiteSpace(fromParts)) return fromParts;
+            if (!string.IsNullOrWhiteSpace(Name)) return Name;
+            if (!string.IsNullOrWhiteSpace(FullName)) return FullName;
+            return Email;
+        }
+    }
 }

@@ -22,6 +22,7 @@ import { useCart } from "../cart/CartContext";
 import { colors, radii, space } from "../theme/colors";
 import { navigateShop } from "../navigation/navigationRef";
 import type { RootStackParamList } from "../navigation/types";
+import { authorInitial, resolveReviewAuthor } from "../utils/reviewAuthor";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Product">;
 const PAD = 16;
@@ -577,6 +578,8 @@ function RelatedBlock({
 }
 
 function ReviewCard({ review }: { review: ProductReview }) {
+  const { user } = useAuth();
+  const author = resolveReviewAuthor(review.authorName, user);
   const date = review.createdAtUtc
     ? new Date(review.createdAtUtc).toLocaleDateString("en-US", {
         month: "long",
@@ -588,12 +591,10 @@ function ReviewCard({ review }: { review: ProductReview }) {
     <View style={styles.reviewCard}>
       <View style={styles.reviewHead}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarLetter}>
-            {(review.authorName || "?").charAt(0).toUpperCase()}
-          </Text>
+          <Text style={styles.avatarLetter}>{authorInitial(review.authorName, user)}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.reviewAuthor}>{review.authorName}</Text>
+          <Text style={styles.reviewAuthor}>{author}</Text>
         </View>
         <Text style={styles.reviewDate}>{date}</Text>
       </View>

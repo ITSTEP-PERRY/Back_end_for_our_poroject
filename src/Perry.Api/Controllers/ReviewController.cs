@@ -11,6 +11,7 @@ using Perry.Infrastructure.DTOs;
 using Perry.Infrastructure.Interfaces;
 using Perry.Infrastructure.Options;
 using Perry.Infrastructure.Persistence;
+using Perry.Infrastructure.Services;
 
 namespace Perry.Api.Controllers;
 
@@ -23,17 +24,20 @@ public class ReviewController : ControllerBase
     private readonly AppDbContext _db;
     private readonly IReviewRepository _reviewRepository;
     private readonly IAuthorizationService _authorizationService;
+    private readonly IAuthInternalClient _authInternal;
 
     public ReviewController(
         ILogger<ReviewController> logger,
         AppDbContext db,
         IReviewRepository reviewRepository,
-        IAuthorizationService authorizationService)
+        IAuthorizationService authorizationService,
+        IAuthInternalClient authInternal)
     {
         _db = db;
         _logger = logger;
         _reviewRepository = reviewRepository;
         _authorizationService = authorizationService;
+        _authInternal = authInternal;
     }
 
     private IList<ProductReview> ConvertImagesToLinks(IList<ProductReview> reviews)
@@ -177,9 +181,7 @@ public class ReviewController : ControllerBase
         if (userId is null) return Unauthorized();
 
         dto.UserId = userId.Value;
-        dto.AuthorName = AuthClaims.GetDisplayName(User)
-                         ?? AuthClaims.GetEmail(User)
-                         ?? "Customer";
+        dto.AuthorName = await ResolveAuthorNameAsync(userId.Value, ct);
 
         var result = await _reviewRepository.PostProductReview(dto, ct);
         if (result.Succeeded && result.Value != null)
@@ -279,5 +281,30 @@ public class ReviewController : ControllerBase
         }
 
         return NotFound("No image found");
+    }
+
+    /// <summary>
+    /// Auth JWT usually has no name claim; Identity.Name is sub (UUID).
+    /// Prefer Auth Internal profile, then claims, then email — never a bare GUID.
+    /// </summary>
+    private async Task<string> ResolveAuthorNameAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            if (_authInternal.IsConfigured)
+            {
+                var profile = await _authInternal.GetUserAsync(userId, ct);
+                if (AuthClaims.IsUsableDisplayName(profile?.DisplayName))
+                    return profile!.DisplayName!.Trim();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Auth internal profile lookup failed for {UserId}", userId);
+        }
+
+        return AuthClaims.GetDisplayName(User)
+               ?? AuthClaims.GetEmail(User)
+               ?? "Customer";
     }
 }

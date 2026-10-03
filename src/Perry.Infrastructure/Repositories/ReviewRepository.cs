@@ -96,6 +96,9 @@ public class ReviewRepository : IReviewRepository
             if (duplicate) return QueryError.Conflict;
 
             var author = string.IsNullOrWhiteSpace(dto.AuthorName) ? "Customer" : dto.AuthorName.Trim();
+            // Never persist JWT sub / userId as the public author label.
+            if (Guid.TryParse(author, out _))
+                author = "Customer";
             var title = string.IsNullOrWhiteSpace(dto.Title) ? "Review" : dto.Title.Trim();
             var body = string.IsNullOrWhiteSpace(dto.Body) ? "" : dto.Body.Trim();
 
