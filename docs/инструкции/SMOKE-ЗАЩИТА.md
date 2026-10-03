@@ -6,19 +6,20 @@
 
 ```bash
 # API
-cd D:\Perry\My_Amazon2
-$env:NUGET_PACKAGES = "D:\nuget-packages"
+cd My_Amazon2
 dotnet run --project src\Perry.Api --launch-profile http
+# или ярлык Perry API / start-api.cmd
 
-# FE (другой терминал)
-cd D:\Perry
+# React FE (другой терминал) — папка frontend/, НЕ Razor
+cd My_Amazon2\frontend
+npm install
 npm run dev
+# или ярлык Perry Desktop / start-desktop.cmd
 ```
 
-Открыть http://localhost:3000  
+Открыть **http://localhost:3000** (React)  
 Swagger: http://localhost:5272/swagger  
-Админ (Razor, опционально): http://localhost:5122/Admin/Login — `Admin` / `Admin`
-
+Админ: http://localhost:3000/admin (React). Порт **5122 / Perry.Web больше не используется**.
 ---
 
 ## Чеклист (покупатель)

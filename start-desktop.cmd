@@ -1,34 +1,41 @@
 @echo off
 chcp 65001 >nul
-title Perry Desktop (Figma)
+title Perry Desktop - React Vite
 cd /d "%~dp0frontend"
 
 echo ========================================
-echo   Perry — Desktop (Vite / Figma)
+echo   Perry Desktop = React + Vite (Figma)
+echo   NOT Razor / NOT Perry.Web
 echo   http://localhost:3000
 echo ========================================
 echo.
-echo Нужен Product API на :5272  ^(start-api.cmd^)
+echo Need Product API on :5272  (start-api.cmd)
 echo.
+
+if not exist "package.json" (
+  echo [!] frontend\package.json missing. git pull the latest Teslyar75/My_Amazon2
+  pause
+  exit /b 1
+)
 
 where npm >nul 2>&1
 if errorlevel 1 (
-  echo [!] Нужен Node.js 18+ ^(npm^)
+  echo [!] Need Node.js 18+ (npm)
   pause
   exit /b 1
 )
 
 if not exist "node_modules\" (
-  echo [!] Ставлю зависимости frontend...
+  echo Installing frontend dependencies...
   call npm install
   if errorlevel 1 (
-    echo Ошибка npm install
+    echo npm install failed
     pause
     exit /b 1
   )
 )
 
-echo Запуск Vite...
+echo Starting Vite (React)...
 call npm run dev
 
 echo.

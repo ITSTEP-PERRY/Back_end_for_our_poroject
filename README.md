@@ -2,7 +2,7 @@
 
 Product API + **актуальная** Desktop-витрина (Figma) + Mobile (Expo).
 
-Старый Razor-фронт **`Perry.Web` удалён** из репозитория. Не используйте командный `perry-front` / `main` — там старая витрина до полной Figma-переписи.
+Старый Razor-фронт **`Perry.Web` удалён**. Запускается только **React** (`frontend/`, порт **3000**), не `:5122` и не `dotnet run --project src/Perry.Web`.
 
 ## Быстрый запуск с ярлыка (после clone)
 
