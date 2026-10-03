@@ -6,6 +6,16 @@ obj/
 .vs/
 *.swp
 
+## Node / Expo (frontend + mobile)
+node_modules/
+dist/
+.expo/
+frontend/dist/
+mobile/dist/
+mobile/.tmp/
+*.log
+npm-debug.log*
+
 ## IDE
 .idea/
 .vscode/
@@ -30,6 +40,7 @@ Desktop.ini
 
 ## Temp
 .figma-tmp/
+.tmp/
 
 
 **.env

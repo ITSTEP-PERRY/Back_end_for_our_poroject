@@ -1,0 +1,11 @@
+import type {IconType} from "../../types/IconType.ts";
+
+export const BellIcon = ({color="black", size=40, fillColor="none", width=1.5}: IconType) => {
+    return (
+        <svg width={size} height={size} viewBox="0 0 40 40" fill={fillColor} xmlns="http://www.w3.org/2000/svg">
+            <path d="M19.9999 5C15.9999 5 14.0099 6.91 12.8199 9.09C11.4499 11.62 10.7999 14.44 10.5899 17.27C10.2999 21.13 8.70987 23.8 7.16987 25.52C6.30987 26.48 7.02987 28 8.30987 28H31.6899C32.9699 28 33.6899 26.48 32.8299 25.52C31.2899 23.8 29.6999 21.12 29.4099 17.27C29.1999 14.44 28.5499 11.62 27.1799 9.09C25.4699 5.94 23.9999 5 19.9999 5Z" stroke={color} stroke-width={width} stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M25 31C25 33.21 22.76 35 20 35C17.24 35 15 33.21 15 31" stroke={color} stroke-width={width} stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+
+    )
+}

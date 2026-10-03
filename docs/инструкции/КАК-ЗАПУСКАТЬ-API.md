@@ -167,11 +167,12 @@ GET http://localhost:5272/api/products?page=1&pageSize=1
 
 | Порт | Сервис |
 |------|--------|
-| **5272** | Perry.Api (Product) — этот репозиторий |
+| **5272** | Perry.Api (Product) |
 | **5432** | PostgreSQL (Docker `perry-postgres`) |
-| 3000 / 8081 | Витрина Desktop / Mobile — **другой** репозиторий (`perry-front`), сюда не входит |
+| **3000** | Desktop-витрина Figma — папка `frontend/` (`start-desktop.cmd`) |
+| **8081** | Mobile Expo — папка `mobile/` (`start-mobile.cmd`) |
 
-Витрина ходит в Product по `http://localhost:5272` (прокси `/api`). Auth — Azure Auth Service, не этот репо.
+Старый Razor `Perry.Web` из репозитория удалён. Витрина проксирует `/api` → `:5272`. Auth — Azure Auth Service.
 
 ---
 

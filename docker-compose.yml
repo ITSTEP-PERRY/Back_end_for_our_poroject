@@ -1,5 +1,6 @@
 # Perry — локальный стек
-# PostgreSQL + Perry.Api (+ optional Web)
+# PostgreSQL + Perry.Api
+# Desktop/Mobile UI: папки frontend/ и mobile/ (Vite / Expo), не в compose
 #
 # cp .env.example .env
 # docker compose up --build
@@ -56,30 +57,6 @@ services:
       Smtp__EnableSsl: "true"
     ports:
       - "5272:8080"
-
-  web:
-    build:
-      context: .
-      dockerfile: src/Perry.Web/Dockerfile
-    container_name: perry-web
-    depends_on:
-      api:
-        condition: service_started
-      postgres:
-        condition: service_healthy
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-perry};Username=${POSTGRES_USER:-perry};Password=${POSTGRES_PASSWORD:-changeme}"
-      Smtp__UseStub: ${SMTP_USE_STUB:-true}
-      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
-      Smtp__Port: ${SMTP_PORT:-587}
-      Smtp__From: ${SMTP_FROM:-}
-      Smtp__Username: ${SMTP_USERNAME:-}
-      Smtp__Password: ${SMTP_PASSWORD:-}
-      Smtp__EnableSsl: "true"
-    ports:
-      - "5000:8080"
 
 volumes:
   perry_pg_data:

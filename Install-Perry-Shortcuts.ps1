@@ -1,6 +1,5 @@
-# Creates "Perry API.lnk" in the repo root and on the user's Desktop.
-# Prefer double-click: Создать-ярлык.cmd
-# Or: powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1
+# Creates Desktop shortcuts for API / Desktop UI / Mobile.
+# Double-click: Создать-ярлык.cmd
 
 $ErrorActionPreference = "Stop"
 $root = $PSScriptRoot
@@ -8,12 +7,20 @@ if ([string]::IsNullOrWhiteSpace($root)) {
   $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 }
 
-$apiCmd = Join-Path $root "start-api.cmd"
-if (-not (Test-Path -LiteralPath $apiCmd)) {
-  throw "Не найден start-api.cmd рядом со скриптом: $apiCmd"
-}
-
 $sh = New-Object -ComObject WScript.Shell
+
+$targets = @(
+  @{ Name = "Perry API.lnk";      Cmd = "start-api.cmd";     Icon = "shell32.dll,13" },
+  @{ Name = "Perry Desktop.lnk";  Cmd = "start-desktop.cmd"; Icon = "shell32.dll,14" },
+  @{ Name = "Perry Mobile.lnk";   Cmd = "start-mobile.cmd";  Icon = "shell32.dll,15" }
+)
+
+foreach ($t in $targets) {
+  $cmdPath = Join-Path $root $t.Cmd
+  if (-not (Test-Path -LiteralPath $cmdPath)) {
+    throw "Не найден $($t.Cmd) в $root"
+  }
+}
 
 $desktopDirs = @(
   [Environment]::GetFolderPath("Desktop"),
@@ -23,24 +30,26 @@ $desktopDirs = @(
 ) | Where-Object { $_ -and (Test-Path -LiteralPath $_) } | Select-Object -Unique
 
 $dirs = @($root) + $desktopDirs | Select-Object -Unique
-$created = @()
 
 foreach ($dir in $dirs) {
-  $path = Join-Path $dir "Perry API.lnk"
-  $lnk = $sh.CreateShortcut($path)
-  $lnk.TargetPath = $apiCmd
-  $lnk.WorkingDirectory = $root
-  $lnk.WindowStyle = 1
-  $lnk.Description = "Perry Product API — PostgreSQL + :5272"
-  $lnk.IconLocation = "shell32.dll,13"
-  $lnk.Save()
-  $created += $path
-  Write-Host "OK  $path"
+  foreach ($t in $targets) {
+    $cmdPath = Join-Path $root $t.Cmd
+    $path = Join-Path $dir $t.Name
+    $lnk = $sh.CreateShortcut($path)
+    $lnk.TargetPath = $cmdPath
+    $lnk.WorkingDirectory = $root
+    $lnk.WindowStyle = 1
+    $lnk.Description = $t.Name.Replace(".lnk", "")
+    $lnk.IconLocation = $t.Icon
+    $lnk.Save()
+    Write-Host "OK  $path"
+  }
 }
 
 Write-Host ""
-Write-Host "Ярлык готов. Запуск: двойной клик по «Perry API»"
-Write-Host "  -> Postgres (Docker) + API  http://localhost:5272/swagger"
-Write-Host "Нужны: Docker Desktop (запущен) и .NET 8 SDK."
+Write-Host "Ярлыки готовы:"
+Write-Host "  Perry API      -> http://localhost:5272/swagger"
+Write-Host "  Perry Desktop  -> http://localhost:3000   (Figma UI)"
+Write-Host "  Perry Mobile   -> http://localhost:8081"
 Write-Host ""
-Write-Host "Создано файлов: $($created.Count)"
+Write-Host "Сначала API, потом Desktop/Mobile. Нужны: Docker, .NET 8, Node.js 18+."

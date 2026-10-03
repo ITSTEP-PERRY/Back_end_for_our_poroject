@@ -1,31 +1,32 @@
-﻿# Perry (Product API)
+﻿# Perry (Teslyar75)
+
+Product API + **актуальная** Desktop-витрина (Figma) + Mobile (Expo).
+
+Старый Razor-фронт **`Perry.Web` удалён** из репозитория. Не используйте командный `perry-front` / `main` — там старая витрина до полной Figma-переписи.
 
 ## Быстрый запуск с ярлыка (после clone)
 
-1. Установите **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** и **[Docker Desktop](https://www.docker.com/products/docker-desktop/)** (Docker должен быть запущен).  
+1. Установите **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)**, **[Docker Desktop](https://www.docker.com/products/docker-desktop/)**, **[Node.js 18+](https://nodejs.org/)**.  
 2. `git clone https://github.com/Teslyar75/My_Amazon2.git` → откройте папку клона.  
-3. Дважды кликните **`Создать-ярлык.cmd`** — на рабочем столе появится **Perry API**.  
-4. Дважды кликните **Perry API** → ждите `Now listening` → откройте http://localhost:5272/swagger  
+3. Дважды кликните **`Создать-ярлык.cmd`**.  
+4. Порядок запуска: **Perry API** → затем **Perry Desktop** и/или **Perry Mobile**.
 
-Без ярлыка можно сразу кликнуть `start-api.cmd` / `Запуск-API.cmd` в корне клона.
+| Ярлык / скрипт | Что | URL |
+|----------------|-----|-----|
+| **Perry API** · `start-api.cmd` | Postgres + Product API | http://localhost:5272/swagger |
+| **Perry Desktop** · `start-desktop.cmd` | Витрина Figma (Vite) в `frontend/` | http://localhost:3000 |
+| **Perry Mobile** · `start-mobile.cmd` | Expo Web в `mobile/` | http://localhost:8081 |
 
-| Файл | Зачем |
-|------|--------|
-| `Создать-ярлык.cmd` | Один раз: ярлык на рабочий стол |
-| `start-api.cmd` | Postgres + API `:5272` |
-| `Запуск-API.cmd` | Алиас → `start-api.cmd` |
-
-Health: http://localhost:5272/api/health · **Инструкция:** [docs/инструкции/КАК-ЗАПУСКАТЬ-API.md](./docs/инструкции/КАК-ЗАПУСКАТЬ-API.md)
+Инструкция API: [docs/инструкции/КАК-ЗАПУСКАТЬ-API.md](./docs/инструкции/КАК-ЗАПУСКАТЬ-API.md) · frontend: [frontend/README.md](./frontend/README.md)
 
 ---
 
-Дипломный маркетплейс **Perry** — бэкенд зоны товаров на **ASP.NET Core 8**  
-(`Perry.Domain` · `Perry.Infrastructure` · `Perry.Api` · `Perry.Web`).
+Бэкенд: **ASP.NET Core 8** (`Perry.Domain` · `Perry.Infrastructure` · `Perry.Api`).  
+UI: папки **`frontend/`** (React/Vite под Figma) и **`mobile/`** (Expo).
 
 | | |
 |--|--|
 | **Доска Trello** | https://trello.com/b/bwEYs3Kq/itstep-perry |
-| **Витрина (React)** | https://github.com/ITSTEP-PERRY/perry-front |
 | **Auth Service** | https://github.com/ITSTEP-PERRY/Backend-client |
 | **Командный mirror API** | https://github.com/ITSTEP-PERRY/Back_end_for_our_poroject |
 | **Защита: Product API (без админки)** | **[project_defense/DEFENSE_BACKEND.md](./project_defense/DEFENSE_BACKEND.md)** |

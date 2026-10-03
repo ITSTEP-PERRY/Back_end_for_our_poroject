@@ -139,17 +139,6 @@ jobs:
             ghcr.io/itstep-perry/perry-api:${{ github.sha }}
             ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-api:{0}', steps.version.outputs.tag) || '' }}
 
-      - name: Build and push Web image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./src/Perry.Web/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/itstep-perry/perry-web:latest
-            ghcr.io/itstep-perry/perry-web:${{ github.sha }}
-            ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-web:{0}', steps.version.outputs.tag) || '' }}
-
   security-check:
     name: Security Check
     runs-on: ubuntu-latest

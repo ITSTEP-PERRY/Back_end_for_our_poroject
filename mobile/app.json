@@ -1,0 +1,36 @@
+{
+  "expo": {
+    "name": "Perry",
+    "slug": "perry-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "scheme": "perry",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.itstep.perry.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#B8EA48",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "package": "com.itstep.perry.mobile",
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "local-dev"
+      }
+    }
+  }
+}
