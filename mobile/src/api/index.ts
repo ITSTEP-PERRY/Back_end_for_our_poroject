@@ -1,5 +1,6 @@
 import { apiFetch } from "./client";
 import { resolveMediaUrl } from "./media";
+import { isLocalAdmin, setLocalAdminFlag } from "./token";
 import type {
   AuthResponse,
   AuthUser,
@@ -147,8 +148,22 @@ export const cartApi = {
     }),
 };
 
+const LOCAL_ADMIN_LOGIN = "Admin";
+const LOCAL_ADMIN_PASSWORD = "Admin";
+
 export const authApi = {
   login: async (login: string, password: string) => {
+    // DEV: Admin/Admin → Product /api/dev/admin-login (как desktop), не Azure Auth.
+    if (__DEV__ && login.trim() === LOCAL_ADMIN_LOGIN && password === LOCAL_ADMIN_PASSWORD) {
+      const raw = await apiFetch<Record<string, unknown>>("/dev/admin-login", {
+        method: "POST",
+        body: JSON.stringify({ login, password }),
+      });
+      await setLocalAdminFlag(true);
+      return normalizeAuthResponse(raw);
+    }
+
+    await setLocalAdminFlag(false);
     const raw = await apiFetch<Record<string, unknown>>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email: login, login, password }),
@@ -157,6 +172,7 @@ export const authApi = {
     return normalizeAuthResponse(raw);
   },
   register: async (body: { name: string; email: string; login: string; password: string }) => {
+    await setLocalAdminFlag(false);
     const raw = await apiFetch<Record<string, unknown>>("/auth/register", {
       method: "POST",
       body: JSON.stringify({
@@ -170,6 +186,10 @@ export const authApi = {
     return normalizeAuthResponse(raw);
   },
   me: async () => {
+    if (__DEV__ && (await isLocalAdmin())) {
+      const raw = await apiFetch<Record<string, unknown>>("/dev/me");
+      return normalizeAuthUser(raw);
+    }
     const raw = await apiFetch<Record<string, unknown>>("/auth/me", { base: "auth" });
     return normalizeAuthUser(raw);
   },

@@ -3,6 +3,8 @@ import * as SecureStore from "expo-secure-store";
 
 const TOKEN_KEY = "perry_access_token";
 const SESSION_KEY = "perry_cart_session";
+/** DEV: Admin/Admin via Product /api/dev/admin-login (same as desktop). */
+const LOCAL_ADMIN_KEY = "perry_local_admin";
 
 function uuid(): string {
   return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
@@ -43,6 +45,15 @@ export async function getToken(): Promise<string | null> {
 
 export async function setToken(token: string | null): Promise<void> {
   await storageSet(TOKEN_KEY, token);
+  if (!token) await storageSet(LOCAL_ADMIN_KEY, null);
+}
+
+export async function setLocalAdminFlag(on: boolean): Promise<void> {
+  await storageSet(LOCAL_ADMIN_KEY, on ? "1" : null);
+}
+
+export async function isLocalAdmin(): Promise<boolean> {
+  return (await storageGet(LOCAL_ADMIN_KEY)) === "1";
 }
 
 export async function getCartSessionId(): Promise<string> {
