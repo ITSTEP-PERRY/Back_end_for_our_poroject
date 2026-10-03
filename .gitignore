@@ -25,6 +25,9 @@ _ref/
 Thumbs.db
 Desktop.ini
 
+## Windows shortcuts (created by Install-Perry-Shortcuts.ps1)
+*.lnk
+
 ## Temp
 .figma-tmp/
 

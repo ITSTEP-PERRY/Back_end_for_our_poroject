@@ -1,5 +1,23 @@
 ﻿# Perry (Product API)
 
+## Быстрый запуск — одна иконка
+
+| Ярлык / скрипт | Что запускает | URL |
+|----------------|---------------|-----|
+| **Perry API** · `start-api.cmd` | PostgreSQL (Docker) + Product API | http://localhost:5272/swagger |
+
+После clone один раз:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1
+```
+
+Иконка появится в корне репо и на рабочем столе. Либо двойной клик по `start-api.cmd` / `Запуск-API.cmd`.
+
+Нужны: **Docker Desktop**, **.NET 8 SDK**. Health: http://localhost:5272/api/health
+
+---
+
 Дипломный маркетплейс **Perry** — бэкенд зоны товаров на **ASP.NET Core 8**  
 (`Perry.Domain` · `Perry.Infrastructure` · `Perry.Api` · `Perry.Web`).
 
