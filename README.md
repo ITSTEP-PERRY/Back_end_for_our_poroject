@@ -1,4 +1,4 @@
-﻿# Perry (Teslyar75)
+# Perry (Teslyar75)
 
 Product API + **актуальная** Desktop-витрина (Figma) + Mobile (Expo).
 
@@ -171,8 +171,8 @@ UI: папки **`frontend/`** (React/Vite под Figma) и **`mobile/`** (Expo)
 | [docs/ГАЙД-ДЛЯ-СТУДЕНТА.md](./docs/ГАЙД-ДЛЯ-СТУДЕНТА.md) | Методичка |
 | [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) | Хроника этапов |
 | [docs/README.md](./docs/README.md) | Оглавление папок |
-| [docs/screenshots/README.md](./docs/screenshots/README.md) | Все скрины витрины / auth / Account |
-| [docs/screenshots/sprint-2026-09-19/README.md](./docs/screenshots/sprint-2026-09-19/README.md) | Спринт 19.09 |
+| [docs/screenshots/README.md](./docs/screenshots/README.md) | Скрины 04.10 (29 шт., с подписями) |
+| [docs/screenshots/2026-10-04/README.md](./docs/screenshots/2026-10-04/README.md) | Каталог с превью |
 | [`project_defense/`](./project_defense/) | Схемы архитектуры к защите |
 
 ---
@@ -202,164 +202,206 @@ dotnet run --project src/Perry.Api --launch-profile http
 
 ---
 
-## 4. Скрины спринта 19.09.2026 (с описанием)
+## Скриншоты витрины (04.10.2026)
 
-Сводка дня: [журнал/2026-09-19.md](./docs/журнал/2026-09-19.md)
+Актуальные кадры: главная → каталог → товар → корзина/checkout → кабинет → legal → админка.  
+Таблица и полный каталог: [docs/screenshots/README.md](./docs/screenshots/README.md) · [2026-10-04](./docs/screenshots/2026-10-04/README.md).
 
-### 01 · 404 Product not found
+### Главная
 
-![404 Product not found](./docs/screenshots/sprint-2026-09-19/01-404-product-not-found.png)
+#### 01 · Home — hero + Trending deals
 
-Товар не найден — Browse catalog / Go to home.
+![Home hero](./docs/screenshots/2026-10-04/home/01-home-hero.png)
 
-### 02 · Admin Products
+Hero «Sale -50%», категории, Trending deals.
 
-![Admin Products](./docs/screenshots/sprint-2026-09-19/02-admin-products.png)
+#### 02 · Home — Welcome back
 
-Список товаров + фильтр Category / Search.
+![Home welcome](./docs/screenshots/2026-10-04/home/02-home-welcome-cta.png)
 
-### 03 · Admin Categories
+Персональный CTA: Go to catalog / My orders.
 
-![Admin Categories](./docs/screenshots/sprint-2026-09-19/03-admin-categories.png)
+#### 03 · Home — Women's fashion: sale
 
-Корневые категории, Active, создание «+».
+![Home sale](./docs/screenshots/2026-10-04/home/03-home-sale-section.png)
 
-### 04 · Admin Reviews
+Карусель Sale + футер.
 
-![Admin Reviews](./docs/screenshots/sprint-2026-09-19/04-admin-reviews.png)
+#### 04 · Home — меню категорий
 
-Модерация: All / Hidden / Visible.
+![Home menu categories](./docs/screenshots/2026-10-04/home/04-home-menu-categories.png)
 
-### 05 · Admin Orders
+Аватар + дерево категорий.
 
-![Admin Orders](./docs/screenshots/sprint-2026-09-19/05-admin-orders.png)
+#### 05 · Home — меню аккаунта
 
-Список заказов Date / Customer / Status / Total.
+![Home menu account](./docs/screenshots/2026-10-04/home/05-home-menu-account.png)
 
-### 07 · Admin Products — category dropdown
+Cart / Orders / Wishlist / Settings / Log out.
 
-![Admin Products category dropdown](./docs/screenshots/sprint-2026-09-19/07-admin-products-category-dropdown.png)
+### Каталог
 
-Иерархия категорий в тулбаре.
+#### 06 · Fashion
 
-### 08 · Admin Products — фильтр Streaming
+![Catalog Fashion](./docs/screenshots/2026-10-04/catalog/06-catalog-fashion.png)
 
-![Admin Products filtered](./docs/screenshots/sprint-2026-09-19/08-admin-products-filter-streaming.png)
+Сетка товаров, фильтры Brand / Fabric type.
 
-Отфильтрованный список (Roku Express 4K+).
+### Страница товара
 
-### 09 · Admin Users — Active
+#### 07 · Product page
 
-![Admin Users Active](./docs/screenshots/sprint-2026-09-19/09-admin-users-filters.png)
+![Product page](./docs/screenshots/2026-10-04/product/07-product-page.png)
 
-Активные пользователи, ellipsis на длинных email.
+Nike Air Jordan 1: галерея, Buy now / Add to cart.
 
-### 10 · Admin Orders — детали
+#### 08 · Lightbox фото
 
-![Admin Order details](./docs/screenshots/sprint-2026-09-19/10-admin-orders-details.png)
+![Product lightbox](./docs/screenshots/2026-10-04/product/08-product-lightbox.png)
 
-Состав заказа + смена Status.
+Полноэкранный просмотр (1/4).
 
-### 11 · Admin Reviews — Hide
+#### 09 · Specs + отзывы на PDP
 
-![Admin Review Hide](./docs/screenshots/sprint-2026-09-19/11-admin-reviews-moderate-hide.png)
+![Product specs reviews](./docs/screenshots/2026-10-04/product/09-product-specs-reviews.png)
 
-Скрыть отзыв с витрины (Hide / Delete).
+Характеристики и блок Customer reviews.
 
-### 12 · Account — My orders
+#### 10 · Customer reviews
 
-![My orders](./docs/screenshots/sprint-2026-09-19/12-account-my-orders.png)
+![Product reviews](./docs/screenshots/2026-10-04/product/10-product-reviews.png)
 
-Кабинет: заказы Ordered / Ready for pickup.
+Рейтинг, теги, Create review, Helpful / Translate.
 
-### 13 · Admin Reviews — Approve
+### Корзина и Checkout
 
-![Admin Review Approve](./docs/screenshots/sprint-2026-09-19/13-admin-reviews-approve.png)
+#### 11 · Shopping cart
 
-Вернуть скрытый отзыв (Approve / Delete).
+![Cart](./docs/screenshots/2026-10-04/cart-checkout/11-cart.png)
 
-### 14 · Account — Order details
+Позиции, Qty, Proceed to checkout.
 
-![Order details modal](./docs/screenshots/sprint-2026-09-19/14-account-order-details-modal.png)
+#### 12 · Checkout — Country
 
-Модалка: позиции, Total, How to cancel.
+![Checkout country](./docs/screenshots/2026-10-04/cart-checkout/12-checkout-country.png)
 
-### 15 · Account — Order details #2
+Ukraine, Card, Place order.
 
-![Order details modal 2](./docs/screenshots/sprint-2026-09-19/15-account-order-details-modal-2.png)
+#### 13 · Checkout — State (области)
 
-Второй заказ, Total $178.
+![Checkout state](./docs/screenshots/2026-10-04/cart-checkout/13-checkout-state.png)
 
-### 16 · Account — Change email
+Выбор области Украины.
 
-![Change email modal](./docs/screenshots/sprint-2026-09-19/17-account-change-email-modal.png)
+#### 14 · Checkout — City (Odesa)
 
-Смена email: пароль + 6-digit code + Send code.
+![Checkout city](./docs/screenshots/2026-10-04/cart-checkout/14-checkout-city-odesa.png)
+
+Города Odesa Oblast.
+
+### Личный кабинет
+
+#### 15 · Wishlist
+
+![Wishlist](./docs/screenshots/2026-10-04/account/15-account-wishlist.png)
+
+Избранное + аватар в сайдбаре.
+
+#### 16 · My reviews
+
+![My reviews](./docs/screenshots/2026-10-04/account/16-account-my-reviews.png)
+
+Отзывы пользователя.
+
+#### 17 · Edit photo
+
+![Edit photo](./docs/screenshots/2026-10-04/account/17-account-edit-photo.png)
+
+Обрезка аватара.
+
+#### 18 · Change name
+
+![Change name](./docs/screenshots/2026-10-04/account/18-account-change-name.png)
+
+Смена имени / фамилии.
+
+### Legal
+
+#### 19 · Terms
+
+![Terms](./docs/screenshots/2026-10-04/legal/19-terms.png)
+
+#### 20 · License
+
+![License](./docs/screenshots/2026-10-04/legal/20-license.png)
+
+#### 21 · Privacy
+
+![Privacy](./docs/screenshots/2026-10-04/legal/21-privacy.png)
+
+### Админка
+
+#### 22 · Products
+
+![Admin Products](./docs/screenshots/2026-10-04/admin/22-admin-products.png)
+
+Список + detail с галереей.
+
+#### 23 · Categories
+
+![Admin Categories](./docs/screenshots/2026-10-04/admin/23-admin-categories.png)
+
+Дерево категорий + detail.
+
+#### 24 · Edit subcategory
+
+![Admin Edit subcategory](./docs/screenshots/2026-10-04/admin/24-admin-categories-edit.png)
+
+Модалка редактирования подкатегории.
+
+#### 25 · Reviews
+
+![Admin Reviews](./docs/screenshots/2026-10-04/admin/25-admin-reviews.png)
+
+Модерация Approve / Delete.
+
+#### 26 · Orders
+
+![Admin Orders](./docs/screenshots/2026-10-04/admin/26-admin-orders.png)
+
+Фильтры + statusCounts.
+
+#### 27 · Users
+
+![Admin Users](./docs/screenshots/2026-10-04/admin/27-admin-users.png)
+
+Роли и статусы.
+
+#### 28 · Users — Columns
+
+![Admin Users Columns](./docs/screenshots/2026-10-04/admin/28-admin-users-columns.png)
+
+Колонки + аватар админа в шапке.
+
+#### 29 · Users — empty
+
+![Admin Users empty](./docs/screenshots/2026-10-04/admin/29-admin-users-empty.png)
+
+Empty state «No users in the selected role».
 
 ---
 
-## 5. Скрины витрины / auth / legal
+## Account — маршруты
 
-Подробно: [docs/screenshots/README.md](./docs/screenshots/README.md)  
-Forgot / Reset / Finishing: [инструкции/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/инструкции/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md)
+| Маршрут | Экран |
+|---------|--------|
+| `/account/orders` | My orders + модалка Details |
+| `/account/wishlist` | Wishlist + Remove confirm |
+| `/account/reviews` | My reviews |
+| `/account/settings` | Settings + модалки photo/name/password/email/logout/delete |
 
-| Экран | Описание | Превью |
-|-------|----------|--------|
-| **Главная (витрина)** | Hero Sale, категории, Trending deals | ![Home storefront](./docs/screenshots/26-home-storefront.png) |
-| **Product Page** | Галерея, About, buy-box, Product details | ![Product Page](./docs/screenshots/27-product-page.png) |
-| **Каталог + фильтры** | Material / Size / Color, grid | ![Catalog filters](./docs/screenshots/28-catalog-filters.png) |
-| **Customer reviews** | Сводка, tags, Helpful / Translate | ![Reviews](./docs/screenshots/29-product-reviews.png) |
-| **Related + footer** | Fashion: sale и подвал | ![Related footer](./docs/screenshots/32-product-related-footer.png) |
-| **Terms** | Terms and conditions | ![Terms](./docs/screenshots/33-terms.png) |
-| **License** | License agreement | ![License](./docs/screenshots/30-license.png) |
-| **Privacy** | Privacy policy | ![Privacy](./docs/screenshots/31-privacy.png) |
-| Sign in (старый кадр) | Ранний кадр входа | ![Login](./docs/screenshots/03-login.png) |
-| **Welcome back** | Вход покупателя (Email / Password) | ![Welcome back](./docs/screenshots/12-auth-login.png) |
-| Welcome back — ошибки | Пустые поля: сообщения валидации | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
-| **Create account** | Регистрация Email + Password + Confirm | ![Create account](./docs/screenshots/14-auth-register.png) |
-| Create account — ошибки | Неверный email / слабый пароль / mismatch | ![Register errors](./docs/screenshots/15-auth-register-errors.png) |
-| **Send code** (пусто) | 6 полей кода после 3 fails Login | ![Send code](./docs/screenshots/16-auth-verify-empty.png) |
-| Send code — ввод + таймер | Код введён, Resend 0:59 | ![Send code filled](./docs/screenshots/17-auth-verify-filled.png) |
-| Send code — ошибка | Incorrect code, try again | ![Send code error](./docs/screenshots/18-auth-verify-error.png) |
-| **Forgot password** | Ввод email для сброса пароля | ![Forgot password](./docs/screenshots/19-auth-forgot.png) |
-| Forgot password — ошибка | Wrong or invalid email address | ![Forgot error](./docs/screenshots/20-auth-forgot-error.png) |
-| **Reset password** | New password + Repeat password | ![Reset password](./docs/screenshots/21-auth-reset.png) |
-| Reset password — ошибки | Necessary to continue / Passwords must match | ![Reset error](./docs/screenshots/22-auth-reset-error.png) |
-| **Finishing touches** | First name + Last name после Register | ![Finishing](./docs/screenshots/23-auth-finishing.png) |
-| Finishing touches — ошибки | First/Last name is required | ![Finishing error](./docs/screenshots/24-auth-finishing-error.png) |
-| **Congratulations!** | Успех регистрации или сброса пароля | ![Success](./docs/screenshots/25-auth-success.png) |
+- Сайдбар: аватар, Customer/Admin, навигация Account
+- Wishlist через API (`WishlistContext`)
+- Смена email: пароль + 6-значный код
 
 ---
-
-## 6. Скрины Account (14)
-
-Срез: [журнал/2026-09-17-account.md](./docs/журнал/2026-09-17-account.md) · описания: [screenshots/README.md](./docs/screenshots/README.md)
-
-| # | Экран | Файл |
-|---|--------|------|
-| A01 | Wishlist | [01-wishlist.png](./docs/screenshots/account/01-wishlist.png) |
-| A02 | Wishlist — Remove confirm | [02-wishlist-remove-modal.png](./docs/screenshots/account/02-wishlist-remove-modal.png) |
-| A03 | My orders | [03-my-orders.png](./docs/screenshots/account/03-my-orders.png) |
-| A04 | Account settings — photo tip | [04-account-settings-photo-tip.png](./docs/screenshots/account/04-account-settings-photo-tip.png) |
-| A05 | Order details (Ordered) | [05-order-details-modal.png](./docs/screenshots/account/05-order-details-modal.png) |
-| A06 | Order details (Received) | [06-order-details-received.png](./docs/screenshots/account/06-order-details-received.png) |
-| A07 | Account settings | [07-account-settings.png](./docs/screenshots/account/07-account-settings.png) |
-| A08 | Change name | [08-change-name-modal.png](./docs/screenshots/account/08-change-name-modal.png) |
-| A09 | Change password | [09-change-password-modal.png](./docs/screenshots/account/09-change-password-modal.png) |
-| A10 | Change password — validation | [10-change-password-validation.png](./docs/screenshots/account/10-change-password-validation.png) |
-| A11 | Change email | [11-change-email-modal.png](./docs/screenshots/account/11-change-email-modal.png) |
-| A12 | Change email — validation | [12-change-email-validation.png](./docs/screenshots/account/12-change-email-validation.png) |
-| A13 | Log out? | [13-logout-confirm.png](./docs/screenshots/account/13-logout-confirm.png) |
-| A14 | Delete account? | [14-delete-account-confirm.png](./docs/screenshots/account/14-delete-account-confirm.png) |
-
-![Wishlist](./docs/screenshots/account/01-wishlist.png)
-
-![My orders](./docs/screenshots/account/03-my-orders.png)
-
-![Account settings](./docs/screenshots/account/07-account-settings.png)
-
-![Change password](./docs/screenshots/account/09-change-password-modal.png)
-
-![Change email](./docs/screenshots/account/11-change-email-modal.png)
-
-![Delete account](./docs/screenshots/account/14-delete-account-confirm.png)
