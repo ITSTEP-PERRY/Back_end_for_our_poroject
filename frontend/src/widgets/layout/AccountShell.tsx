@@ -1,4 +1,5 @@
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
+import { resolveMediaUrl } from "../../api/media";
 import { useAuth } from "../../app/AuthContext";
 
 export function AccountShell() {
@@ -8,6 +9,7 @@ export function AccountShell() {
 
   const roleLabel = user.roleId === "Admin" ? "Admin" : "Customer";
   const initial = (user.name?.trim()?.[0] || user.login?.[0] || "?").toUpperCase();
+  const avatarSrc = resolveMediaUrl(user.avatar) || user.avatar || null;
 
   return (
     <div className="account-page" data-figma="1852:3311">
@@ -22,8 +24,8 @@ export function AccountShell() {
       <div className="account-layout">
         <aside className="account-nav">
           <div className="account-nav__profile">
-            {user.avatar ? (
-              <img className="account-nav__avatar" src={user.avatar} alt="" />
+            {avatarSrc ? (
+              <img className="account-nav__avatar" src={avatarSrc} alt="" />
             ) : (
               <div className="account-nav__avatar account-nav__avatar--initial" aria-hidden>
                 {initial}

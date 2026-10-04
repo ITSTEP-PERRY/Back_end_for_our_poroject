@@ -41,7 +41,10 @@ export type ProductListResponse = {
 };
 
 export type ProductReview = {
+  userId?: string;
   authorName: string;
+  /** Public URL or /uploads/… — when missing, UI shows initials (or live profile photo for own review). */
+  authorAvatarUrl?: string | null;
   rating: number;
   title: string;
   body: string;

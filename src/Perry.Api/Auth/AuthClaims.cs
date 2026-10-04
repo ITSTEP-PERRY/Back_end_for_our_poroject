@@ -71,10 +71,16 @@ public static class AuthClaims
         return string.IsNullOrWhiteSpace(role) ? null : role.Trim();
     }
 
-    /// <summary>Reject empty values and bare user-id GUIDs (common when NameClaimType=sub).</summary>
+    /// <summary>
+    /// Reject empty values, bare user-id GUIDs (NameClaimType=sub), and emails —
+    /// reviews should show a person name, not a mailbox.
+    /// </summary>
     public static bool IsUsableDisplayName(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return false;
-        return !Guid.TryParse(value.Trim(), out _);
+        var trimmed = value.Trim();
+        if (Guid.TryParse(trimmed, out _)) return false;
+        if (trimmed.Contains('@')) return false;
+        return true;
     }
 }

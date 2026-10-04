@@ -131,6 +131,12 @@ public sealed class AuthInternalUserDto
     [JsonPropertyName("role")]
     public string? Role { get; set; }
 
+    [JsonPropertyName("avatarUrl")]
+    public string? AvatarUrl { get; set; }
+
+    [JsonPropertyName("avatar")]
+    public string? Avatar { get; set; }
+
     public string? DisplayName
     {
         get

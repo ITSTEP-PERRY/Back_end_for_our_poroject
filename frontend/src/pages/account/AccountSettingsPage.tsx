@@ -8,7 +8,8 @@ import {
 } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../app/AuthContext";
-import { authApi } from "../../api";
+import { authApi, reviewsApi } from "../../api";
+import { AvatarCropModal } from "../../widgets/AvatarCropModal";
 import { AuthField } from "../../widgets/auth/AuthModal";
 import { PasswordField } from "../../widgets/auth/PasswordField";
 
@@ -35,6 +36,7 @@ export function AccountSettingsPage() {
   const [busy, setBusy] = useState(false);
   const [showTips, setShowTips] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   if (!user) return null;
@@ -42,11 +44,12 @@ export function AccountSettingsPage() {
   const close = () => {
     setEdit(null);
     setPhotoError(null);
+    setCropFile(null);
   };
 
   const onPickPhoto = () => fileRef.current?.click();
 
-  const onFile = async (file: File | undefined) => {
+  const onFile = (file: File | undefined) => {
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
       setPhotoError("Maximum file size: 5 MB");
@@ -58,15 +61,27 @@ export function AccountSettingsPage() {
       setEdit("photo");
       return;
     }
+    setPhotoError(null);
+    setCropFile(file);
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const onCropConfirm = async (cropped: File) => {
     setBusy(true);
     setPhotoError(null);
     try {
-      const dataUrl = await readAsDataUrl(file);
-      await authApi.updateMe({ avatar: dataUrl });
+      const updated = await authApi.uploadAvatar(cropped);
+      // Persist a public /uploads copy on Product reviews so PDP shows the photo for everyone.
+      await reviewsApi.syncMyAvatar().catch(() => undefined);
       await refreshUser();
+      // Ensure in-memory user keeps the data-URL avatar if /me still returns Auth path.
+      if (updated.avatar) {
+        /* refreshUser already ran; cache is set inside uploadAvatar */
+      }
       close();
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Failed to upload photo");
+      setCropFile(null);
       setEdit("photo");
     } finally {
       setBusy(false);
@@ -231,7 +246,7 @@ export function AccountSettingsPage() {
         />
       )}
 
-      {edit === "photo" && photoError && (
+      {edit === "photo" && photoError && !cropFile && (
         <SettingsModal title="Change photo" onClose={close} wide={false}>
           <p className="settings-field-error">{photoError}</p>
           <div className="confirm-modal__actions">
@@ -240,6 +255,15 @@ export function AccountSettingsPage() {
             </button>
           </div>
         </SettingsModal>
+      )}
+
+      {cropFile && (
+        <AvatarCropModal
+          file={cropFile}
+          busy={busy}
+          onCancel={close}
+          onConfirm={onCropConfirm}
+        />
       )}
     </section>
   );
@@ -265,7 +289,6 @@ function ChangeNameModal({
 
   const onSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const name = `${first.trim()} ${last.trim()}`.trim();
     if (!first.trim()) {
       setError("First name is required.");
       return;
@@ -273,7 +296,10 @@ function ChangeNameModal({
     setBusy(true);
     setError(null);
     try {
-      await authApi.updateMe({ name });
+      await authApi.updateName({
+        firstName: first.trim(),
+        lastName: last.trim(),
+      });
       await onSaved();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update name");
@@ -706,13 +732,4 @@ function SettingsModal({
       </div>
     </div>
   );
-}
-
-function readAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = () => reject(new Error("Failed to read file"));
-    reader.readAsDataURL(file);
-  });
 }

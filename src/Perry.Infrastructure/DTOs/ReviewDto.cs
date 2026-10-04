@@ -17,6 +17,9 @@ public sealed record PostReviewDto
     /// <summary>Игнорируется с клиента — заполняется из JWT на сервере.</summary>
     public string? AuthorName { get; set; }
 
+    /// <summary>Игнорируется с клиента — заполняется из Auth / копии на диск.</summary>
+    public string? AuthorAvatarUrl { get; set; }
+
     [Required]
     public int Rating { get; set; }
 
@@ -32,6 +35,7 @@ public sealed record CreatedReviewDto
     public required Guid ProductId { get; init; }
     public required Guid UserId { get; init; }
     public string? AuthorName { get; init; }
+    public string? AuthorAvatarUrl { get; init; }
     public required int Rating { get; init; }
     public string? Title { get; init; }
     public string? Body { get; init; }

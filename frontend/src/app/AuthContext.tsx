@@ -42,8 +42,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const onExpired = () => {
+      setUser((prev) => {
+        if (prev?.avatar?.startsWith("blob:")) URL.revokeObjectURL(prev.avatar);
+        return null;
+      });
       setToken(null);
-      setUser(null);
     };
     window.addEventListener("perry:auth-expired", onExpired);
     return () => window.removeEventListener("perry:auth-expired", onExpired);
@@ -52,7 +55,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = useCallback(async (loginName: string, password: string) => {
     const res = await authApi.login(loginName, password);
     setToken(res.token);
-    setUser(res.user);
+    // Prefer /me so protected avatarUrl (/api/account/avatar) becomes a blob: URL.
+    try {
+      setUser(await authApi.me());
+    } catch {
+      setUser(res.user);
+    }
   }, []);
 
   const register = useCallback(
@@ -63,9 +71,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    setUser((prev) => {
+      if (prev?.avatar?.startsWith("blob:")) URL.revokeObjectURL(prev.avatar);
+      return null;
+    });
     setToken(null);
-    setUser(null);
     localStorage.removeItem("perry_local_admin");
+    authApi.clearAvatarCache();
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -75,7 +87,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
     const me = await authApi.me();
-    setUser(me);
+    setUser((prev) => {
+      if (prev?.avatar?.startsWith("blob:") && prev.avatar !== me.avatar) {
+        URL.revokeObjectURL(prev.avatar);
+      }
+      return me;
+    });
   }, []);
 
   const value = useMemo(

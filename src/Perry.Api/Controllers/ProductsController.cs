@@ -294,7 +294,9 @@ public class ProductsController : ControllerBase
                     .OrderByDescending(r => r.CreatedAtUtc)
                     .Select(r => new
                     {
+                        r.UserId,
                         r.AuthorName,
+                        r.AuthorAvatarUrl,
                         r.Rating,
                         r.Title,
                         r.Body,

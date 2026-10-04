@@ -117,6 +117,9 @@ public class ReviewRepository : IReviewRepository
                 CreatedAtUtc = DateTime.UtcNow,
                 Title = title,
                 AuthorName = author,
+                AuthorAvatarUrl = string.IsNullOrWhiteSpace(dto.AuthorAvatarUrl)
+                    ? null
+                    : dto.AuthorAvatarUrl.Trim(),
                 Rating = dto.Rating,
                 IsApproved = true,
             };
@@ -316,6 +319,7 @@ public class ReviewRepository : IReviewRepository
             Id = r.Id,
             ProductId = r.ProductId,
             AuthorName = r.AuthorName,
+            AuthorAvatarUrl = r.AuthorAvatarUrl,
             Body = r.Body,
             CreatedAtUtc = r.CreatedAtUtc,
             IsApproved = r.IsApproved,

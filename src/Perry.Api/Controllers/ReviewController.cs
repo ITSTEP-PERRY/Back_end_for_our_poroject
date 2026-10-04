@@ -12,6 +12,8 @@ using Perry.Infrastructure.Interfaces;
 using Perry.Infrastructure.Options;
 using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
+using Perry.Infrastructure.Storage;
+using System.Net.Http.Json;
 
 namespace Perry.Api.Controllers;
 
@@ -25,19 +27,28 @@ public class ReviewController : ControllerBase
     private readonly IReviewRepository _reviewRepository;
     private readonly IAuthorizationService _authorizationService;
     private readonly IAuthInternalClient _authInternal;
+    private readonly IStorageService _storage;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IConfiguration _configuration;
 
     public ReviewController(
         ILogger<ReviewController> logger,
         AppDbContext db,
         IReviewRepository reviewRepository,
         IAuthorizationService authorizationService,
-        IAuthInternalClient authInternal)
+        IAuthInternalClient authInternal,
+        IStorageService storage,
+        IHttpClientFactory httpClientFactory,
+        IConfiguration configuration)
     {
         _db = db;
         _logger = logger;
         _reviewRepository = reviewRepository;
         _authorizationService = authorizationService;
         _authInternal = authInternal;
+        _storage = storage;
+        _httpClientFactory = httpClientFactory;
+        _configuration = configuration;
     }
 
     private IList<ProductReview> ConvertImagesToLinks(IList<ProductReview> reviews)
@@ -69,6 +80,7 @@ public class ReviewController : ControllerBase
             ProductId = withLinks.ProductId,
             UserId = withLinks.UserId,
             AuthorName = withLinks.AuthorName,
+            AuthorAvatarUrl = withLinks.AuthorAvatarUrl,
             Rating = withLinks.Rating,
             Title = withLinks.Title,
             Body = withLinks.Body,
@@ -170,6 +182,31 @@ public class ReviewController : ControllerBase
         return NotFound();
     }
 
+    /// <summary>
+    /// Sync Auth profile onto all of the user's reviews: display name + avatar (/uploads).
+    /// Fixes older rows that stored email or GUID as AuthorName.
+    /// </summary>
+    [HttpPut("me/avatar")]
+    [Authorize]
+    public async Task<IActionResult> SyncMyAvatar(CancellationToken ct)
+    {
+        var userId = AuthClaims.GetUserId(User);
+        if (userId is null) return Unauthorized();
+
+        var name = await ResolveAuthorNameAsync(userId.Value, ct);
+        var url = await ResolveAuthorAvatarUrlAsync(userId.Value, ct);
+        var reviews = await _db.ProductReviews.Where(r => r.UserId == userId.Value).ToListAsync(ct);
+        foreach (var r in reviews)
+        {
+            if (AuthClaims.IsUsableDisplayName(name))
+                r.AuthorName = name;
+            if (!string.IsNullOrWhiteSpace(url))
+                r.AuthorAvatarUrl = url;
+        }
+        await _db.SaveChangesAsync(ct);
+        return Ok(new { updated = reviews.Count, authorName = name, authorAvatarUrl = url });
+    }
+
     /// <summary>#99/#100/#104 — создать отзыв; UserId только из JWT.</summary>
     [HttpPost]
     [Authorize]
@@ -182,6 +219,7 @@ public class ReviewController : ControllerBase
 
         dto.UserId = userId.Value;
         dto.AuthorName = await ResolveAuthorNameAsync(userId.Value, ct);
+        dto.AuthorAvatarUrl = await ResolveAuthorAvatarUrlAsync(userId.Value, ct);
 
         var result = await _reviewRepository.PostProductReview(dto, ct);
         if (result.Succeeded && result.Value != null)
@@ -339,4 +377,71 @@ public class ReviewController : ControllerBase
                ?? AuthClaims.GetEmail(User)
                ?? "Customer";
     }
+
+    /// <summary>
+    /// Public avatar for PDP: prefer absolute URL from Auth Internal; otherwise copy
+    /// bytes from Auth <c>/api/account/avatar</c> (caller Bearer) into Product /uploads.
+    /// </summary>
+    private async Task<string?> ResolveAuthorAvatarUrlAsync(Guid userId, CancellationToken ct)
+    {
+        try
+        {
+            if (_authInternal.IsConfigured)
+            {
+                var profile = await _authInternal.GetUserAsync(userId, ct);
+                var fromProfile = profile?.AvatarUrl ?? profile?.Avatar;
+                if (IsPublicAvatarUrl(fromProfile))
+                    return fromProfile!.Trim();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Auth internal avatar lookup failed for {UserId}", userId);
+        }
+
+        var authHeader = Request.Headers.Authorization.ToString();
+        if (string.IsNullOrWhiteSpace(authHeader))
+            return null;
+
+        var authBase = (_configuration["AuthService:BaseUrl"] ?? "").TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(authBase))
+            return null;
+
+        try
+        {
+            var client = _httpClientFactory.CreateClient();
+            using var req = new HttpRequestMessage(HttpMethod.Get, $"{authBase}/api/account/avatar");
+            req.Headers.TryAddWithoutValidation("Authorization", authHeader);
+            using var res = await client.SendAsync(req, ct);
+            if (!res.IsSuccessStatusCode)
+                return null;
+
+            var ctHeader = res.Content.Headers.ContentType?.MediaType ?? "";
+            if (ctHeader.Contains("json", StringComparison.OrdinalIgnoreCase))
+            {
+                var json = await res.Content.ReadFromJsonAsync<Dictionary<string, object?>>(cancellationToken: ct);
+                var href = json?.GetValueOrDefault("avatarUrl")?.ToString()
+                           ?? json?.GetValueOrDefault("url")?.ToString()
+                           ?? json?.GetValueOrDefault("avatar")?.ToString();
+                return IsPublicAvatarUrl(href) ? href!.Trim() : null;
+            }
+
+            var bytes = await res.Content.ReadAsByteArrayAsync(ct);
+            if (bytes.Length == 0)
+                return null;
+            var mime = string.IsNullOrWhiteSpace(ctHeader) ? "image/jpeg" : ctHeader;
+            return _storage.SaveBytes(bytes, mime);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogDebug(ex, "Could not copy Auth avatar for review author {UserId}", userId);
+            return null;
+        }
+    }
+
+    private static bool IsPublicAvatarUrl(string? url) =>
+        !string.IsNullOrWhiteSpace(url)
+        && (url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || url.StartsWith("/uploads/", StringComparison.OrdinalIgnoreCase));
 }

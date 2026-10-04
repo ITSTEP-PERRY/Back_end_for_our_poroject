@@ -106,4 +106,22 @@ public class DiskStorageService : IStorageService
         File.WriteAllBytes(savePath, bytes);
         return "/uploads/" + saveName;
     }
+
+    public string SaveBytes(byte[] bytes, string contentType)
+    {
+        ArgumentNullException.ThrowIfNull(bytes);
+        if (bytes.Length == 0)
+            throw new ArgumentException("File is empty", nameof(bytes));
+        if (bytes.Length > MaxFileSize)
+            throw new ArgumentException("File too large (max 5MB)", nameof(bytes));
+
+        var mime = (contentType ?? "").Split(';')[0].Trim();
+        if (!MimeToExt.TryGetValue(mime, out var ext) || !AllowedExtensions.Contains(ext))
+            throw new ArgumentException($"MIME '{mime}' is not allowed", nameof(contentType));
+
+        var saveName = Guid.NewGuid() + ext;
+        var savePath = Path.Combine(_storagePath, saveName);
+        File.WriteAllBytes(savePath, bytes);
+        return "/uploads/" + saveName;
+    }
 }

@@ -134,10 +134,12 @@ export async function apiFetch<T = unknown>(
   const headers = new Headers(rest.headers);
   const method = (rest.method || "GET").toUpperCase();
   let body = rest.body;
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
   if (!body && (method === "PUT" || method === "POST" || method === "PATCH")) {
     body = "{}";
   }
-  if (!headers.has("Content-Type") && body) {
+  // FormData must keep the browser-generated multipart boundary — do not force JSON.
+  if (!isFormData && !headers.has("Content-Type") && body) {
     headers.set("Content-Type", "application/json");
   }
   const token = getToken();

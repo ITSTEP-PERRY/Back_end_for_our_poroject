@@ -11,5 +11,8 @@ public interface IStorageService
     /// <summary>Сохраняет data-URL (base64); возвращает <c>/uploads/...</c>.</summary>
     string SaveDataUrl(string dataUrl);
 
+    /// <summary>Сохраняет сырые байты изображения; возвращает <c>/uploads/...</c>.</summary>
+    string SaveBytes(byte[] bytes, string contentType);
+
     byte[] Load(string filename);
 }

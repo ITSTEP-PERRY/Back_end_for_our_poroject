@@ -1,4 +1,4 @@
-import { apiFetch, ApiError } from "./client";
+import { apiFetch, ApiError, authApiUrl, getToken } from "./client";
 import { resolveMediaUrl } from "./media";
 import type {
   AuthResponse,
@@ -81,6 +81,7 @@ export const reviewsApi = {
       productId: string;
       userId: string;
       authorName: string;
+      authorAvatarUrl?: string | null;
       rating: number;
       title: string;
       body: string;
@@ -99,6 +100,12 @@ export const reviewsApi = {
         images: body.imageUrls ?? [],
       }),
     }),
+  /** Copy Auth display name + photo onto all of the current user's Product reviews. */
+  syncMyAvatar: () =>
+    apiFetch<{ updated: number; authorName?: string | null; authorAvatarUrl?: string | null }>(
+      "/reviews/me/avatar",
+      { method: "PUT" },
+    ),
   /** #102 — отзывы текущего пользователя */
   mine: async () => {
     const p = new URLSearchParams();
@@ -344,6 +351,73 @@ export const authApi = {
       return normalizeAuthUser(raw);
     }
     const raw = await apiFetch<Record<string, unknown>>("/auth/me", { base: "auth" });
+    const user = normalizeAuthUser(raw);
+    // Prefer session cache / public URL; Auth often returns "/api/account/avatar" which <img> cannot load.
+    const cached = readAvatarCache();
+    if (cached) return { ...user, avatar: cached };
+    if (isPublicAvatarUrl(user.avatar)) return user;
+    const hydrated = await authApi.loadAvatarBlobUrl().catch(() => null);
+    return { ...user, avatar: hydrated || undefined };
+  },
+  /**
+   * Authorized avatar for <img src>.
+   * Returns data:/https:/blob: URL, never a bare Auth API path.
+   */
+  loadAvatarBlobUrl: async (): Promise<string | null> => {
+    const cached = readAvatarCache();
+    if (cached) return cached;
+    const token = getToken();
+    if (!token) return null;
+    const url = authApiUrl("/account/avatar");
+    let res: Response;
+    try {
+      res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    } catch {
+      return null;
+    }
+    if (!res.ok) return null;
+    const ct = (res.headers.get("content-type") || "").toLowerCase();
+    if (ct.includes("application/json")) {
+      const data = (await res.json()) as Record<string, unknown>;
+      const href = String(data.avatarUrl ?? data.url ?? data.avatar ?? "");
+      if (isPublicAvatarUrl(href)) {
+        writeAvatarCache(href);
+        return href;
+      }
+      return null;
+    }
+    // Some Auth builds omit content-type; still try as image bytes.
+    const blob = await res.blob();
+    if (!blob.size) return null;
+    if (ct && !ct.startsWith("image/") && ct !== "application/octet-stream" && !ct.includes("octet")) {
+      return null;
+    }
+    const dataUrl = await blobToDataUrl(blob);
+    writeAvatarCache(dataUrl);
+    return dataUrl;
+  },
+  /** Auth Account API: multipart field name is `File` (Swagger `/api/account/avatar`). */
+  uploadAvatar: async (file: File) => {
+    const form = new FormData();
+    form.append("File", file, file.name);
+    await apiFetch("/account/avatar", {
+      method: "PUT",
+      body: form,
+      base: "auth",
+    });
+    // Immediate displayable avatar for account + reviews (don't wait on Auth CDN path).
+    const dataUrl = await blobToDataUrl(file);
+    writeAvatarCache(dataUrl);
+    const me = await authApi.me();
+    return { ...me, avatar: dataUrl };
+  },
+  clearAvatarCache: () => clearAvatarCache(),
+  updateName: async (body: { firstName: string; lastName: string }) => {
+    const raw = await apiFetch<Record<string, unknown>>("/account/name", {
+      method: "PATCH",
+      body: JSON.stringify(body),
+      base: "auth",
+    });
     return normalizeAuthUser(raw);
   },
   updateMe: (body: { name?: string; email?: string; avatar?: string }) =>
@@ -352,7 +426,7 @@ export const authApi = {
       body: JSON.stringify(body),
       base: "auth",
     }).catch(async () => {
-      // Auth may not support PUT /me yet — refresh from GET
+      // Legacy fallback — real Auth uses /account/name and /account/avatar.
       const me = await authApi.me();
       return { ...me, ...body } as AuthUser;
     }),
@@ -384,6 +458,47 @@ export const authApi = {
     }),
 };
 
+const AVATAR_CACHE_KEY = "perry_avatar_data";
+
+/** Public URLs safe for <img src>. Relative Auth paths need Bearer fetch. */
+function isPublicAvatarUrl(url?: string | null): boolean {
+  return !!url && /^(https?:|data:|blob:)/i.test(url);
+}
+
+function readAvatarCache(): string | null {
+  try {
+    const v = sessionStorage.getItem(AVATAR_CACHE_KEY);
+    return v && /^(data:image|https?:|blob:)/i.test(v) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeAvatarCache(url: string) {
+  try {
+    sessionStorage.setItem(AVATAR_CACHE_KEY, url);
+  } catch {
+    /* quota / private mode */
+  }
+}
+
+function clearAvatarCache() {
+  try {
+    sessionStorage.removeItem(AVATAR_CACHE_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+function blobToDataUrl(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Failed to read image"));
+    reader.readAsDataURL(blob);
+  });
+}
+
 function normalizeAuthUser(raw: Record<string, unknown>): AuthUser {
   const role =
     (raw.role as string) ||
@@ -393,15 +508,17 @@ function normalizeAuthUser(raw: Record<string, unknown>): AuthUser {
   const first = String(raw.firstName ?? "").trim();
   const last = String(raw.lastName ?? "").trim();
   const fullFromParts = [first, last].filter(Boolean).join(" ");
+  const avatarRaw = ((raw.avatarUrl as string | null | undefined) ??
+    (raw.avatar as string | null | undefined) ??
+    undefined) as string | undefined;
   return {
     id: String(raw.id ?? raw.userId ?? ""),
     name: String(raw.name ?? raw.fullName ?? (fullFromParts || raw.email) ?? "User"),
     email: String(raw.email ?? ""),
     login: String(raw.login ?? raw.email ?? ""),
     roleId: role === "Admin" || role === "admin" ? "Admin" : "User",
-    avatar: ((raw.avatarUrl as string | null | undefined) ??
-      (raw.avatar as string | null | undefined) ??
-      undefined) as string | undefined,
+    // Keep relative paths only as a signal for me() to hydrate; do not use as img src.
+    avatar: avatarRaw || undefined,
   };
 }
 

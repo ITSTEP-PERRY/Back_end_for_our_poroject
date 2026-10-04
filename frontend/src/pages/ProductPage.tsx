@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { productsApi, reviewsApi } from "../api";
-import { authorInitial, resolveReviewAuthor } from "../utils/reviewAuthor";
+import { isOwnReview, resolveReviewAuthor } from "../utils/reviewAuthor";
+import { ReviewAvatar } from "../widgets/ReviewAvatar";
 import {
   translateReviewToUkrainian,
   type ReviewTranslation,
@@ -102,6 +103,49 @@ export function ProductPage() {
         else setError(e.message);
       });
   }, [id]);
+
+  // If the viewer has a review without a stored avatar, push Auth photo → Product /uploads.
+  useEffect(() => {
+    if (!user || !product?.reviews?.length) return;
+    const needsSync = product.reviews.some((r) => {
+      if (!isOwnReview(r, user)) return false;
+      const author = (r.authorName || "").trim();
+      const nameBad =
+        !author ||
+        /^[0-9a-f-]{36}$/i.test(author) ||
+        author.includes("@") ||
+        (!!user.name && author.toLowerCase() !== user.name.trim().toLowerCase());
+      const avatarBad = !r.authorAvatarUrl?.startsWith("/uploads");
+      return nameBad || avatarBad;
+    });
+    if (!needsSync) return;
+    let cancelled = false;
+    void reviewsApi
+      .syncMyAvatar()
+      .then((res) => {
+        if (cancelled) return;
+        if (!res.authorAvatarUrl && !res.authorName) return;
+        setProduct((prev) => {
+          if (!prev?.reviews) return prev;
+          return {
+            ...prev,
+            reviews: prev.reviews.map((r) =>
+              isOwnReview(r, user)
+                ? {
+                    ...r,
+                    authorName: res.authorName || r.authorName,
+                    authorAvatarUrl: res.authorAvatarUrl || r.authorAvatarUrl,
+                  }
+                : r,
+            ),
+          };
+        });
+      })
+      .catch(() => undefined);
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, product?.id]);
 
   if (error) {
     const missing = /not found|404/i.test(error);
@@ -257,7 +301,11 @@ export function ProductPage() {
             : product!.reviewCount,
         reviews: [
           {
-            authorName: resolveReviewAuthor(created.authorName, user),
+            userId: created.userId,
+            authorName: resolveReviewAuthor(created.authorName, user, created.userId),
+            authorAvatarUrl:
+              created.authorAvatarUrl ||
+              (user?.avatar && !user.avatar.startsWith("/api/") ? user.avatar : null),
             rating: created.rating,
             title: created.title,
             body: created.body,
@@ -608,10 +656,8 @@ export function ProductPage() {
                       <article key={key} className="review-card">
                         <div className="review-card__head">
                           <div className="review-card__author">
-                            <span className="review-avatar" aria-hidden="true">
-                              {authorInitial(r.authorName, user)}
-                            </span>
-                            <strong>{resolveReviewAuthor(r.authorName, user)}</strong>
+                            <ReviewAvatar review={r} user={user} />
+                            <strong>{resolveReviewAuthor(r.authorName, user, r.userId)}</strong>
                           </div>
                           <time>{new Date(r.createdAtUtc).toLocaleDateString()}</time>
                         </div>
@@ -648,7 +694,7 @@ export function ProductPage() {
                                   setLightbox({
                                     images: r.images,
                                     index: photoIdx,
-                                    alt: `Review by ${resolveReviewAuthor(r.authorName, user)}`,
+                                    alt: `Review by ${resolveReviewAuthor(r.authorName, user, r.userId)}`,
                                   })
                                 }
                               >

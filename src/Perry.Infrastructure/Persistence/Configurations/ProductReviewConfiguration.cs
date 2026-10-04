@@ -13,6 +13,7 @@ public class ProductReviewConfiguration : IEntityTypeConfiguration<ProductReview
 
         builder.HasKey(x => x.Id);
         builder.Property(x => x.AuthorName).HasMaxLength(200).IsRequired();
+        builder.Property(x => x.AuthorAvatarUrl).HasMaxLength(1000);
         builder.Property(x => x.Title).HasMaxLength(300).IsRequired();
         builder.Property(x => x.Body).HasMaxLength(4000).IsRequired();
 

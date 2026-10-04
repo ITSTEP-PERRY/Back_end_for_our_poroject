@@ -21,6 +21,9 @@ public record ProductReview
     /// <summary>Имя автора, отображаемое в отзыве.</summary>
     public string? AuthorName { get; set; } = string.Empty;
 
+    /// <summary>Публичный URL аватара (/uploads/… или https) — копия из Auth на момент отзыва.</summary>
+    public string? AuthorAvatarUrl { get; set; }
+
     /// <summary>Оценка от 1 до 5 звёзд.</summary>
     public int Rating { get; set; }
 
