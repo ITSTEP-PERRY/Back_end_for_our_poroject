@@ -71,6 +71,8 @@ export function ProductPage() {
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [reviewsVisible, setReviewsVisible] = useState(3);
   const [helpful, setHelpful] = useState<Record<string, number>>({});
+  const [myHelpful, setMyHelpful] = useState<Record<string, boolean>>({});
+  const [helpfulBusy, setHelpfulBusy] = useState<Record<string, boolean>>({});
   const [reviewTranslations, setReviewTranslations] = useState<
     Record<string, ReviewTranslation>
   >({});
@@ -646,7 +648,8 @@ export function ProductPage() {
                 <div className="review-list">
                   {visibleReviews.map((r, i) => {
                     const key = reviewKey(r, i);
-                    const helpfulCount = helpful[key] ?? (i === 1 ? 25 : 0);
+                    const helpfulCount = helpful[key] ?? r.totalHelpful ?? 0;
+                    const gradeBusy = !!helpfulBusy[key];
                     const showingUk = !!reviewShowUk[key];
                     const uk = reviewTranslations[key];
                     const busy = !!translateBusy[key];
@@ -707,13 +710,57 @@ export function ProductPage() {
                           <div className="review-card__btns">
                             <button
                               type="button"
-                              className="btn btn-helpful"
-                              onClick={() =>
-                                setHelpful((prev) => ({
-                                  ...prev,
-                                  [key]: (prev[key] ?? (i === 1 ? 25 : 0)) + 1,
-                                }))
-                              }
+                              className={`btn btn-helpful${myHelpful[key] ? " is-active" : ""}`}
+                              disabled={gradeBusy}
+                              aria-busy={gradeBusy}
+                              onClick={async () => {
+                                if (!user) {
+                                  navigate("/login", { state: { from: `/products/${product.id}` } });
+                                  return;
+                                }
+                                if (!r.id) {
+                                  setMsg("Review id missing — reload the page.");
+                                  return;
+                                }
+                                setHelpfulBusy((prev) => ({ ...prev, [key]: true }));
+                                setMsg(null);
+                                const beforeVoted = !!myHelpful[key];
+                                const beforeCount = helpful[key] ?? r.totalHelpful ?? 0;
+                                try {
+                                  await reviewsApi.grade(r.id);
+                                  let voted = !beforeVoted;
+                                  try {
+                                    const mine = await reviewsApi.myGrade(r.id);
+                                    voted = !!(mine.isHelpful ?? mine.IsHelpful);
+                                  } catch {
+                                    /* 404 = no grade row; treat as not helpful */
+                                    voted = false;
+                                  }
+                                  const nextCount = Math.max(
+                                    0,
+                                    beforeCount + (voted === beforeVoted ? 0 : voted ? 1 : -1),
+                                  );
+                                  setMyHelpful((prev) => ({ ...prev, [key]: voted }));
+                                  setHelpful((prev) => ({ ...prev, [key]: nextCount }));
+                                  setProduct((prev) => {
+                                    if (!prev?.reviews) return prev;
+                                    return {
+                                      ...prev,
+                                      reviews: prev.reviews.map((rev) =>
+                                        rev.id === r.id ? { ...rev, totalHelpful: nextCount } : rev,
+                                      ),
+                                    };
+                                  });
+                                } catch (e) {
+                                  if (e instanceof ApiError && e.status === 401) {
+                                    navigate("/login", { state: { from: `/products/${product.id}` } });
+                                    return;
+                                  }
+                                  setMsg(e instanceof Error ? e.message : "Could not mark helpful");
+                                } finally {
+                                  setHelpfulBusy((prev) => ({ ...prev, [key]: false }));
+                                }
+                              }}
                             >
                               Helpful
                             </button>

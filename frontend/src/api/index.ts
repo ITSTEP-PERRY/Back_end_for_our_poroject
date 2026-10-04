@@ -199,6 +199,12 @@ export const reviewsApi = {
       body: JSON.stringify({ reviewIds: [id], approved: false }),
     }),
   remove: (id: string) => apiFetch<void>(`/reviews/${id}`, { method: "DELETE" }),
+  /** Toggle Helpful vote for a review (JWT). */
+  grade: (reviewId: string) =>
+    apiFetch<void>(`/reviews/grade/${reviewId}`, { method: "POST", body: "{}" }),
+  /** Current user's grade for a review (JWT). */
+  myGrade: (reviewId: string) =>
+    apiFetch<{ isHelpful?: boolean; IsHelpful?: boolean }>(`/reviews/my/${reviewId}`),
 };
 
 export const productsApi = {

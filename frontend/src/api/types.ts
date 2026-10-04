@@ -41,6 +41,7 @@ export type ProductListResponse = {
 };
 
 export type ProductReview = {
+  id?: string;
   userId?: string;
   authorName: string;
   /** Public URL or /uploads/… — when missing, UI shows initials (or live profile photo for own review). */
@@ -49,6 +50,8 @@ export type ProductReview = {
   title: string;
   body: string;
   createdAtUtc: string;
+  /** Helpful votes from Product API (`TotalHelpful`). */
+  totalHelpful?: number;
   tags: string[];
   images: string[];
 };

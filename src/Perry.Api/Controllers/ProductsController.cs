@@ -294,6 +294,7 @@ public class ProductsController : ControllerBase
                     .OrderByDescending(r => r.CreatedAtUtc)
                     .Select(r => new
                     {
+                        r.Id,
                         r.UserId,
                         r.AuthorName,
                         r.AuthorAvatarUrl,
@@ -301,6 +302,7 @@ public class ProductsController : ControllerBase
                         r.Title,
                         r.Body,
                         r.CreatedAtUtc,
+                        TotalHelpful = r.Grades.Count(g => g.IsHelpful),
                         Tags = r.Tags.Select(t => t.Name).ToList(),
                         Images = r.Images.Select(i => i.Url).ToList()
                     })
@@ -591,6 +593,7 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = entity.Id }, new { entity.Id, entity.Slug, sellerId = entity.SellerId });
     }
 
+    [Authorize(Roles = "Admin,Seller")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateProductRequest body, CancellationToken ct)
     {
@@ -722,6 +725,7 @@ public class ProductsController : ControllerBase
         return result;
     }
 
+    [Authorize(Roles = "Admin,Seller")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> SoftDelete(Guid id, [FromServices] IProductService products, CancellationToken ct)
     {
