@@ -1,4 +1,4 @@
-# Perry React storefront (`perry-front`)
+﻿# Perry React storefront (`perry-front`)
 
 ## Быстрый запуск — две иконки
 
@@ -130,7 +130,7 @@ Hero «Sale -50%», категории, Trending deals.
 
 #### 03 · Home — Women's fashion: sale
 
-![Home sale](./docs/screenshots/2026-10-04/home/03-home-sale-section.png)
+![Home sale](./docs/screenshots/2026-10-04/home/03-home-womens-fashion-sale.png)
 
 Карусель Sale + футер.
 

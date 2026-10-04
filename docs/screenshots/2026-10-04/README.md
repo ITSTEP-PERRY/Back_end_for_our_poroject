@@ -1,4 +1,4 @@
-# Скриншоты Perry — 04.10.2026
+﻿# Скриншоты Perry — 04.10.2026
 
 Актуальная витрина (localhost:3000), **43 кадра**.
 
@@ -27,9 +27,9 @@ Hero «Sale -50%», карточки категорий, Trending deals (в т.�
 
 ### 03 · Home — Women's fashion: sale
 
-**Файл:** [`home/03-home-sale-section.png`](./home/03-home-sale-section.png)
+**Файл:** [`home/03-home-womens-fashion-sale.png`](./home/03-home-womens-fashion-sale.png)
 
-![Home sale](./home/03-home-sale-section.png)
+![Home sale](./home/03-home-womens-fashion-sale.png)
 
 Карусель Sale внизу главной + футер.
 

@@ -1,4 +1,4 @@
-# Скриншоты Perry
+﻿# Скриншоты Perry
 
 **Актуальный набор (04.10.2026, 43 шт.):** [2026-10-04/README.md](./2026-10-04/README.md)
 
@@ -8,7 +8,7 @@
 |---|--------|------|-------------|
 | 01 | Главная | [`2026-10-04/home/01-home-hero.png`](./2026-10-04/home/01-home-hero.png) | Hero Sale -50%, категории, Trending deals |
 | 02 | Главная | [`2026-10-04/home/02-home-welcome-cta.png`](./2026-10-04/home/02-home-welcome-cta.png) | Welcome back + Go to catalog / My orders |
-| 03 | Главная | [`2026-10-04/home/03-home-sale-section.png`](./2026-10-04/home/03-home-sale-section.png) | Women's fashion: sale + футер |
+| 03 | Главная | [`2026-10-04/home/03-home-womens-fashion-sale.png`](./2026-10-04/home/03-home-womens-fashion-sale.png) | Women's fashion: sale + футер |
 | 04 | Главная | [`2026-10-04/home/04-home-menu-categories.png`](./2026-10-04/home/04-home-menu-categories.png) | Боковое меню: аватар + дерево категорий |
 | 05 | Главная | [`2026-10-04/home/05-home-menu-account.png`](./2026-10-04/home/05-home-menu-account.png) | Меню: Cart / Orders / Wishlist / Settings |
 | 06 | Каталог | [`2026-10-04/catalog/06-catalog-fashion.png`](./2026-10-04/catalog/06-catalog-fashion.png) | Fashion: сетка, фильтры Brand / Fabric |
