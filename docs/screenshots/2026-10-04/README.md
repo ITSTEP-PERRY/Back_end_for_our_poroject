@@ -1,8 +1,8 @@
 # Скриншоты Perry — 04.10.2026
 
-Актуальная витрина (localhost:3000): главная → каталог → товар → корзина/checkout → кабинет → legal → админка.
+Актуальная витрина (localhost:3000), **43 кадра**.
 
-Порядок ниже — по иерархии пользовательского пути.
+Порядок: главная → каталог → товар (PDP + особенности) → корзина/checkout → кабинет → auth → legal → админка.
 
 ---
 
@@ -110,7 +110,7 @@ Specs (Color / Size / Fabric) и блок Customer reviews на PDP.
 
 ![Cart](./cart-checkout/11-cart.png)
 
-Список позиций, Qty, Order summary, Proceed to checkout.
+Позиции, Qty, Order summary, Proceed to checkout.
 
 ### 12 · Checkout — Country
 
@@ -119,157 +119,268 @@ Specs (Color / Size / Fabric) и блок Customer reviews на PDP.
 
 ![Checkout country](./cart-checkout/12-checkout-country.png)
 
-Получатель, Country (Ukraine), Card, Place order.
+Country = Ukraine, оплата Card, Place order.
 
-### 13 · Checkout — State (области Украины)
+### 13 · Checkout — State
 
 **Файл:** [`cart-checkout/13-checkout-state.png`](./cart-checkout/13-checkout-state.png)
 
 ![Checkout state](./cart-checkout/13-checkout-state.png)
 
-Выпадающий список областей: Kyiv, Lviv, Odesa, …
+Выбор области Украины (State).
 
-### 14 · Checkout — City (Odesa Oblast)
+### 14 · Checkout — City
 
-**Файл:** [`cart-checkout/14-checkout-city-odesa.png`](./cart-checkout/14-checkout-city-odesa.png)
+**Файл:** [`cart-checkout/14-checkout-city.png`](./cart-checkout/14-checkout-city.png)
 
-![Checkout city](./cart-checkout/14-checkout-city-odesa.png)
+![Checkout city](./cart-checkout/14-checkout-city.png)
 
-Города области Odesa (Bilhorod-Dnistrovskyi и др.).
+Города при State = Odesa Oblast.
+
+### 15 · Checkout — Card details
+
+**Файл:** [`cart-checkout/15-checkout-card-details.png`](./cart-checkout/15-checkout-card-details.png)
+
+![Checkout card details](./cart-checkout/15-checkout-card-details.png)
+
+Поля номера карты, срока и CVV.
 
 ---
 
 ## 5. Личный кабинет
 
-### 15 · Wishlist
+### 16 · Wishlist
 
-**Файл:** [`account/15-account-wishlist.png`](./account/15-account-wishlist.png)  
+**Файл:** [`account/16-account-wishlist.png`](./account/16-account-wishlist.png)  
 **URL:** `/account/wishlist`
 
-![Wishlist](./account/15-account-wishlist.png)
+![Wishlist](./account/16-account-wishlist.png)
 
-Избранное + Remove, сайдбар с аватаром.
+Избранное + аватар в сайдбаре.
 
-### 16 · My reviews
+### 17 · My reviews
 
-**Файл:** [`account/16-account-my-reviews.png`](./account/16-account-my-reviews.png)  
+**Файл:** [`account/17-account-my-reviews.png`](./account/17-account-my-reviews.png)  
 **URL:** `/account/reviews`
 
-![My reviews](./account/16-account-my-reviews.png)
+![My reviews](./account/17-account-my-reviews.png)
 
-Отзывы пользователя (в т.ч. скрытые админом).
+Отзывы пользователя с тегами.
 
-### 17 · Account settings — Edit photo
+### 18 · Edit photo
 
-**Файл:** [`account/17-account-edit-photo.png`](./account/17-account-edit-photo.png)  
-**URL:** `/account/settings`
+**Файл:** [`account/18-account-edit-photo.png`](./account/18-account-edit-photo.png)
 
-![Edit photo](./account/17-account-edit-photo.png)
+![Edit photo](./account/18-account-edit-photo.png)
 
-Модалка обрезки аватара (круг + Save photo).
+Модалка обрезки аватара.
 
-### 18 · Account settings — Change name
+### 19 · Change name
 
-**Файл:** [`account/18-account-change-name.png`](./account/18-account-change-name.png)
+**Файл:** [`account/19-account-change-name.png`](./account/19-account-change-name.png)
 
-![Change name](./account/18-account-change-name.png)
+![Change name](./account/19-account-change-name.png)
 
-Модалка смены имени / фамилии.
+Смена имени / фамилии.
+
+### 20 · Change email
+
+**Файл:** [`account/20-account-change-email.png`](./account/20-account-change-email.png)
+
+![Change email](./account/20-account-change-email.png)
+
+Новый email, пароль, код подтверждения.
+
+### 21 · Change password
+
+**Файл:** [`account/21-account-change-password.png`](./account/21-account-change-password.png)
+
+![Change password](./account/21-account-change-password.png)
+
+Текущий пароль + новый пароль / повтор.
 
 ---
 
-## 6. Legal
+## 6. Auth
 
-### 19 · Terms and conditions
+### 22 · Login
 
-**Файл:** [`legal/19-terms.png`](./legal/19-terms.png)  
+**Файл:** [`auth/22-auth-login.png`](./auth/22-auth-login.png)
+
+![Login](./auth/22-auth-login.png)
+
+Welcome back — вход в аккаунт.
+
+### 23 · Login — ошибки
+
+**Файл:** [`auth/23-auth-login-errors.png`](./auth/23-auth-login-errors.png)
+
+![Login errors](./auth/23-auth-login-errors.png)
+
+Ошибки валидации на форме входа.
+
+### 24 · Register
+
+**Файл:** [`auth/24-auth-register.png`](./auth/24-auth-register.png)
+
+![Register](./auth/24-auth-register.png)
+
+Регистрация нового пользователя.
+
+### 25 · Register — ошибки
+
+**Файл:** [`auth/25-auth-register-errors.png`](./auth/25-auth-register-errors.png)
+
+![Register errors](./auth/25-auth-register-errors.png)
+
+Ошибки валидации на регистрации.
+
+### 26 · Verify email — пусто
+
+**Файл:** [`auth/26-auth-verify-empty.png`](./auth/26-auth-verify-empty.png)
+
+![Verify empty](./auth/26-auth-verify-empty.png)
+
+Экран подтверждения email, поля кода пустые.
+
+### 27 · Verify email — код введён
+
+**Файл:** [`auth/27-auth-verify-filled.png`](./auth/27-auth-verify-filled.png)
+
+![Verify filled](./auth/27-auth-verify-filled.png)
+
+Код подтверждения заполнен.
+
+### 28 · Verify email — ошибка
+
+**Файл:** [`auth/28-auth-verify-error.png`](./auth/28-auth-verify-error.png)
+
+![Verify error](./auth/28-auth-verify-error.png)
+
+Ошибка неверного кода.
+
+### 29 · Forgot password
+
+**Файл:** [`auth/29-auth-forgot.png`](./auth/29-auth-forgot.png)
+
+![Forgot](./auth/29-auth-forgot.png)
+
+Восстановление пароля.
+
+### 30 · Forgot password — ошибка
+
+**Файл:** [`auth/30-auth-forgot-error.png`](./auth/30-auth-forgot-error.png)
+
+![Forgot error](./auth/30-auth-forgot-error.png)
+
+Ошибка на форме восстановления.
+
+---
+
+## 7. Legal
+
+### 31 · Terms and conditions
+
+**Файл:** [`legal/31-terms.png`](./legal/31-terms.png)  
 **URL:** `/terms`
 
-![Terms](./legal/19-terms.png)
+![Terms](./legal/31-terms.png)
 
-### 20 · License agreement
+### 32 · License agreement
 
-**Файл:** [`legal/20-license.png`](./legal/20-license.png)  
+**Файл:** [`legal/32-license.png`](./legal/32-license.png)  
 **URL:** `/license`
 
-![License](./legal/20-license.png)
+![License](./legal/32-license.png)
 
-### 21 · Privacy policy
+### 33 · Privacy policy
 
-**Файл:** [`legal/21-privacy.png`](./legal/21-privacy.png)  
+**Файл:** [`legal/33-privacy.png`](./legal/33-privacy.png)  
 **URL:** `/privacy`
 
-![Privacy](./legal/21-privacy.png)
+![Privacy](./legal/33-privacy.png)
 
 ---
 
-## 7. Админка
+## 8. Админка
 
-### 22 · Admin — Products
+### 34 · Admin dashboard
 
-**Файл:** [`admin/22-admin-products.png`](./admin/22-admin-products.png)  
-**URL:** `/admin/products`
+**Файл:** [`admin/34-admin-dashboard.png`](./admin/34-admin-dashboard.png)  
+**URL:** `/admin`
 
-![Admin Products](./admin/22-admin-products.png)
+![Admin dashboard](./admin/34-admin-dashboard.png)
+
+Главный экран: Products / Categories / Reviews / Orders / Users.
+
+### 35 · Products
+
+**Файл:** [`admin/35-admin-products.png`](./admin/35-admin-products.png)
+
+![Admin Products](./admin/35-admin-products.png)
 
 Список товаров + detail с галереей.
 
-### 23 · Admin — Categories
+### 36 · Create product
 
-**Файл:** [`admin/23-admin-categories.png`](./admin/23-admin-categories.png)  
-**URL:** `/admin/categories`
+**Файл:** [`admin/36-admin-create-product.png`](./admin/36-admin-create-product.png)
 
-![Admin Categories](./admin/23-admin-categories.png)
+![Admin Create product](./admin/36-admin-create-product.png)
 
-Дерево категорий, detail T-Shirts.
+Форма создания: General information.
 
-### 24 · Admin — Edit subcategory
+### 37 · Categories
 
-**Файл:** [`admin/24-admin-categories-edit.png`](./admin/24-admin-categories-edit.png)
+**Файл:** [`admin/37-admin-categories.png`](./admin/37-admin-categories.png)
 
-![Admin Edit subcategory](./admin/24-admin-categories-edit.png)
+![Admin Categories](./admin/37-admin-categories.png)
 
-Модалка Edit: имя, статус, описание, parent, иконка, property keys.
+Дерево категорий + detail.
 
-### 25 · Admin — Reviews
+### 38 · Edit subcategory
 
-**Файл:** [`admin/25-admin-reviews.png`](./admin/25-admin-reviews.png)  
-**URL:** `/admin/reviews`
+**Файл:** [`admin/38-admin-categories-edit.png`](./admin/38-admin-categories-edit.png)
 
-![Admin Reviews](./admin/25-admin-reviews.png)
+![Admin Edit subcategory](./admin/38-admin-categories-edit.png)
 
-Модерация: All / Hidden / Visible, Approve / Delete.
+Модалка редактирования подкатегории.
 
-### 26 · Admin — Orders
+### 39 · Reviews
 
-**Файл:** [`admin/26-admin-orders.png`](./admin/26-admin-orders.png)  
-**URL:** `/admin/orders`
+**Файл:** [`admin/39-admin-reviews.png`](./admin/39-admin-reviews.png)
 
-![Admin Orders](./admin/26-admin-orders.png)
+![Admin Reviews](./admin/39-admin-reviews.png)
 
-Фильтры, statusCounts, список заказов.
+Модерация: Approve / Delete, Hidden / Visible.
 
-### 27 · Admin — Users
+### 40 · Orders
 
-**Файл:** [`admin/27-admin-users.png`](./admin/27-admin-users.png)  
-**URL:** `/admin/users`
+**Файл:** [`admin/40-admin-orders.png`](./admin/40-admin-orders.png)
 
-![Admin Users](./admin/27-admin-users.png)
+![Admin Orders](./admin/40-admin-orders.png)
 
-Роли Admin/User, статусы Active/Deleted.
+Фильтры, даты, statusCounts.
 
-### 28 · Admin — Users Columns
+### 41 · Users
 
-**Файл:** [`admin/28-admin-users-columns.png`](./admin/28-admin-users-columns.png)
+**Файл:** [`admin/41-admin-users.png`](./admin/41-admin-users.png)
 
-![Admin Users Columns](./admin/28-admin-users-columns.png)
+![Admin Users](./admin/41-admin-users.png)
 
-Колонки Name / Email / Role / Status / Login / Registered + аватар админа в шапке.
+Роли и статусы Active / Deleted.
 
-### 29 · Admin — Users empty
+### 42 · Users — Columns
 
-**Файл:** [`admin/29-admin-users-empty.png`](./admin/29-admin-users-empty.png)
+**Файл:** [`admin/42-admin-users-columns.png`](./admin/42-admin-users-columns.png)
 
-![Admin Users empty](./admin/29-admin-users-empty.png)
+![Admin Users Columns](./admin/42-admin-users-columns.png)
+
+Настройка видимых колонок таблицы.
+
+### 43 · Users — empty
+
+**Файл:** [`admin/43-admin-users-empty.png`](./admin/43-admin-users-empty.png)
+
+![Admin Users empty](./admin/43-admin-users-empty.png)
 
 Empty state «No users in the selected role».
