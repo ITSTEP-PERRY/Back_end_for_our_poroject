@@ -115,7 +115,9 @@ export type OrderDto = {
   status: string;
   totalAmount: number;
   itemsCount: number;
+  userId?: string;
   userName?: string;
+  userEmail?: string | null;
   recipientName?: string | null;
   shippingAddress?: string | null;
   paymentType?: string | null;

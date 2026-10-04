@@ -262,6 +262,159 @@
   line-height: 1.35;
 }
 
+.ap-dash__kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.ap-dash__kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--ap-line);
+  background: var(--ap-surface);
+}
+
+.ap-dash__kpi-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--ap-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ap-dash__kpi-value {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--ap-ink);
+}
+
+.ap-dash__quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+
+.ap-dash__section-title {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--ap-ink);
+}
+
+.ap-dash__recent {
+  margin-bottom: 28px;
+}
+
+.ap-dash__recent-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.ap-dash__more {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+
+.ap-dash__empty {
+  color: var(--ap-muted);
+  margin: 0 0 8px;
+}
+
+.ap-dash__order-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--ap-line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--ap-surface);
+}
+
+.ap-dash__order-list li + li {
+  border-top: 1px solid var(--ap-line);
+}
+
+.ap-dash__order {
+  display: grid;
+  grid-template-columns: minmax(100px, 140px) 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 16px;
+  text-decoration: none !important;
+  color: var(--ap-ink) !important;
+}
+
+.ap-dash__order:hover {
+  background: #f8fafc;
+}
+
+.ap-dash__order-id {
+  font-weight: 800;
+}
+
+.ap-dash__order-meta {
+  color: var(--ap-muted);
+  font-size: 0.9rem;
+}
+
+.ap-dash__order-amount {
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.ap-customer__nav {
+  margin-bottom: 16px;
+}
+
+.ap-customer__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.ap-customer__meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 16px 0 20px;
+}
+
+.ap-customer__meta > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--ap-line);
+  background: var(--ap-surface);
+}
+
+.ap-customer__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 640px) {
+  .ap-dash__order {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}
+
 /* ----- Toolbar ----- */
 .ap-toolbar {
   display: flex;

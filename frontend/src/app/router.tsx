@@ -32,6 +32,7 @@ import { AdminCategoriesPage } from "../pages/admin/AdminCategoriesPage";
 import { AdminReviewsPage } from "../pages/admin/AdminReviewsPage";
 import { AdminOrdersPage } from "../pages/admin/AdminOrdersPage";
 import { AdminUsersPage } from "../pages/admin/AdminUsersPage";
+import { AdminCustomerPage } from "../pages/admin/AdminCustomerPage";
 
 export const router = createBrowserRouter([
   {
@@ -110,6 +111,7 @@ export const router = createBrowserRouter([
       { path: "reviews", element: <AdminReviewsPage /> },
       { path: "orders", element: <AdminOrdersPage /> },
       { path: "users", element: <AdminUsersPage /> },
+      { path: "users/:userId", element: <AdminCustomerPage /> },
     ],
   },
   {

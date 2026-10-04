@@ -625,6 +625,20 @@ export const usersApi = {
       return list.map((u) => mapAdminUser(u as Record<string, unknown>));
     });
   },
+  /** #A15 — карточка покупателя; fallback на list, если GET by id нет. */
+  get: async (id: string) => {
+    try {
+      const raw = await apiFetch<Record<string, unknown>>(`/admin/users/${id}`, { base: "users" });
+      return mapAdminUser(raw);
+    } catch {
+      for (const status of ["active", "deleted", "all"] as const) {
+        const rows = await usersApi.list({ status });
+        const hit = rows.find((u) => u.id === id);
+        if (hit) return hit;
+      }
+      throw new Error("User not found");
+    }
+  },
   softDelete: (id: string) =>
     apiFetch(`/admin/users/${id}/status`, {
       method: "PATCH",
@@ -675,12 +689,23 @@ export const ordersApi = {
         recipientName: opts?.recipientName,
       }),
     }),
-  admin: (opts?: { status?: string; fromUtc?: string; toUtc?: string; orderId?: string }) => {
+  admin: (opts?: {
+    status?: string;
+    fromUtc?: string;
+    toUtc?: string;
+    orderId?: string;
+    userId?: string;
+    page?: number;
+    pageSize?: number;
+  }) => {
     const p = new URLSearchParams();
     if (opts?.status) p.set("status", opts.status);
     if (opts?.fromUtc) p.set("fromUtc", opts.fromUtc);
     if (opts?.toUtc) p.set("toUtc", opts.toUtc);
     if (opts?.orderId) p.set("orderId", opts.orderId);
+    if (opts?.userId) p.set("userId", opts.userId);
+    if (opts?.page) p.set("page", String(opts.page));
+    if (opts?.pageSize) p.set("pageSize", String(opts.pageSize));
     const qs = p.toString();
     return apiFetch<AdminOrdersResponse>(`/orders/admin${qs ? `?${qs}` : ""}`);
   },

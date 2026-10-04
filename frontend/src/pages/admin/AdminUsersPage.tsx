@@ -1,5 +1,5 @@
 import { type FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { usersApi } from "../../api";
 import { AdminConfirmModal } from "../../widgets/admin/AdminConfirmModal";
 import { AdminEmptyBlob } from "../../widgets/admin/AdminEmptyBlob";
@@ -306,6 +306,9 @@ export function AdminUsersPage() {
                 </select>
               </label>
               <div className="ap-panel__actions">
+                <Link className="ap-btn ap-btn--accent" to={`/admin/users/${selected.id}`}>
+                  Open customer page
+                </Link>
                 {selected.isDeleted ? (
                   <button
                     type="button"
