@@ -158,13 +158,13 @@ Cart / Orders / Wishlist / Settings / Log out.
 
 #### 07 · Product page
 
-![Product page](./docs/screenshots/2026-10-04/product/07-product-page.png)
+![Product page](./docs/screenshots/2026-10-04/product/07-product-nike-pdp.png)
 
 Nike Air Jordan 1: галерея, Buy now / Add to cart.
 
 #### 08 · Lightbox фото
 
-![Product lightbox](./docs/screenshots/2026-10-04/product/08-product-lightbox.png)
+![Product lightbox](./docs/screenshots/2026-10-04/product/08-product-image-lightbox.png)
 
 Полноэкранный просмотр (1/4).
 
@@ -196,7 +196,7 @@ Ukraine, Card, Place order.
 
 #### 13 · Checkout — State
 
-![Checkout state](./docs/screenshots/2026-10-04/cart-checkout/13-checkout-state.png)
+![Checkout state](./docs/screenshots/2026-10-04/cart-checkout/13-checkout-state-ua.png)
 
 Выбор области Украины.
 

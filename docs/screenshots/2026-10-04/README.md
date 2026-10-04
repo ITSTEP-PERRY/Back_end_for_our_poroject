@@ -68,18 +68,18 @@ Hero «Sale -50%», карточки категорий, Trending deals (в т.�
 
 ### 07 · Product page
 
-**Файл:** [`product/07-product-page.png`](./product/07-product-page.png)  
+**Файл:** [`product/07-product-nike-pdp.png`](./product/07-product-nike-pdp.png)  
 **URL:** `/products/...`
 
-![Product page](./product/07-product-page.png)
+![Product page](./product/07-product-nike-pdp.png)
 
 Nike Air Jordan 1: галерея, цена, Buy now / Add to cart / Wishlist.
 
 ### 08 · Product — lightbox фото
 
-**Файл:** [`product/08-product-lightbox.png`](./product/08-product-lightbox.png)
+**Файл:** [`product/08-product-image-lightbox.png`](./product/08-product-image-lightbox.png)
 
-![Product lightbox](./product/08-product-lightbox.png)
+![Product lightbox](./product/08-product-image-lightbox.png)
 
 Полноэкранный просмотр фото (1/4), стрелки, закрытие.
 
@@ -123,9 +123,9 @@ Country = Ukraine, оплата Card, Place order.
 
 ### 13 · Checkout — State
 
-**Файл:** [`cart-checkout/13-checkout-state.png`](./cart-checkout/13-checkout-state.png)
+**Файл:** [`cart-checkout/13-checkout-state-ua.png`](./cart-checkout/13-checkout-state-ua.png)
 
-![Checkout state](./cart-checkout/13-checkout-state.png)
+![Checkout state](./cart-checkout/13-checkout-state-ua.png)
 
 Выбор области Украины (State).
 

@@ -12,13 +12,13 @@
 | 04 | Главная | [`2026-10-04/home/04-home-menu-categories.png`](./2026-10-04/home/04-home-menu-categories.png) | Боковое меню: аватар + дерево категорий |
 | 05 | Главная | [`2026-10-04/home/05-home-menu-account.png`](./2026-10-04/home/05-home-menu-account.png) | Меню: Cart / Orders / Wishlist / Settings |
 | 06 | Каталог | [`2026-10-04/catalog/06-catalog-fashion.png`](./2026-10-04/catalog/06-catalog-fashion.png) | Fashion: сетка, фильтры Brand / Fabric |
-| 07 | Товар | [`2026-10-04/product/07-product-page.png`](./2026-10-04/product/07-product-page.png) | PDP Nike Air Jordan: галерея, Buy now |
-| 08 | Товар | [`2026-10-04/product/08-product-lightbox.png`](./2026-10-04/product/08-product-lightbox.png) | Lightbox фото товара (1/4) |
+| 07 | Товар | [`2026-10-04/product/07-product-nike-pdp.png`](./2026-10-04/product/07-product-nike-pdp.png) | PDP Nike Air Jordan: галерея, Buy now |
+| 08 | Товар | [`2026-10-04/product/08-product-image-lightbox.png`](./2026-10-04/product/08-product-image-lightbox.png) | Lightbox фото товара (1/4) |
 | 09 | Товар | [`2026-10-04/product/09-product-specs-reviews.png`](./2026-10-04/product/09-product-specs-reviews.png) | Specs + блок отзывов на PDP |
 | 10 | Товар | [`2026-10-04/product/10-product-reviews.png`](./2026-10-04/product/10-product-reviews.png) | Customer reviews: рейтинг, теги, Translate |
 | 11 | Корзина | [`2026-10-04/cart-checkout/11-cart.png`](./2026-10-04/cart-checkout/11-cart.png) | Shopping cart + Order summary |
 | 12 | Checkout | [`2026-10-04/cart-checkout/12-checkout-country.png`](./2026-10-04/cart-checkout/12-checkout-country.png) | Country Ukraine, Card, Place order |
-| 13 | Checkout | [`2026-10-04/cart-checkout/13-checkout-state.png`](./2026-10-04/cart-checkout/13-checkout-state.png) | Области Украины (State) |
+| 13 | Checkout | [`2026-10-04/cart-checkout/13-checkout-state-ua.png`](./2026-10-04/cart-checkout/13-checkout-state-ua.png) | Области Украины (State) |
 | 14 | Checkout | [`2026-10-04/cart-checkout/14-checkout-city.png`](./2026-10-04/cart-checkout/14-checkout-city.png) | Города (Odesa Oblast) |
 | 15 | Checkout | [`2026-10-04/cart-checkout/15-checkout-card-details.png`](./2026-10-04/cart-checkout/15-checkout-card-details.png) | Поля Card details |
 | 16 | Кабинет | [`2026-10-04/account/16-account-wishlist.png`](./2026-10-04/account/16-account-wishlist.png) | Wishlist + аватар в сайдбаре |
