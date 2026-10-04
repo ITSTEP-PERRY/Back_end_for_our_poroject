@@ -348,7 +348,11 @@ export const authApi = {
   me: async () => {
     if (import.meta.env.DEV && localStorage.getItem(LOCAL_ADMIN_FLAG) === "1") {
       const raw = await apiFetch<Record<string, unknown>>("/dev/me");
-      return normalizeAuthUser(raw);
+      const user = normalizeAuthUser(raw);
+      // Local Product admin — no Auth avatar API; keep photo from browser cache.
+      const cached = readAvatarCache();
+      if (cached) return { ...user, avatar: cached };
+      return user;
     }
     const raw = await apiFetch<Record<string, unknown>>("/auth/me", { base: "auth" });
     const user = normalizeAuthUser(raw);
@@ -398,16 +402,22 @@ export const authApi = {
   },
   /** Auth Account API: multipart field name is `File` (Swagger `/api/account/avatar`). */
   uploadAvatar: async (file: File) => {
-    const form = new FormData();
-    form.append("File", file, file.name);
-    await apiFetch("/account/avatar", {
-      method: "PUT",
-      body: form,
-      base: "auth",
-    });
-    // Immediate displayable avatar for account + reviews (don't wait on Auth CDN path).
+    // Immediate displayable avatar for account sidebar (data-URL cache).
     const dataUrl = await blobToDataUrl(file);
     writeAvatarCache(dataUrl);
+
+    const isLocalAdmin =
+      import.meta.env.DEV && localStorage.getItem(LOCAL_ADMIN_FLAG) === "1";
+    if (!isLocalAdmin) {
+      const form = new FormData();
+      form.append("File", file, file.name);
+      await apiFetch("/account/avatar", {
+        method: "PUT",
+        body: form,
+        base: "auth",
+      });
+    }
+
     const me = await authApi.me();
     return { ...me, avatar: dataUrl };
   },
@@ -467,7 +477,8 @@ function isPublicAvatarUrl(url?: string | null): boolean {
 
 function readAvatarCache(): string | null {
   try {
-    const v = sessionStorage.getItem(AVATAR_CACHE_KEY);
+    // localStorage — чтобы фото админа/пользователя пережило refresh вкладки.
+    const v = localStorage.getItem(AVATAR_CACHE_KEY) || sessionStorage.getItem(AVATAR_CACHE_KEY);
     return v && /^(data:image|https?:|blob:)/i.test(v) ? v : null;
   } catch {
     return null;
@@ -476,6 +487,7 @@ function readAvatarCache(): string | null {
 
 function writeAvatarCache(url: string) {
   try {
+    localStorage.setItem(AVATAR_CACHE_KEY, url);
     sessionStorage.setItem(AVATAR_CACHE_KEY, url);
   } catch {
     /* quota / private mode */
@@ -484,6 +496,7 @@ function writeAvatarCache(url: string) {
 
 function clearAvatarCache() {
   try {
+    localStorage.removeItem(AVATAR_CACHE_KEY);
     sessionStorage.removeItem(AVATAR_CACHE_KEY);
   } catch {
     /* ignore */

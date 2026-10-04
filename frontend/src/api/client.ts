@@ -168,14 +168,7 @@ export async function apiFetch<T = unknown>(
 
   const data = await parseJson(res);
   if (!res.ok) {
-    // Auth Service may still accept the JWT while Product API rejects it (secret / expiry).
-    // Drop the local token so account pages don't look "signed in" with a dead Product session.
-    if (res.status === 401 && base === "product" && token) {
-      setToken(null);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("perry:auth-expired"));
-      }
-    }
+    // Не сбрасываем сессию автоматически — выход только по кнопке Logout.
     const msg =
       formatApiErrorMessage(data) ||
       friendlyStatusMessage(res.status, base) ||

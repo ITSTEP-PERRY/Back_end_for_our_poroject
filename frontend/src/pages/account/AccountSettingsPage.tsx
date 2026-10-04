@@ -70,14 +70,10 @@ export function AccountSettingsPage() {
     setBusy(true);
     setPhotoError(null);
     try {
-      const updated = await authApi.uploadAvatar(cropped);
+      await authApi.uploadAvatar(cropped);
       // Persist a public /uploads copy on Product reviews so PDP shows the photo for everyone.
       await reviewsApi.syncMyAvatar().catch(() => undefined);
       await refreshUser();
-      // Ensure in-memory user keeps the data-URL avatar if /me still returns Auth path.
-      if (updated.avatar) {
-        /* refreshUser already ran; cache is set inside uploadAvatar */
-      }
       close();
     } catch (err) {
       setPhotoError(err instanceof Error ? err.message : "Failed to upload photo");

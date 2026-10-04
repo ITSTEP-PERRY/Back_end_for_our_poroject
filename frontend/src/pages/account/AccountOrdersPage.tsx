@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ordersApi } from "../../api";
-import { ApiError } from "../../api/client";
 import type { OrderDto } from "../../api/types";
-import { useAuth } from "../../app/AuthContext";
 import { OrderDetailsModal } from "../../widgets/OrderDetailsModal";
 
 const STATUS_LABEL: Record<string, string> = {
@@ -46,8 +44,6 @@ function shortId(id: string) {
 }
 
 export function AccountOrdersPage() {
-  const navigate = useNavigate();
-  const { logout } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [orders, setOrders] = useState<OrderDto[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -68,17 +64,6 @@ export function AccountOrdersPage() {
         }
       })
       .catch((e: Error) => {
-        if (e instanceof ApiError && e.status === 401) {
-          logout();
-          navigate("/login", {
-            replace: true,
-            state: {
-              from: { pathname: "/account/orders" },
-              notice: "Session expired for Product API. Please sign in again.",
-            },
-          });
-          return;
-        }
         setError(e.message);
       })
       .finally(() => setLoading(false));

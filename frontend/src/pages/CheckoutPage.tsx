@@ -3,6 +3,9 @@ import { Link, Navigate, useNavigate } from "react-router-dom";
 import { ordersApi } from "../api";
 import { useAuth } from "../app/AuthContext";
 import { useCart } from "../app/CartContext";
+import { UKRAINE_CITIES_BY_STATE, UKRAINE_STATES } from "../data/ukraineCheckoutLocales";
+import { loadShippingAddress, saveShippingAddress } from "../data/shippingAddress";
+import { loadSavedCard, saveSavedCard } from "../data/savedCard";
 
 const REQUIRED = "This field is necessary to continue!";
 
@@ -18,31 +21,7 @@ const STATES: Record<string, string[]> = {
   "United Kingdom": ["England", "Scotland", "Wales"],
   Germany: ["Bavaria", "Berlin", "Hamburg"],
   Poland: ["Mazovia", "Lesser Poland", "Silesia"],
-  Ukraine: [
-    "Kyiv City",
-    "Kyiv Oblast",
-    "Lviv Oblast",
-    "Odesa Oblast",
-    "Kharkiv Oblast",
-    "Dnipropetrovsk Oblast",
-    "Zaporizhzhia Oblast",
-    "Vinnytsia Oblast",
-    "Poltava Oblast",
-    "Chernihiv Oblast",
-    "Ivano-Frankivsk Oblast",
-    "Ternopil Oblast",
-    "Khmelnytskyi Oblast",
-    "Cherkasy Oblast",
-    "Mykolaiv Oblast",
-    "Kherson Oblast",
-    "Sumy Oblast",
-    "Zhytomyr Oblast",
-    "Rivne Oblast",
-    "Volyn Oblast",
-    "Zakarpattia Oblast",
-    "Chernivtsi Oblast",
-    "Kirovohrad Oblast",
-  ],
+  Ukraine: [...UKRAINE_STATES],
 };
 
 /** Cities by country — shown as soon as a country is selected. */
@@ -214,29 +193,7 @@ const CITIES_BY_STATE: Record<string, string[]> = {
   Mazovia: ["Warsaw", "Radom"],
   "Lesser Poland": ["Kraków"],
   Silesia: ["Katowice", "Częstochowa"],
-  "Kyiv City": ["Kyiv", "Brovary", "Bila Tserkva"],
-  "Kyiv Oblast": ["Kyiv", "Brovary", "Bila Tserkva"],
-  "Lviv Oblast": ["Lviv", "Drohobych", "Chervonohrad", "Stryi"],
-  "Odesa Oblast": ["Odesa"],
-  "Kharkiv Oblast": ["Kharkiv"],
-  "Dnipropetrovsk Oblast": ["Dnipro", "Kryvyi Rih", "Kamianske", "Nikopol", "Pavlohrad"],
-  "Zaporizhzhia Oblast": ["Zaporizhzhia", "Melitopol", "Berdiansk"],
-  "Vinnytsia Oblast": ["Vinnytsia"],
-  "Poltava Oblast": ["Poltava", "Kremenchuk"],
-  "Chernihiv Oblast": ["Chernihiv"],
-  "Ivano-Frankivsk Oblast": ["Ivano-Frankivsk", "Kolomyia"],
-  "Ternopil Oblast": ["Ternopil"],
-  "Khmelnytskyi Oblast": ["Kamianets-Podilskyi"],
-  "Cherkasy Oblast": ["Cherkasy", "Uman"],
-  "Mykolaiv Oblast": ["Mykolaiv"],
-  "Kherson Oblast": ["Kherson"],
-  "Sumy Oblast": ["Sumy", "Konotop"],
-  "Zhytomyr Oblast": ["Zhytomyr"],
-  "Rivne Oblast": ["Rivne"],
-  "Volyn Oblast": ["Lutsk"],
-  "Zakarpattia Oblast": ["Uzhhorod", "Mukachevo"],
-  "Chernivtsi Oblast": ["Chernivtsi"],
-  "Kirovohrad Oblast": ["Kropyvnytskyi"],
+  ...UKRAINE_CITIES_BY_STATE,
 };
 
 type FieldErrors = Partial<
@@ -263,8 +220,13 @@ function splitName(name: string) {
 }
 
 function citiesFor(country: string, state: string): string[] {
-  if (state && CITIES_BY_STATE[state]?.length) return CITIES_BY_STATE[state];
-  return CITIES_BY_COUNTRY[country] ?? [];
+  // Область выбрана → только города этой области.
+  if (!state) {
+    if ((STATES[country] ?? []).length > 0) return [];
+    return CITIES_BY_COUNTRY[country] ?? [];
+  }
+  if (country === "Ukraine") return UKRAINE_CITIES_BY_STATE[state] ?? [];
+  return CITIES_BY_STATE[state] ?? [];
 }
 
 function luhnOk(digits: string): boolean {
@@ -328,17 +290,20 @@ export function CheckoutPage() {
   const { cart, sessionId, refresh } = useCart();
   const navigate = useNavigate();
   const nameParts = splitName(user?.name || "");
+  const userKey = user?.id || user?.email || null;
+  const saved = useMemo(() => loadShippingAddress(), []);
 
-  const [firstName, setFirstName] = useState(nameParts.first);
-  const [lastName, setLastName] = useState(nameParts.last);
+  const [firstName, setFirstName] = useState(saved?.firstName || nameParts.first);
+  const [lastName, setLastName] = useState(saved?.lastName || nameParts.last);
   const [email, setEmail] = useState(user?.email || "");
-  const [country, setCountry] = useState("Ukraine");
-  const [state, setState] = useState("");
-  const [city, setCity] = useState("");
-  const [postcode, setPostcode] = useState("");
+  const [country, setCountry] = useState(saved?.country || "Ukraine");
+  const [state, setState] = useState(saved?.state || "");
+  const [city, setCity] = useState(saved?.city || "");
+  const [postcode, setPostcode] = useState(saved?.postcode || "");
   const [payment, setPayment] = useState<"Cash" | "Card">("Card");
   const [cardNumber, setCardNumber] = useState("");
   const [cardExp, setCardExp] = useState("");
+  // CVV/CVC никогда не сохраняем — между сессиями всегда пусто.
   const [cardCvv, setCardCvv] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [busy, setBusy] = useState(false);
@@ -352,8 +317,36 @@ export function CheckoutPage() {
     setEmail((v) => v || user.email || "");
   }, [user]);
 
+  // Подтянуть номер/срок после логина / новой сессии; CVV всегда сбрасываем.
+  useEffect(() => {
+    if (!userKey) return;
+    const card = loadSavedCard(userKey);
+    if (card?.cardNumber) setCardNumber(card.cardNumber);
+    if (card?.cardExp) setCardExp(card.cardExp);
+    setCardCvv("");
+  }, [userKey]);
+
+  // Адрес запоминается — не сбрасывается при каждом заходе на checkout.
+  useEffect(() => {
+    saveShippingAddress({
+      country,
+      state,
+      city,
+      postcode,
+      firstName,
+      lastName,
+    });
+  }, [country, state, city, postcode, firstName, lastName]);
+
+  // Номер и срок — в localStorage между сессиями; CVV не пишем.
+  useEffect(() => {
+    if (!userKey) return;
+    if (!cardNumber && !cardExp) return;
+    saveSavedCard({ cardNumber, cardExp }, userKey);
+  }, [cardNumber, cardExp, userKey]);
+
   const stateOptions = STATES[country] ?? [];
-  const cityOptions = citiesFor(country, state);
+  const cityOptions = useMemo(() => citiesFor(country, state), [country, state]);
 
   const items = cart?.items ?? [];
   const total = cart?.totalAmount ?? 0;
@@ -395,11 +388,21 @@ export function CheckoutPage() {
     try {
       const recipientName = `${firstName.trim()} ${lastName.trim()}`.trim();
       const shippingAddress = [city, state, postcode.trim(), country].filter(Boolean).join(", ");
+      saveShippingAddress({
+        country,
+        state,
+        city,
+        postcode: postcode.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      });
       const order = await ordersApi.checkout(sessionId, {
         recipientName,
         shippingAddress,
         paymentType: payment,
       });
+      saveSavedCard({ cardNumber, cardExp }, userKey);
+      setCardCvv("");
       await refresh();
       navigate(`/account/orders?open=${encodeURIComponent(order.id)}`);
     } catch (err) {
@@ -506,7 +509,7 @@ export function CheckoutPage() {
               <Field label="City" error={errors.city}>
                 <select
                   value={city}
-                  disabled={cityOptions.length === 0}
+                  disabled={!state || cityOptions.length === 0}
                   onChange={(e) => {
                     setCity(e.target.value);
                     setErrors((prev) => {
@@ -515,7 +518,7 @@ export function CheckoutPage() {
                     });
                   }}
                 >
-                  <option value="">Select city</option>
+                  <option value="">{!state ? "Select state first" : "Select city"}</option>
                   {cityOptions.map((c) => (
                     <option key={c} value={c}>
                       {c}
@@ -602,7 +605,8 @@ export function CheckoutPage() {
                       onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                       placeholder="***"
                       inputMode="numeric"
-                      autoComplete="cc-csc"
+                      autoComplete="off"
+                      name="card-cvc-not-saved"
                     />
                   </Field>
                 </div>

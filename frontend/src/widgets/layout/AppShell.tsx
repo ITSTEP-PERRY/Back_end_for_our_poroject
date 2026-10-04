@@ -332,6 +332,9 @@ export function AdminShell() {
   if (loading || !isAdmin) return <div className="shell-loading">Loading…</div>;
 
   const close = () => setDrawer(false);
+  const displayName = user?.name || "Administrator";
+  const initial = (displayName.trim()?.[0] || user?.login?.[0] || "A").toUpperCase();
+  const avatarSrc = resolveMediaUrl(user?.avatar) || user?.avatar || null;
 
   return (
     <div className="admin-shell admin-body">
@@ -370,17 +373,17 @@ export function AdminShell() {
             <Link className="admin-header__icon-btn" to="/" title="Store">
               <img src="/icons/home.svg" alt="" width={22} height={22} />
             </Link>
-            <button
-              type="button"
-              className="admin-header__icon-btn"
-              title="Logout"
-              onClick={() => {
-                logout();
-                navigate("/admin/login");
-              }}
+            <Link
+              className="admin-header__icon-btn admin-header__avatar-btn"
+              to="/account/settings"
+              title="Profile"
             >
-              <img src="/icons/account.svg" alt="" width={24} height={24} />
-            </button>
+              {avatarSrc ? (
+                <img className="admin-header__avatar" src={avatarSrc} alt="" />
+              ) : (
+                <img src="/icons/account.svg" alt="" width={24} height={24} />
+              )}
+            </Link>
           </div>
         </div>
       </header>
@@ -389,10 +392,19 @@ export function AdminShell() {
         <>
           <div className="admin-drawer-backdrop" onClick={close} />
           <aside className="admin-drawer" role="dialog" aria-label="Admin menu">
-            <div className="admin-drawer__user">
-              <strong>{user?.name || "Administrator"}</strong>
-              <span>Administrator</span>
-            </div>
+            <Link className="admin-drawer__user" to="/account/settings" onClick={close}>
+              {avatarSrc ? (
+                <img className="admin-drawer__avatar" src={avatarSrc} alt="" />
+              ) : (
+                <span className="admin-drawer__avatar admin-drawer__avatar--initial" aria-hidden>
+                  {initial}
+                </span>
+              )}
+              <span className="admin-drawer__user-text">
+                <strong>{displayName}</strong>
+                <span>Administrator</span>
+              </span>
+            </Link>
             <NavLink to="/admin/products" onClick={close}>
               Products
             </NavLink>
