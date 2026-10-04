@@ -8,7 +8,9 @@ export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || "/";
+  const locState = location.state as { from?: { pathname?: string }; notice?: string } | null;
+  const from = locState?.from?.pathname || "/";
+  const notice = locState?.notice || null;
   const [loginName, setLoginName] = useState("");
   const [password, setPassword] = useState("");
   const [stay, setStay] = useState(true);
@@ -37,6 +39,7 @@ export function LoginPage() {
 
   return (
     <AuthModal data-figma="1350:5004">
+      {notice && !error && <div className="auth-alert auth-alert--info">{notice}</div>}
       {error && <div className="auth-alert">{error}</div>}
       <form className="login-form" onSubmit={(e) => void onSubmit(e)}>
         <div className="login-form__titles">

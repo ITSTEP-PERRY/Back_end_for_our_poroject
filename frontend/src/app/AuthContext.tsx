@@ -33,8 +33,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     authApi
       .me()
       .then(setUser)
-      .catch(() => setToken(null))
+      .catch(() => {
+        setToken(null);
+        setUser(null);
+      })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    const onExpired = () => {
+      setToken(null);
+      setUser(null);
+    };
+    window.addEventListener("perry:auth-expired", onExpired);
+    return () => window.removeEventListener("perry:auth-expired", onExpired);
   }, []);
 
   const login = useCallback(async (loginName: string, password: string) => {
