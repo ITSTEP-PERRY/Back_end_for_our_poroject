@@ -23,6 +23,7 @@ import { colors, radii, space } from "../theme/colors";
 import { navigateShop } from "../navigation/navigationRef";
 import type { RootStackParamList } from "../navigation/types";
 import { authorInitial, resolveReviewAuthor } from "../utils/reviewAuthor";
+import { translateReviewToUkrainian } from "../utils/translateToUk";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Product">;
 const PAD = 16;
@@ -587,6 +588,14 @@ function ReviewCard({ review }: { review: ProductReview }) {
         year: "numeric",
       })
     : "";
+  const [uk, setUk] = useState<{ title: string; body: string } | null>(null);
+  const [showUk, setShowUk] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const titleText = showUk && uk ? uk.title || review.title : review.title;
+  const bodyText = showUk && uk ? uk.body || review.body : review.body;
+
   return (
     <View style={styles.reviewCard}>
       <View style={styles.reviewHead}>
@@ -608,8 +617,10 @@ function ReviewCard({ review }: { review: ProductReview }) {
           />
         ))}
       </View>
-      {review.title ? <Text style={styles.reviewTitle}>{review.title}</Text> : null}
-      <Text style={styles.reviewBody}>{review.body}</Text>
+      {titleText ? <Text style={styles.reviewTitle}>{titleText}</Text> : null}
+      <Text style={styles.reviewBody}>{bodyText}</Text>
+      {showUk ? <Text style={styles.langNote}>Translated to Ukrainian</Text> : null}
+      {err ? <Text style={styles.translateErr}>{err}</Text> : null}
       {review.tags?.length ? (
         <View style={styles.tagsWrap}>
           {review.tags.slice(0, 3).map((t) => (
@@ -625,8 +636,37 @@ function ReviewCard({ review }: { review: ProductReview }) {
         <Pressable style={styles.helpfulBtn}>
           <Text style={styles.helpfulText}>Helpful</Text>
         </Pressable>
-        <Pressable style={styles.translateBtn}>
-          <Text style={styles.translateText}>Translate</Text>
+        <Pressable
+          style={[styles.translateBtn, showUk && styles.translateBtnActive]}
+          disabled={busy}
+          onPress={async () => {
+            setErr(null);
+            if (showUk) {
+              setShowUk(false);
+              return;
+            }
+            if (uk) {
+              setShowUk(true);
+              return;
+            }
+            setBusy(true);
+            try {
+              const next = await translateReviewToUkrainian(
+                review.title ?? "",
+                review.body ?? "",
+              );
+              setUk(next);
+              setShowUk(true);
+            } catch (e) {
+              setErr(e instanceof Error ? e.message : "Could not translate");
+            } finally {
+              setBusy(false);
+            }
+          }}
+        >
+          <Text style={[styles.translateText, showUk && styles.translateTextActive]}>
+            {busy ? "Translating…" : showUk ? "Show original" : "Translate"}
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -1001,7 +1041,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
+  translateBtnActive: {
+    backgroundColor: colors.secondary,
+    borderColor: colors.secondary,
+  },
   translateText: { color: colors.secondary, fontWeight: "700", fontSize: 13 },
+  translateTextActive: { color: "#fff" },
+  langNote: { color: colors.muted, fontSize: 12, marginBottom: 6 },
+  translateErr: { color: "#b00020", fontSize: 12, marginBottom: 6 },
   seeMoreBtn: {
     alignSelf: "center",
     borderWidth: 1.5,
