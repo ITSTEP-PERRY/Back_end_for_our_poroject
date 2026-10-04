@@ -7,6 +7,7 @@ using Perry.Infrastructure.DTOs;
 using Perry.Infrastructure.Interfaces;
 using Perry.Infrastructure.Options;
 using Perry.Infrastructure.Persistence;
+using Perry.Infrastructure.Storage;
 
 namespace Perry.Infrastructure.Repositories;
 
@@ -14,11 +15,16 @@ public class ReviewRepository : IReviewRepository
 {
     private readonly ILogger<ReviewRepository> _logger;
     private readonly AppDbContext _dbContext;
+    private readonly IStorageService _storage;
 
-    public ReviewRepository(ILogger<ReviewRepository> logger, AppDbContext dbContext)
+    public ReviewRepository(
+        ILogger<ReviewRepository> logger,
+        AppDbContext dbContext,
+        IStorageService storage)
     {
         _logger = logger;
         _dbContext = dbContext;
+        _storage = storage;
     }
 
     public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, Guid? id, CancellationToken cancellationToken)
@@ -121,11 +127,22 @@ public class ReviewRepository : IReviewRepository
             {
                 foreach (var image in dto.Images.Where(i => !string.IsNullOrWhiteSpace(i)))
                 {
+                    string url;
+                    try
+                    {
+                        url = PersistReviewImage(image.Trim());
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Review image rejected");
+                        return new Error("InvalidImage", ex.Message);
+                    }
+
                     _dbContext.ProductReviewImages.Add(new ProductReviewImage
                     {
                         Id = Guid.NewGuid(),
                         ReviewId = entity.Id,
-                        Url = image.Trim()
+                        Url = url
                     });
                 }
             }
@@ -157,14 +174,36 @@ public class ReviewRepository : IReviewRepository
         }
         catch (DbUpdateException ex)
         {
-            _logger.LogWarning(ex, "PostProductReview conflict/db error");
-            return QueryError.Conflict;
+            // Unique (user+product) → 409. Other DB errors (e.g. Url too long) must NOT look like "already reviewed".
+            var pg = ex.InnerException?.GetType().GetProperty("SqlState")?.GetValue(ex.InnerException) as string;
+            if (pg == "23505")
+            {
+                _logger.LogWarning(ex, "PostProductReview unique conflict");
+                return QueryError.Conflict;
+            }
+
+            _logger.LogError(ex, "PostProductReview db error");
+            return Error.Failed;
         }
         catch (Exception e)
         {
             _logger.LogError(e, "PostProductReview failed");
             return Error.Failed;
         }
+    }
+
+    /// <summary>
+    /// Data-URL фото не влезают в Url(1000) — кладём файл в wwwroot/uploads и храним короткий путь.
+    /// </summary>
+    private string PersistReviewImage(string image)
+    {
+        if (image.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
+            return _storage.SaveDataUrl(image);
+
+        if (image.Length > 1000)
+            throw new ArgumentException("Image URL is too long (max 1000). Upload a file instead.");
+
+        return image;
     }
 
     public async Task<Result> SetApproveReview(Guid reviewId, CancellationToken cancellationToken)

@@ -26,9 +26,16 @@ foreach (var envPath in new[]
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Review photos arrive as base64 data-URLs in JSON before we persist them to /uploads.
+builder.WebHost.ConfigureKestrel(o => o.Limits.MaxRequestBodySize = 40 * 1024 * 1024);
+
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+});
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
+{
+    o.MultipartBodyLengthLimit = 40 * 1024 * 1024;
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -152,6 +159,19 @@ app.UseSwaggerUI(o =>
 });
 
 app.UseCors("Frontend");
+
+// Review photos: DiskStorageService writes to ContentRoot/wwwroot/uploads.
+// Map /uploads/* explicitly — default UseStaticFiles alone was 404 in this host layout.
+var uploadsDir = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
+Directory.CreateDirectory(uploadsDir);
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsDir),
+    RequestPath = "/uploads",
+    ServeUnknownFileTypes = true,
+});
+app.UseStaticFiles();
+
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();

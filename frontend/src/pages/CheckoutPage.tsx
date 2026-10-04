@@ -6,37 +6,237 @@ import { useCart } from "../app/CartContext";
 
 const REQUIRED = "This field is necessary to continue!";
 
-const COUNTRIES = ["United States", "Canada", "United Kingdom", "Germany", "Poland", "Ukraine"];
+/** Demo card — accepted by checkout, no real charge. */
+const DEMO_CARD = "4111111111111111";
+
+const COUNTRIES = ["United States", "Canada", "United Kingdom", "Germany", "Poland", "Ukraine"] as const;
+
+/** Region / state options per country. */
 const STATES: Record<string, string[]> = {
   "United States": ["California", "New York", "Texas", "Florida", "Washington"],
   Canada: ["Ontario", "Quebec", "British Columbia"],
   "United Kingdom": ["England", "Scotland", "Wales"],
   Germany: ["Bavaria", "Berlin", "Hamburg"],
   Poland: ["Mazovia", "Lesser Poland", "Silesia"],
-  Ukraine: ["Kyiv", "Lviv", "Odesa", "Kharkiv"],
+  Ukraine: [
+    "Kyiv City",
+    "Kyiv Oblast",
+    "Lviv Oblast",
+    "Odesa Oblast",
+    "Kharkiv Oblast",
+    "Dnipropetrovsk Oblast",
+    "Zaporizhzhia Oblast",
+    "Vinnytsia Oblast",
+    "Poltava Oblast",
+    "Chernihiv Oblast",
+    "Ivano-Frankivsk Oblast",
+    "Ternopil Oblast",
+    "Khmelnytskyi Oblast",
+    "Cherkasy Oblast",
+    "Mykolaiv Oblast",
+    "Kherson Oblast",
+    "Sumy Oblast",
+    "Zhytomyr Oblast",
+    "Rivne Oblast",
+    "Volyn Oblast",
+    "Zakarpattia Oblast",
+    "Chernivtsi Oblast",
+    "Kirovohrad Oblast",
+  ],
 };
-const CITIES: Record<string, string[]> = {
-  California: ["Los Angeles", "San Francisco", "San Diego"],
-  "New York": ["New York", "Buffalo", "Albany"],
-  Texas: ["Austin", "Houston", "Dallas"],
-  Florida: ["Miami", "Orlando", "Tampa"],
-  Washington: ["Seattle", "Spokane"],
-  Ontario: ["Toronto", "Ottawa"],
-  Quebec: ["Montreal", "Quebec City"],
-  "British Columbia": ["Vancouver", "Victoria"],
-  England: ["London", "Manchester"],
-  Scotland: ["Edinburgh", "Glasgow"],
-  Wales: ["Cardiff"],
-  Bavaria: ["Munich"],
+
+/** Cities by country — shown as soon as a country is selected. */
+const CITIES_BY_COUNTRY: Record<string, string[]> = {
+  "United States": [
+    "Los Angeles",
+    "San Francisco",
+    "San Diego",
+    "San Jose",
+    "Sacramento",
+    "New York",
+    "Buffalo",
+    "Albany",
+    "Rochester",
+    "Austin",
+    "Houston",
+    "Dallas",
+    "San Antonio",
+    "Miami",
+    "Orlando",
+    "Tampa",
+    "Jacksonville",
+    "Seattle",
+    "Spokane",
+    "Tacoma",
+    "Chicago",
+    "Boston",
+    "Philadelphia",
+    "Phoenix",
+    "Denver",
+    "Atlanta",
+    "Las Vegas",
+    "Portland",
+  ],
+  Canada: [
+    "Toronto",
+    "Ottawa",
+    "Mississauga",
+    "Hamilton",
+    "Montreal",
+    "Quebec City",
+    "Laval",
+    "Vancouver",
+    "Victoria",
+    "Surrey",
+    "Calgary",
+    "Edmonton",
+    "Winnipeg",
+    "Halifax",
+  ],
+  "United Kingdom": [
+    "London",
+    "Manchester",
+    "Birmingham",
+    "Liverpool",
+    "Leeds",
+    "Bristol",
+    "Edinburgh",
+    "Glasgow",
+    "Aberdeen",
+    "Cardiff",
+    "Swansea",
+    "Belfast",
+    "Nottingham",
+    "Sheffield",
+  ],
+  Germany: [
+    "Berlin",
+    "Hamburg",
+    "Munich",
+    "Cologne",
+    "Frankfurt",
+    "Stuttgart",
+    "Düsseldorf",
+    "Dortmund",
+    "Essen",
+    "Leipzig",
+    "Bremen",
+    "Dresden",
+    "Hanover",
+    "Nuremberg",
+  ],
+  Poland: [
+    "Warsaw",
+    "Kraków",
+    "Łódź",
+    "Wrocław",
+    "Poznań",
+    "Gdańsk",
+    "Szczecin",
+    "Bydgoszcz",
+    "Lublin",
+    "Katowice",
+    "Białystok",
+    "Gdynia",
+    "Częstochowa",
+    "Radom",
+  ],
+  Ukraine: [
+    "Kyiv",
+    "Kharkiv",
+    "Odesa",
+    "Dnipro",
+    "Donetsk",
+    "Zaporizhzhia",
+    "Lviv",
+    "Kryvyi Rih",
+    "Mykolaiv",
+    "Mariupol",
+    "Luhansk",
+    "Vinnytsia",
+    "Makiivka",
+    "Simferopol",
+    "Sevastopol",
+    "Kherson",
+    "Poltava",
+    "Chernihiv",
+    "Cherkasy",
+    "Sumy",
+    "Zhytomyr",
+    "Horlivka",
+    "Rivne",
+    "Kropyvnytskyi",
+    "Kamianske",
+    "Ternopil",
+    "Kremenchuk",
+    "Lutsk",
+    "Ivano-Frankivsk",
+    "Bila Tserkva",
+    "Kramatorsk",
+    "Melitopol",
+    "Kerch",
+    "Nikopol",
+    "Sloviansk",
+    "Uzhhorod",
+    "Berdiansk",
+    "Alchevsk",
+    "Pavlohrad",
+    "Sievierodonetsk",
+    "Yevpatoriia",
+    "Kamianets-Podilskyi",
+    "Brovary",
+    "Mukachevo",
+    "Konotop",
+    "Uman",
+    "Kolomyia",
+    "Chervonohrad",
+    "Drohobych",
+    "Stryi",
+  ],
+};
+
+/** Optional filter: cities belonging to a region (subset of country list). */
+const CITIES_BY_STATE: Record<string, string[]> = {
+  California: ["Los Angeles", "San Francisco", "San Diego", "San Jose", "Sacramento"],
+  "New York": ["New York", "Buffalo", "Albany", "Rochester"],
+  Texas: ["Austin", "Houston", "Dallas", "San Antonio"],
+  Florida: ["Miami", "Orlando", "Tampa", "Jacksonville"],
+  Washington: ["Seattle", "Spokane", "Tacoma"],
+  Ontario: ["Toronto", "Ottawa", "Mississauga", "Hamilton"],
+  Quebec: ["Montreal", "Quebec City", "Laval"],
+  "British Columbia": ["Vancouver", "Victoria", "Surrey"],
+  England: ["London", "Manchester", "Birmingham", "Liverpool", "Leeds", "Bristol"],
+  Scotland: ["Edinburgh", "Glasgow", "Aberdeen"],
+  Wales: ["Cardiff", "Swansea"],
+  Bavaria: ["Munich", "Nuremberg"],
   Berlin: ["Berlin"],
   Hamburg: ["Hamburg"],
-  Mazovia: ["Warsaw"],
+  Mazovia: ["Warsaw", "Radom"],
   "Lesser Poland": ["Kraków"],
-  Silesia: ["Katowice"],
-  Kyiv: ["Kyiv"],
-  Lviv: ["Lviv"],
-  Odesa: ["Odesa"],
-  Kharkiv: ["Kharkiv"],
+  Silesia: ["Katowice", "Częstochowa"],
+  "Kyiv City": ["Kyiv", "Brovary", "Bila Tserkva"],
+  "Kyiv Oblast": ["Kyiv", "Brovary", "Bila Tserkva"],
+  "Lviv Oblast": ["Lviv", "Drohobych", "Chervonohrad", "Stryi"],
+  "Odesa Oblast": ["Odesa"],
+  "Kharkiv Oblast": ["Kharkiv"],
+  "Dnipropetrovsk Oblast": ["Dnipro", "Kryvyi Rih", "Kamianske", "Nikopol", "Pavlohrad"],
+  "Zaporizhzhia Oblast": ["Zaporizhzhia", "Melitopol", "Berdiansk"],
+  "Vinnytsia Oblast": ["Vinnytsia"],
+  "Poltava Oblast": ["Poltava", "Kremenchuk"],
+  "Chernihiv Oblast": ["Chernihiv"],
+  "Ivano-Frankivsk Oblast": ["Ivano-Frankivsk", "Kolomyia"],
+  "Ternopil Oblast": ["Ternopil"],
+  "Khmelnytskyi Oblast": ["Kamianets-Podilskyi"],
+  "Cherkasy Oblast": ["Cherkasy", "Uman"],
+  "Mykolaiv Oblast": ["Mykolaiv"],
+  "Kherson Oblast": ["Kherson"],
+  "Sumy Oblast": ["Sumy", "Konotop"],
+  "Zhytomyr Oblast": ["Zhytomyr"],
+  "Rivne Oblast": ["Rivne"],
+  "Volyn Oblast": ["Lutsk"],
+  "Zakarpattia Oblast": ["Uzhhorod", "Mukachevo"],
+  "Chernivtsi Oblast": ["Chernivtsi"],
+  "Kirovohrad Oblast": ["Kropyvnytskyi"],
 };
 
 type FieldErrors = Partial<
@@ -60,6 +260,49 @@ function splitName(name: string) {
   if (parts.length === 0) return { first: "", last: "" };
   if (parts.length === 1) return { first: parts[0], last: "" };
   return { first: parts[0], last: parts.slice(1).join(" ") };
+}
+
+function citiesFor(country: string, state: string): string[] {
+  if (state && CITIES_BY_STATE[state]?.length) return CITIES_BY_STATE[state];
+  return CITIES_BY_COUNTRY[country] ?? [];
+}
+
+function luhnOk(digits: string): boolean {
+  if (digits.length < 13 || digits.length > 19) return false;
+  let sum = 0;
+  let alt = false;
+  for (let i = digits.length - 1; i >= 0; i--) {
+    let n = Number(digits[i]);
+    if (alt) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    alt = !alt;
+  }
+  return sum % 10 === 0;
+}
+
+function formatCardNumber(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 16);
+  return digits.replace(/(\d{4})(?=\d)/g, "$1 ").trim();
+}
+
+function formatExp(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+}
+
+function expNotPast(exp: string): boolean {
+  const m = /^(\d{2})\/(\d{2})$/.exec(exp.trim());
+  if (!m) return false;
+  const month = Number(m[1]);
+  const year = 2000 + Number(m[2]);
+  if (month < 1 || month > 12) return false;
+  const now = new Date();
+  const end = new Date(year, month, 0, 23, 59, 59);
+  return end >= now;
 }
 
 function Field({
@@ -89,7 +332,7 @@ export function CheckoutPage() {
   const [firstName, setFirstName] = useState(nameParts.first);
   const [lastName, setLastName] = useState(nameParts.last);
   const [email, setEmail] = useState(user?.email || "");
-  const [country, setCountry] = useState("United States");
+  const [country, setCountry] = useState("Ukraine");
   const [state, setState] = useState("");
   const [city, setCity] = useState("");
   const [postcode, setPostcode] = useState("");
@@ -110,7 +353,7 @@ export function CheckoutPage() {
   }, [user]);
 
   const stateOptions = STATES[country] ?? [];
-  const cityOptions = CITIES[state] ?? [];
+  const cityOptions = citiesFor(country, state);
 
   const items = cart?.items ?? [];
   const total = cart?.totalAmount ?? 0;
@@ -133,8 +376,9 @@ export function CheckoutPage() {
     if (!postcode.trim()) next.postcode = REQUIRED;
     if (payment === "Card") {
       const digits = cardNumber.replace(/\D/g, "");
-      if (digits.length < 16) next.cardNumber = "Incorrect card number";
-      if (!/^\d{2}\/\d{2}$/.test(cardExp.trim())) next.cardExp = "Incorrect date";
+      if (!luhnOk(digits)) next.cardNumber = "Incorrect card number";
+      if (!/^\d{2}\/\d{2}$/.test(cardExp.trim()) || !expNotPast(cardExp))
+        next.cardExp = "Incorrect date";
       if (!/^\d{3,4}$/.test(cardCvv.trim())) next.cardCvv = "Incorrect code";
     }
     return next;
@@ -223,6 +467,10 @@ export function CheckoutPage() {
                     setCountry(e.target.value);
                     setState("");
                     setCity("");
+                    setErrors((prev) => {
+                      const { country: _c, state: _s, city: _ci, ...rest } = prev;
+                      return rest;
+                    });
                   }}
                 >
                   {COUNTRIES.map((c) => (
@@ -236,8 +484,13 @@ export function CheckoutPage() {
                 <select
                   value={state}
                   onChange={(e) => {
-                    setState(e.target.value);
+                    const nextState = e.target.value;
+                    setState(nextState);
                     setCity("");
+                    setErrors((prev) => {
+                      const { state: _s, city: _ci, ...rest } = prev;
+                      return rest;
+                    });
                   }}
                 >
                   <option value="">Select state</option>
@@ -251,7 +504,17 @@ export function CheckoutPage() {
             </div>
             <div className="checkout-row">
               <Field label="City" error={errors.city}>
-                <select value={city} onChange={(e) => setCity(e.target.value)}>
+                <select
+                  value={city}
+                  disabled={cityOptions.length === 0}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                    setErrors((prev) => {
+                      const { city: _ci, ...rest } = prev;
+                      return rest;
+                    });
+                  }}
+                >
                   <option value="">Select city</option>
                   {cityOptions.map((c) => (
                     <option key={c} value={c}>
@@ -292,6 +555,22 @@ export function CheckoutPage() {
                 Card
               </button>
             </div>
+            <p className="checkout-pay__hint">
+              Demo checkout — no real charge. Card: use{" "}
+              <button
+                type="button"
+                className="checkout-pay__fill"
+                onClick={() => {
+                  setPayment("Card");
+                  setCardNumber(formatCardNumber(DEMO_CARD));
+                  setCardExp("12/30");
+                  setCardCvv("123");
+                }}
+              >
+                4111 1111 1111 1111
+              </button>
+              , any future expiry, any 3-digit CVV.
+            </p>
           </section>
 
           {payment === "Card" && (
@@ -302,8 +581,8 @@ export function CheckoutPage() {
                 <Field label="Card number" error={errors.cardNumber}>
                   <input
                     value={cardNumber}
-                    onChange={(e) => setCardNumber(e.target.value)}
-                    placeholder="0000-0000-0000-0000"
+                    onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+                    placeholder="0000 0000 0000 0000"
                     inputMode="numeric"
                     autoComplete="cc-number"
                   />
@@ -312,15 +591,15 @@ export function CheckoutPage() {
                   <Field label="Date of expiration" error={errors.cardExp}>
                     <input
                       value={cardExp}
-                      onChange={(e) => setCardExp(e.target.value)}
-                      placeholder="01/01"
+                      onChange={(e) => setCardExp(formatExp(e.target.value))}
+                      placeholder="MM/YY"
                       autoComplete="cc-exp"
                     />
                   </Field>
                   <Field label="CVV/CVC" error={errors.cardCvv}>
                     <input
                       value={cardCvv}
-                      onChange={(e) => setCardCvv(e.target.value)}
+                      onChange={(e) => setCardCvv(e.target.value.replace(/\D/g, "").slice(0, 4))}
                       placeholder="***"
                       inputMode="numeric"
                       autoComplete="cc-csc"

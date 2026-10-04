@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { productsApi, reviewsApi } from "../api";
 import { authorInitial, resolveReviewAuthor } from "../utils/reviewAuthor";
+import {
+  translateReviewToUkrainian,
+  type ReviewTranslation,
+} from "../utils/translateToUk";
 import { ApiError } from "../api/client";
 import type { ProductDetail, ProductListItem, ProductReview } from "../api/types";
 import { useAuth } from "../app/AuthContext";
@@ -66,6 +70,11 @@ export function ProductPage() {
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [reviewsVisible, setReviewsVisible] = useState(3);
   const [helpful, setHelpful] = useState<Record<string, number>>({});
+  const [reviewTranslations, setReviewTranslations] = useState<
+    Record<string, ReviewTranslation>
+  >({});
+  const [reviewShowUk, setReviewShowUk] = useState<Record<string, boolean>>({});
+  const [translateBusy, setTranslateBusy] = useState<Record<string, boolean>>({});
   const [notifyBusy, setNotifyBusy] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; index: number; alt?: string } | null>(null);
 
@@ -78,6 +87,9 @@ export function ProductPage() {
     setTagFilter(null);
     setReviewsVisible(3);
     setHelpful({});
+    setReviewTranslations({});
+    setReviewShowUk({});
+    setTranslateBusy({});
     productsApi
       .byId(id)
       .then((p) => {
@@ -235,6 +247,7 @@ export function ProductPage() {
         title: payload.title,
         body: payload.body,
         tags: payload.tags,
+        imageUrls: payload.photos,
       });
       setProduct({
         ...product!,
@@ -586,6 +599,11 @@ export function ProductPage() {
                   {visibleReviews.map((r, i) => {
                     const key = reviewKey(r, i);
                     const helpfulCount = helpful[key] ?? (i === 1 ? 25 : 0);
+                    const showingUk = !!reviewShowUk[key];
+                    const uk = reviewTranslations[key];
+                    const busy = !!translateBusy[key];
+                    const titleText = showingUk && uk ? uk.title || r.title : r.title;
+                    const bodyText = showingUk && uk ? uk.body || r.body : r.body;
                     return (
                       <article key={key} className="review-card">
                         <div className="review-card__head">
@@ -604,8 +622,11 @@ export function ProductPage() {
                             </span>
                           ))}
                         </div>
-                        <h3>{r.title}</h3>
-                        <p>{r.body}</p>
+                        <h3>{titleText}</h3>
+                        <p>{bodyText}</p>
+                        {showingUk && (
+                          <p className="review-card__lang-note">Translated to Ukrainian</p>
+                        )}
                         {r.tags.length > 0 && (
                           <div className="review-card__tags">
                             {r.tags.map((t) => (
@@ -652,10 +673,39 @@ export function ProductPage() {
                             </button>
                             <button
                               type="button"
-                              className="btn btn-translate"
-                              onClick={() => setMsg("Translation is a demo action")}
+                              className={`btn btn-translate${showingUk ? " is-active" : ""}`}
+                              disabled={busy}
+                              aria-busy={busy}
+                              onClick={async () => {
+                                setMsg(null);
+                                if (showingUk) {
+                                  setReviewShowUk((prev) => ({ ...prev, [key]: false }));
+                                  return;
+                                }
+                                if (uk) {
+                                  setReviewShowUk((prev) => ({ ...prev, [key]: true }));
+                                  return;
+                                }
+                                setTranslateBusy((prev) => ({ ...prev, [key]: true }));
+                                try {
+                                  const next = await translateReviewToUkrainian(
+                                    r.title ?? "",
+                                    r.body ?? "",
+                                  );
+                                  setReviewTranslations((prev) => ({ ...prev, [key]: next }));
+                                  setReviewShowUk((prev) => ({ ...prev, [key]: true }));
+                                } catch (e) {
+                                  setMsg(
+                                    e instanceof Error
+                                      ? e.message
+                                      : "Could not translate this review",
+                                  );
+                                } finally {
+                                  setTranslateBusy((prev) => ({ ...prev, [key]: false }));
+                                }
+                              }}
                             >
-                              Translate
+                              {busy ? "Translating…" : showingUk ? "Show original" : "Translate"}
                             </button>
                           </div>
                           {helpfulCount > 0 && (

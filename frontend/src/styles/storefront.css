@@ -1198,6 +1198,22 @@ button.tag {
   font-weight: 600;
 }
 
+.btn-translate.is-active {
+  background: var(--header);
+  color: #fff !important;
+}
+
+.btn-translate:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.review-card__lang-note {
+  margin: -4px 0 10px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .review-card__helpful-note {
   color: var(--muted);
   font-size: 0.85rem;
@@ -4000,6 +4016,17 @@ html, body, #root {
   justify-content: center;
 }
 
+.pdp-review-modal__photo-add:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.pdp-review-modal__photo-error {
+  margin: 0 0 8px;
+  color: #b00020;
+  font-size: 0.85rem;
+}
+
 .pdp-review-modal__actions {
   display: flex;
   justify-content: flex-end;
@@ -4606,6 +4633,25 @@ html, body, #root {
 .checkout-pay__check {
   font-weight: 700;
 }
+
+.checkout-pay__hint {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.checkout-pay__fill {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--header);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
 .checkout-summary {
   background: #fff;
   border-radius: 8px;

@@ -191,6 +191,8 @@ public class ReviewController : ControllerBase
             return Conflict(new { error = result.Error.Description ?? "Review already exists" });
         if (result.Error?.Code == QueryError.EntityNotExist.Code)
             return NotFound(new { error = "Product not found" });
+        if (result.Error?.Code == "InvalidImage")
+            return BadRequest(new { error = result.Error.Description ?? "Invalid review photo" });
 
         _logger.LogWarning("PostProductReview failed: {Code}", result.Error?.Code);
         return StatusCode(500, new { error = "Failed to create review" });
@@ -270,17 +272,47 @@ public class ReviewController : ControllerBase
     }
 
     [HttpGet("image/{id}")]
-    public async Task<IActionResult> GetReviewImage(Guid id, CancellationToken ct)
+    public async Task<IActionResult> GetReviewImage(
+        Guid id,
+        [FromServices] Perry.Infrastructure.Storage.IStorageService storage,
+        CancellationToken ct)
     {
         var image = await _db.ProductReviewImages.FirstOrDefaultAsync(r => r.Id == id, ct);
-        if (image != null)
+        if (image is null) return NotFound("No image found");
+
+        if (image.Url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+            return Redirect(image.Url);
+
+        if (image.Url.StartsWith("/uploads", StringComparison.OrdinalIgnoreCase))
         {
-            var (mime, data) = Helpers.GetImageTypeFromBase64(image.Url);
-            if (mime != null)
-                return File(image.Url, mime);
+            try
+            {
+                var bytes = storage.Load(image.Url);
+                var ext = Path.GetExtension(image.Url).ToLowerInvariant();
+                var mime = ext switch
+                {
+                    ".png" => "image/png",
+                    ".gif" => "image/gif",
+                    ".webp" => "image/webp",
+                    ".bmp" => "image/bmp",
+                    _ => "image/jpeg",
+                };
+                return File(bytes, mime, enableRangeProcessing: false);
+            }
+            catch (FileNotFoundException)
+            {
+                return NotFound("No image found");
+            }
         }
 
-        return NotFound("No image found");
+        var (mimeType, data) = Helpers.GetImageTypeFromBase64(image.Url);
+        if (mimeType is null || data is null) return NotFound("No image found");
+
+        if (data.Contains(','))
+            data = data.Split(',')[1];
+
+        var imageBytes = Convert.FromBase64String(data);
+        return File(imageBytes, mimeType, enableRangeProcessing: false);
     }
 
     /// <summary>
