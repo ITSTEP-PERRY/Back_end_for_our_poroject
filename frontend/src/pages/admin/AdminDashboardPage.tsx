@@ -29,6 +29,12 @@ function money(v: number) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(v);
 }
 
+function fmtPct(v: number | null | undefined) {
+  if (v == null || Number.isNaN(v)) return null;
+  const sign = v > 0 ? "+" : "";
+  return `${sign}${v.toFixed(1)}%`;
+}
+
 export function AdminDashboardPage() {
   const [orders, setOrders] = useState<AdminOrdersResponse | null>(null);
   const [recent, setRecent] = useState<OrderDto[]>([]);
@@ -66,9 +72,11 @@ export function AdminDashboardPage() {
 
   const ordered = orders?.statusCounts?.Ordered ?? 0;
   const shipped = orders?.statusCounts?.Shipped ?? 0;
+  const ordersCmp = fmtPct(orders?.totalOrderCompare);
+  const amountCmp = fmtPct(orders?.totalAmountCompare);
 
   return (
-    <div className="ap-dash">
+    <div className="ap-dash" data-figma="a14-dashboard">
       <h1 className="ap-dash__title">Admin dashboard</h1>
       <p className="ap-dash__lead">Store pulse this month — then jump into a section.</p>
 
@@ -78,12 +86,34 @@ export function AdminDashboardPage() {
         <div className="ap-dash__kpi">
           <span className="ap-dash__kpi-label">Orders (month)</span>
           <strong className="ap-dash__kpi-value">{orders ? orders.totalOrders : "—"}</strong>
+          {ordersCmp && (
+            <span
+              className={
+                (orders?.totalOrderCompare ?? 0) >= 0
+                  ? "ap-dash__kpi-cmp is-up"
+                  : "ap-dash__kpi-cmp is-down"
+              }
+            >
+              {ordersCmp}
+            </span>
+          )}
         </div>
         <div className="ap-dash__kpi">
           <span className="ap-dash__kpi-label">Revenue (month)</span>
           <strong className="ap-dash__kpi-value">
             {orders ? money(orders.totalAmount) : "—"}
           </strong>
+          {amountCmp && (
+            <span
+              className={
+                (orders?.totalAmountCompare ?? 0) >= 0
+                  ? "ap-dash__kpi-cmp is-up"
+                  : "ap-dash__kpi-cmp is-down"
+              }
+            >
+              {amountCmp}
+            </span>
+          )}
         </div>
         <div className="ap-dash__kpi">
           <span className="ap-dash__kpi-label">Catalog products</span>

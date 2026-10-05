@@ -12,7 +12,7 @@ export function AdminLoginPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && isAdmin) navigate("/admin/products", { replace: true });
+    if (!loading && isAdmin) navigate("/admin", { replace: true });
   }, [loading, isAdmin, navigate]);
 
   const onSubmit = async (e: FormEvent) => {
@@ -20,7 +20,7 @@ export function AdminLoginPage() {
     setError(null);
     try {
       await login(loginName, password);
-      navigate("/admin/products");
+      navigate("/admin");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
     }

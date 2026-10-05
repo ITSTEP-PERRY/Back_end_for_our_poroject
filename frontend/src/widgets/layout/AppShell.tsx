@@ -127,7 +127,7 @@ export function AppShell() {
               </Link>
             )}
             {isAdmin && (
-              <Link to="/admin/products" className="header-link">
+              <Link to="/admin" className="header-link">
                 Admin
               </Link>
             )}
@@ -234,7 +234,7 @@ export function AppShell() {
                 <span>Account settings</span>
               </NavLink>
               {isAdmin && (
-                <NavLink to="/admin/products" className="mobile-nav__row" onClick={closeMenu}>
+                <NavLink to="/admin" className="mobile-nav__row" onClick={closeMenu}>
                   <img src="/icons/admin/pencil.svg" alt="" width={24} height={24} />
                   <span>Admin</span>
                 </NavLink>
@@ -353,6 +353,9 @@ export function AdminShell() {
             PERRY
           </Link>
           <nav className="admin-header__nav">
+            <NavLink to="/admin" end className="admin-header__link">
+              Dashboard
+            </NavLink>
             <NavLink to="/admin/products" className="admin-header__link">
               Products
             </NavLink>
@@ -405,6 +408,9 @@ export function AdminShell() {
                 <span>Administrator</span>
               </span>
             </Link>
+            <NavLink to="/admin" end onClick={close}>
+              Dashboard
+            </NavLink>
             <NavLink to="/admin/products" onClick={close}>
               Products
             </NavLink>
@@ -419,9 +425,6 @@ export function AdminShell() {
             </NavLink>
             <NavLink to="/admin/users" onClick={close}>
               Users
-            </NavLink>
-            <NavLink to="/admin" end onClick={close}>
-              Dashboard
             </NavLink>
             <NavLink to="/" onClick={close}>
               Store

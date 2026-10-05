@@ -293,6 +293,14 @@
   color: var(--ap-ink);
 }
 
+.ap-dash__kpi-cmp {
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.ap-dash__kpi-cmp.is-up { color: #047857; }
+.ap-dash__kpi-cmp.is-down { color: #9b1c1c; }
+
 .ap-dash__quick {
   display: flex;
   flex-wrap: wrap;

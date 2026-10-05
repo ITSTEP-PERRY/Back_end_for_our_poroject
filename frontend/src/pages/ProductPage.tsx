@@ -90,6 +90,8 @@ export function ProductPage() {
     setTagFilter(null);
     setReviewsVisible(3);
     setHelpful({});
+    setMyHelpful({});
+    setHelpfulBusy({});
     setReviewTranslations({});
     setReviewShowUk({});
     setTranslateBusy({});
@@ -105,6 +107,35 @@ export function ProductPage() {
         else setError(e.message);
       });
   }, [id]);
+
+  // Hydrate "my Helpful" marks from Product API after reload (JWT).
+  useEffect(() => {
+    if (!user || !product?.reviews?.length) return;
+    let cancelled = false;
+    const reviews = product.reviews;
+    void (async () => {
+      const nextMine: Record<string, boolean> = {};
+      const nextCounts: Record<string, number> = {};
+      await Promise.all(
+        reviews.map(async (r) => {
+          const key = String(r.id);
+          nextCounts[key] = r.totalHelpful ?? 0;
+          try {
+            const mine = await reviewsApi.myGrade(r.id);
+            nextMine[key] = !!(mine.isHelpful ?? mine.IsHelpful);
+          } catch {
+            nextMine[key] = false;
+          }
+        }),
+      );
+      if (cancelled) return;
+      setHelpful((prev) => ({ ...nextCounts, ...prev }));
+      setMyHelpful((prev) => ({ ...nextMine, ...prev }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, product?.id, product?.reviews]);
 
   // If the viewer has a review without a stored avatar, push Auth photo → Product /uploads.
   useEffect(() => {
