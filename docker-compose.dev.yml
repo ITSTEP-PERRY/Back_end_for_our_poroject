@@ -1,0 +1,62 @@
+# Perry — локальный стек (postgres + api)
+# Desktop/Mobile UI: папки frontend/ и mobile/ (Vite / Expo), не в compose
+#
+# cp .env.example .env
+# docker compose -f docker-compose.dev.yml up --build
+#
+# Defaults ниже — только для CI / быстрого локального старта.
+# В проде задайте POSTGRES_PASSWORD и JWT_KEY через .env / secrets.
+# Custom server: корневой docker-compose.yml (#D01).
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: perry-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-perry}
+      POSTGRES_USER: ${POSTGRES_USER:-perry}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    ports:
+      - "5432:5432"
+    volumes:
+      - perry_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-perry} -d $${POSTGRES_DB:-perry}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: src/Perry.Api/Dockerfile
+    container_name: perry-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-perry};Username=${POSTGRES_USER:-perry};Password=${POSTGRES_PASSWORD:-changeme}"
+      Jwt__Key: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
+      Jwt__SigningSecret: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
+      Jwt__Issuer: ${JWT_ISSUER:-Perry.AuthService}
+      Jwt__Audience: ${JWT_AUDIENCE:-Perry.Client}
+      Jwt__SkipSignatureValidation: ${JWT_SKIP_SIGNATURE:-false}
+      Jwt__MapInboundClaims: "false"
+      Jwt__RoleClaimType: role
+      Jwt__NameClaimType: sub
+      AuthService__BaseUrl: ${AUTH_SERVICE_BASE_URL:-https://perry-auth-service.orangeplant-910928aa.swedencentral.azurecontainerapps.io}
+      AuthService__ServiceName: ${AUTH_SERVICE_NAME:-local-service}
+      Smtp__UseStub: ${SMTP_USE_STUB:-true}
+      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
+      Smtp__Port: ${SMTP_PORT:-587}
+      Smtp__From: ${SMTP_FROM:-}
+      Smtp__Username: ${SMTP_USERNAME:-}
+      Smtp__Password: ${SMTP_PASSWORD:-}
+      Smtp__EnableSsl: "true"
+    ports:
+      - "5272:8080"
+
+volumes:
+  perry_pg_data:
