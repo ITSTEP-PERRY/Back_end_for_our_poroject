@@ -11,9 +11,6 @@ COPY ["src/Perry.Core/Perry.Infrastructure.csproj", "src/Perry.Infrastructure/"]
 # 2. Быстро восстанавливаем пакеты. Этот слой закэшируется и не будет выполняться заново
 RUN dotnet restore "src/Perry.Api/Perry.Api.csproj" --disable-parallel 
 
-# 3. Только теперь копируем весь оставшийся исходный код
-COPY . .
-
 WORKDIR /src/src/Perry.Api
 
 # 4. Собираем приложение (флаг --no-restore использует уже скачанные на шаге 2 пакеты)
