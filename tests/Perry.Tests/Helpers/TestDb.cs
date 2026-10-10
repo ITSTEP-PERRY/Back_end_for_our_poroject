@@ -41,7 +41,14 @@ public sealed class TestDb : IDisposable
         return cat;
     }
 
-    public Product SeedProduct(Category? category = null, int stock = 10, decimal price = 25m, string? name = null)
+    public Product SeedProduct(
+        Category? category = null,
+        int stock = 10,
+        decimal price = 25m,
+        string? name = null,
+        Guid? sellerId = null,
+        int viewCount = 0,
+        int orderCount = 0)
     {
         category ??= SeedCategory();
         var product = new Product
@@ -53,9 +60,12 @@ public sealed class TestDb : IDisposable
             Brand = "Perry",
             Slug = "p-" + Guid.NewGuid().ToString("N")[..8],
             CategoryId = category.Id,
+            SellerId = sellerId,
             Price = price,
             StockQuantity = stock,
             Status = stock <= 0 ? ProductStatus.OutOfStock : ProductStatus.Active,
+            ViewCount = viewCount,
+            OrderCount = orderCount,
             CreatedAtUtc = DateTime.UtcNow
         };
         Db.Products.Add(product);

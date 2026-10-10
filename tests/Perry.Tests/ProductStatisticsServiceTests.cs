@@ -55,4 +55,53 @@ public class ProductStatisticsServiceTests
         var ok = await stats.TryRecordViewAsync(Guid.NewGuid(), "client-b");
         Assert.False(ok);
     }
+
+    [Fact]
+    public async Task GetMostViewed_without_seller_returns_all_ordered_by_views()
+    {
+        using var fx = new TestDb();
+        var sellerA = Guid.NewGuid();
+        var sellerB = Guid.NewGuid();
+        var cat = fx.SeedCategory();
+        var low = fx.SeedProduct(cat, name: "Low", sellerId: sellerA, viewCount: 1);
+        var mid = fx.SeedProduct(cat, name: "Mid", sellerId: sellerB, viewCount: 5);
+        var high = fx.SeedProduct(cat, name: "High", sellerId: sellerA, viewCount: 10);
+        var stats = CreateStats(fx);
+
+        var items = await stats.GetMostViewedAsync(take: 10);
+
+        Assert.Equal(new[] { high.Id, mid.Id, low.Id }, items.Select(i => i.Id).ToArray());
+    }
+
+    [Fact]
+    public async Task GetMostViewed_with_sellerId_returns_only_that_sellers_products()
+    {
+        using var fx = new TestDb();
+        var sellerA = Guid.NewGuid();
+        var sellerB = Guid.NewGuid();
+        var cat = fx.SeedCategory();
+        var aHigh = fx.SeedProduct(cat, name: "A-High", sellerId: sellerA, viewCount: 3);
+        fx.SeedProduct(cat, name: "B-Higher", sellerId: sellerB, viewCount: 99);
+        var aLow = fx.SeedProduct(cat, name: "A-Low", sellerId: sellerA, viewCount: 1);
+        var stats = CreateStats(fx);
+
+        var items = await stats.GetMostViewedAsync(take: 10, sellerId: sellerA);
+
+        Assert.Equal(new[] { aHigh.Id, aLow.Id }, items.Select(i => i.Id).ToArray());
+    }
+
+    [Fact]
+    public async Task GetMostViewed_respects_take_clamp()
+    {
+        using var fx = new TestDb();
+        var seller = Guid.NewGuid();
+        var cat = fx.SeedCategory();
+        for (var i = 0; i < 5; i++)
+            fx.SeedProduct(cat, name: $"P{i}", sellerId: seller, viewCount: 10 - i);
+
+        var stats = CreateStats(fx);
+        var items = await stats.GetMostViewedAsync(take: 2, sellerId: seller);
+
+        Assert.Equal(2, items.Count);
+    }
 }
