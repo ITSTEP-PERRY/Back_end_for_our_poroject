@@ -36,9 +36,7 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-    network_mode: "service:tunnel"  # Routes all traffic through Gluetun
-    depends_on:
-      - tunnel
+   
       
   tunnel:
     container_name: cloudflared-tunnel
