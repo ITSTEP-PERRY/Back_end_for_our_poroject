@@ -5,8 +5,8 @@ WORKDIR /src
 # Если у вас мультипроектное решение (Solution), скопируйте файлы всех связанных .csproj
 COPY ["src/Perry.Api/Perry.Api.csproj", "src/Perry.Api/"]
 # Если есть другие библиотеки/проекты, от которых зависит Perry.Api, добавьте их сюда, например:
-COPY ["src/Perry.Core/Perry.Domain.csproj", "src/Perry.Domain/"]
-COPY ["src/Perry.Core/Perry.Infrastructure.csproj", "src/Perry.Infrastructure/"]
+COPY ["src/Perry.Domain/Perry.Domain.csproj", "src/Perry.Domain/"]
+COPY ["src/Perry.Infrastructure/Perry.Infrastructure.csproj", "src/Perry.Infrastructure/"]
 
 # 2. Быстро восстанавливаем пакеты. Этот слой закэшируется и не будет выполняться заново
 RUN dotnet restore "src/Perry.Api/Perry.Api.csproj" --disable-parallel 
