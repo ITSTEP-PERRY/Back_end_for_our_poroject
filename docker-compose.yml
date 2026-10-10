@@ -9,35 +9,16 @@
 # В проде задайте POSTGRES_PASSWORD и JWT_KEY через .env / secrets.
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: perry-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-perry}
-      POSTGRES_USER: ${POSTGRES_USER:-perry}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-    ports:
-      - "5432:5432"
-    volumes:
-      - perry_pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-perry} -d $${POSTGRES_DB:-perry}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   api:
     build:
       context: .
       dockerfile: src/Perry.Api/Dockerfile
     container_name: perry-api
-    depends_on:
-      postgres:
-        condition: service_healthy
+    restart: 'unless-stopped'
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-perry};Username=${POSTGRES_USER:-perry};Password=${POSTGRES_PASSWORD:-changeme}"
+      ConnectionStrings__DefaultConnection: "${ConnectionString}"
       Jwt__Key: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
       Jwt__SigningSecret: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
       Jwt__Issuer: ${JWT_ISSUER:-Perry.AuthService}
