@@ -36,8 +36,10 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-    ports:
-      - "5272:8080"
+      
+    network_mode: "${NETWORK_MODE:-host}"
+    depends_on:
+      - tunnel
       
   tunnel:
     container_name: cloudflared-tunnel
