@@ -47,9 +47,5 @@ services:
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
 
-networks:
-  default:
-    external:
-      name: api
 volumes:
   perry_pg_data:
