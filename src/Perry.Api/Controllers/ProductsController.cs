@@ -232,13 +232,24 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
     
-    /// Часто просматриваемые товары (по ViewCount).
+    /// <summary>
+    /// Часто просматриваемые товары (по ViewCount, затем OrderCount).
+    /// Seller — только свои товары; Admin — все (#A16).
     /// GET /api/products/popular?take=10
     /// </summary>
+    [Authorize(Roles = "Admin,Seller")]
     [HttpGet("popular")]
     public async Task<IActionResult> GetPopular([FromQuery] int take = 10, CancellationToken cancellationToken = default)
     {
-        var items = await _stats.GetMostViewedAsync(take, cancellationToken);
+        Guid? sellerId = null;
+        if (!User.IsInRole("Admin"))
+        {
+            sellerId = AuthClaims.GetUserId(User);
+            if (sellerId is null)
+                return Unauthorized(new { error = "SellerId (JWT sub) required." });
+        }
+
+        var items = await _stats.GetMostViewedAsync(take, sellerId, cancellationToken);
         return Ok(new { take = items.Count, items });
     }
 

@@ -14,7 +14,11 @@ public interface IProductStatisticsService
 
     Task<(int ViewCount, int OrderCount)?> GetStatsAsync(Guid productId, CancellationToken ct = default);
 
-    Task<IReadOnlyList<ProductStatsListItem>> GetMostViewedAsync(int take = 10, CancellationToken ct = default);
+    /// <param name="sellerId">If set, only products of that seller (#A16).</param>
+    Task<IReadOnlyList<ProductStatsListItem>> GetMostViewedAsync(
+        int take = 10,
+        Guid? sellerId = null,
+        CancellationToken ct = default);
 }
 
 public sealed record ProductStatsListItem(
@@ -105,13 +109,21 @@ public sealed class ProductStatisticsService : IProductStatisticsService
         return row is null ? null : (row.ViewCount, row.OrderCount);
     }
 
-    public async Task<IReadOnlyList<ProductStatsListItem>> GetMostViewedAsync(int take = 10, CancellationToken ct = default)
+    public async Task<IReadOnlyList<ProductStatsListItem>> GetMostViewedAsync(
+        int take = 10,
+        Guid? sellerId = null,
+        CancellationToken ct = default)
     {
         if (take < 1) take = 10;
         if (take > 50) take = 50;
 
-        return await _db.Products.AsNoTracking()
-            .Where(p => p.Status == ProductStatus.Active || p.Status == ProductStatus.OutOfStock)
+        var query = _db.Products.AsNoTracking()
+            .Where(p => p.Status == ProductStatus.Active || p.Status == ProductStatus.OutOfStock);
+
+        if (sellerId is not null)
+            query = query.Where(p => p.SellerId == sellerId);
+
+        return await query
             .OrderByDescending(p => p.ViewCount)
             .ThenByDescending(p => p.OrderCount)
             .Take(take)
