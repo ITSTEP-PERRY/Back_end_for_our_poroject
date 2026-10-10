@@ -45,17 +45,22 @@ jobs:
       - name: Run tests
         run: dotnet test Perry.sln --configuration Release --no-build --verbosity normal
 
-      - name: Validate Docker Compose
-        run: docker compose config > /dev/null
+      # CI uses docker-compose.dev.yml (postgres+api). Root docker-compose.yml is custom-server (#D01).
+      - name: Validate Docker Compose (dev + deploy)
+        run: |
+          docker compose -f docker-compose.dev.yml config > /dev/null
+          ConnectionString="Host=localhost;Database=perry;Username=perry;Password=changeme" \
+            NETWORK_MODE=bridge \
+            docker compose -f docker-compose.yml config > /dev/null
 
       - name: Build Docker images
-        run: docker compose build
+        run: docker compose -f docker-compose.dev.yml build
 
       - name: Start Docker environment
-        run: docker compose up -d
+        run: docker compose -f docker-compose.dev.yml up -d
 
       - name: Check running containers
-        run: docker compose ps
+        run: docker compose -f docker-compose.dev.yml ps
 
       - name: Wait for API
         run: |
@@ -70,7 +75,7 @@ jobs:
           done
 
           echo "API did not become available"
-          docker compose logs
+          docker compose -f docker-compose.dev.yml logs
           exit 1
 
       - name: Integration test API and database
@@ -91,12 +96,12 @@ jobs:
           done
 
           echo "Integration test failed"
-          docker compose logs
+          docker compose -f docker-compose.dev.yml logs
           exit 1
 
       - name: Stop Docker environment
         if: always()
-        run: docker compose down
+        run: docker compose -f docker-compose.dev.yml down
 
   publish-images:
     name: Publish Docker images to GHCR

@@ -93,127 +93,55 @@ Publish to GHCR
 
 Локальное развёртывание
 
-Для локального запуска используется Docker Compose.
+Для локальной разработки (Postgres + API в compose):
 
-Основной файл:
+```bash
+cp .env.example .env
+docker compose -f docker-compose.dev.yml up --build -d
+```
 
-docker-compose.yml
+Сервисы: `perry-postgres` (`:5432`), `perry-api` (`:5272` → контейнер `:8080`).
 
-Перед запуском необходимо убедиться, что задана переменная окружения:
+Проверка: `http://localhost:5272/api/health` и Swagger `http://localhost:5272/swagger`.
 
-SA_PASSWORD
+Остановка: `docker compose -f docker-compose.dev.yml down`.
 
-После этого выполняется:
+## Custom server (#D01)
 
-docker compose build
+Корневой `docker-compose.yml` взят из ветки `deploy`: только `perry-api`, без встроенного Postgres.
+Нужен внешний PostgreSQL и переменные в `.env`:
 
-Запуск:
+- `ConnectionString` — строка подключения к БД
+- `NETWORK_MODE` — обычно `host` (по умолчанию)
+- `JWT_KEY` / SMTP / Auth — как в `.env.example`
 
-docker compose up -d
+```bash
+cp .env.example .env
+# заполнить ConnectionString, JWT_KEY (секреты не коммитить)
+docker compose up --build -d
+```
 
-Проверка:
+При `network_mode: host` API слушает порт из `ASPNETCORE_URLS` (по умолчанию `8080`):
 
-docker compose ps
-Используемые сервисы
+- health: `http://localhost:8080/api/health`
+- swagger: `http://localhost:8080/swagger`
 
-Docker Compose запускает три основных сервиса:
+Фактический деплой на конкретный хост (SSH/IP) — отдельно, когда команда даст доступы.
 
-sqlserver
-api
-web
-
-Контейнеры:
-
-perry-sql
-perry-api
-perry-web
-
-Порты:
-
-SQL Server → 1433
-API        → 5001
-Web        → 5000
-Проверка после развёртывания
-
-После запуска необходимо проверить состояние контейнеров:
-
-docker compose ps
-
-Все три контейнера должны находиться в состоянии Up.
-
-Затем проверяется API:
-
-http://localhost:5001/health
-
-При успешной работе API возвращает:
-
-Healthy
-
-Web-приложение проверяется по адресу:
-
-http://localhost:5000
-
-Swagger API:
-
-http://localhost:5001/swagger
-Перезапуск после изменения кода
-
-После изменения исходного кода Docker-образы необходимо пересобрать:
-
-docker compose up -d --build
-
-После этого рекомендуется выполнить:
-
-docker compose ps
-
-и проверить health endpoint:
-
-http://localhost:5001/health
 Остановка
 
-Для остановки Docker-окружения:
-
-docker compose down
-
-При необходимости удалить также данные Docker volume:
-
-docker compose down -v
-
-Удаление volume приводит к удалению сохранённых данных SQL Server, поэтому эту команду следует использовать осторожно.
+- Локально: `docker compose -f docker-compose.dev.yml down` (с данными: добавьте `-v`).
+- Custom server: `docker compose down`.
 
 Конфигурация и секреты
 
-Секретные данные не должны храниться непосредственно в Git-репозитории.
-
-Пароль SQL Server передаётся через переменную:
-
-SA_PASSWORD
-
-Для GitHub Actions используется GitHub Actions Secret:
-
-SA_PASSWORD
-
-Локально секрет может находиться в .env.
-
-Файл .env не должен попадать в Git.
-
-Для примера переменных окружения используется:
-
-.env.example
-
-В .env.example не должны находиться реальные пароли и другие секреты.
+Секреты не коммитить. Локально — `.env` (в `.gitignore`). Пример переменных — `.env.example`
+(`ConnectionString`, `NETWORK_MODE`, `JWT_KEY`, SMTP, Auth). Файл `passwod_Azure.txt` и любые
+Azure/SSH пароли — только локально, не в git и не в PR.
 
 Текущий статус развёртывания
 
-На текущем этапе:
-
-Docker Compose настроен;
-API и Web имеют Dockerfile;
-SQL Server запускается в отдельном контейнере;
-локальное Docker-окружение успешно запускается;
-API имеет health check;
-Docker-образы публикуются в GHCR;
-CI автоматически проверяет сборку и запуск;
-подготовлена схема дальнейшего развёртывания.
-
-Полноценное облачное развёртывание может быть выполнено на следующем этапе проекта.
+- `docker-compose.dev.yml` — локальный Postgres + API (CI).
+- `docker-compose.yml` — custom server (из ветки `deploy`, #D01).
+- Образ API: `src/Perry.Api/Dockerfile`, публикация в GHCR после green CI на `main`.
+- Фактический деплой на конкретный хост — когда команда даст SSH и `ConnectionString`.

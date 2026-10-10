@@ -1,43 +1,24 @@
-# Perry — локальный стек
-# PostgreSQL + Perry.Api
-# Desktop/Mobile UI: папки frontend/ и mobile/ (Vite / Expo), не в compose
+﻿# Perry — custom server (#D01)
+# Только API; PostgreSQL внешний (ConnectionString в .env).
+# Локально с встроенным Postgres: docker compose -f docker-compose.dev.yml up --build
 #
 # cp .env.example .env
-# docker compose up --build
+# задайте ConnectionString и JWT_KEY
+# docker compose up --build -d
 #
-# Defaults ниже — только для CI / быстрого локального старта.
-# В проде задайте POSTGRES_PASSWORD и JWT_KEY через .env / secrets.
+# При NETWORK_MODE=host API слушает ASPNETCORE_URLS (по умолчанию :8080).
 
 services:
-  postgres:
-    image: postgres:16-alpine
-    container_name: perry-postgres
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-perry}
-      POSTGRES_USER: ${POSTGRES_USER:-perry}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
-    ports:
-      - "5432:5432"
-    volumes:
-      - perry_pg_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-perry} -d $${POSTGRES_DB:-perry}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   api:
     build:
       context: .
       dockerfile: src/Perry.Api/Dockerfile
     container_name: perry-api
-    depends_on:
-      postgres:
-        condition: service_healthy
+    restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=${POSTGRES_DB:-perry};Username=${POSTGRES_USER:-perry};Password=${POSTGRES_PASSWORD:-changeme}"
+      ConnectionStrings__DefaultConnection: "${ConnectionString}"
       Jwt__Key: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
       Jwt__SigningSecret: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
       Jwt__Issuer: ${JWT_ISSUER:-Perry.AuthService}
@@ -55,8 +36,4 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-    ports:
-      - "5272:8080"
-
-volumes:
-  perry_pg_data:
+    network_mode: "${NETWORK_MODE:-host}"
