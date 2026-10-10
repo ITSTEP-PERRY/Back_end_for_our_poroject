@@ -111,7 +111,7 @@ export function AdminProductEditPage() {
 
   const addImageUrl = () => {
     if (form.imageUrls.length >= MAX_IMAGES) return;
-    const url = window.prompt("Image URL");
+    const url = window.prompt("Image or video URL (.mp4 for gallery video)");
     if (!url?.trim()) return;
     setForm((f) => ({ ...f, imageUrls: [...f.imageUrls, url.trim()].slice(0, MAX_IMAGES) }));
   };
@@ -245,24 +245,33 @@ export function AdminProductEditPage() {
           <div className="ap-pedit-display">
             <div className="ap-pedit-display__head">
               <span>
-                Product display <span className="ap-pedit-display__info" title="Up to 10 images">ⓘ</span>
+                Product display{" "}
+                <span
+                  className="ap-pedit-display__info"
+                  title="Up to 10 media URLs. Paste a .mp4 URL for gallery video (#42)."
+                >
+                  ⓘ
+                </span>
               </span>
               <span className="ap-pedit-display__count">
                 {imageCount} / {MAX_IMAGES}
               </span>
             </div>
             <div className="ap-pedit-display__grid">
-              {form.imageUrls.map((url, i) => (
-                <button
-                  key={`${url}-${i}`}
-                  type="button"
-                  className="ap-pedit-display__tile ap-pedit-display__tile--filled"
-                  onClick={() => removeImage(i)}
-                  title="Remove image"
-                >
-                  <img src={url} alt="" />
-                </button>
-              ))}
+              {form.imageUrls.map((url, i) => {
+                const isVideo = /\.(mp4|webm|mov)(\?|$)/i.test(url);
+                return (
+                  <button
+                    key={`${url}-${i}`}
+                    type="button"
+                    className="ap-pedit-display__tile ap-pedit-display__tile--filled"
+                    onClick={() => removeImage(i)}
+                    title={isVideo ? "Remove video" : "Remove image"}
+                  >
+                    {isVideo ? <span className="ap-pedit-display__video">VIDEO</span> : <img src={url} alt="" />}
+                  </button>
+                );
+              })}
               {imageCount < MAX_IMAGES && (
                 <button type="button" className="ap-pedit-display__tile" onClick={addImageUrl} aria-label="Add image">
                   <span>+</span>

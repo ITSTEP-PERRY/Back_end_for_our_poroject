@@ -59,8 +59,48 @@ public static class DbSeeder
         await EnsureCatalogFilterAttributesAsync(db);
         await EnsureProductPageDemoAsync(db, catalog);
         await EnsureShopLooksAliveAsync(db, catalog);
+        await EnsureDemoProductVideosAsync(db);
         await EnsureDemoOrdersAsync(db);
         await EnsureOrderNumbersAsync(db);
+    }
+
+    /// <summary>
+    /// #42 — 1–2 демо-товара с mp4 в галерее (IsVideo), без YouTube embed.
+    /// </summary>
+    private static async Task EnsureDemoProductVideosAsync(AppDbContext db)
+    {
+        const string demoMp4 = "https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4";
+
+        if (await db.ProductImages.AnyAsync(i => i.IsVideo))
+            return;
+
+        var products = await db.Products
+            .Include(p => p.Images)
+            .Where(p => p.Status == ProductStatus.Active)
+            .OrderBy(p => p.Name)
+            .Take(2)
+            .ToListAsync();
+
+        foreach (var p in products)
+        {
+            if (p.Images.Any(i => i.IsVideo))
+                continue;
+
+            var nextOrder = p.Images.Count == 0 ? 0 : p.Images.Max(i => i.SortOrder) + 1;
+            db.ProductImages.Add(new ProductImage
+            {
+                Id = Guid.NewGuid(),
+                ProductId = p.Id,
+                Url = demoMp4,
+                SortOrder = nextOrder,
+                IsPrimary = false,
+                IsVideo = true,
+                AltText = $"{p.Name} demo video"
+            });
+        }
+
+        if (products.Count > 0)
+            await db.SaveChangesAsync();
     }
 
     /// <summary>

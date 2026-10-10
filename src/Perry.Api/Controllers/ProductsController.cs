@@ -715,7 +715,9 @@ public class ProductsController : ControllerBase
                     continue;
                 var sort = img.SortOrder ?? order;
                 var primary = anyPrimary ? img.IsPrimary : result.Count == 0;
-                result.Add((img.Url.Trim(), primary, img.IsVideo, img.AltText?.Trim(), sort));
+                var url = img.Url.Trim();
+                var isVideo = img.IsVideo || LooksLikeVideoUrl(url);
+                result.Add((url, primary, isVideo, img.AltText?.Trim(), sort));
                 order++;
             }
             return result;
@@ -728,12 +730,23 @@ public class ProductsController : ControllerBase
             {
                 if (string.IsNullOrWhiteSpace(url))
                     continue;
-                result.Add((url.Trim(), order == 0, false, null, order));
+                var trimmed = url.Trim();
+                // #42 — plain imageUrls: treat .mp4 (and similar) as gallery video
+                result.Add((trimmed, order == 0, LooksLikeVideoUrl(trimmed), null, order));
                 order++;
             }
         }
 
         return result;
+    }
+
+    private static bool LooksLikeVideoUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        var path = url.Split('?', 2)[0];
+        return path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+               || path.EndsWith(".webm", StringComparison.OrdinalIgnoreCase)
+               || path.EndsWith(".mov", StringComparison.OrdinalIgnoreCase);
     }
 
     [Authorize(Roles = "Admin,Seller")]
