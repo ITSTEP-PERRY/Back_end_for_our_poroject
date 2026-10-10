@@ -2,11 +2,13 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # 1. Копируем только файлы проектов для восстановления зависимостей
-# Если у вас мультипроектное решение (Solution), скопируйте файлы всех связанных .csproj
-COPY ["src/Perry.Api/Perry.Api.csproj", "src/Perry.Api/"]
-# Если есть другие библиотеки/проекты, от которых зависит Perry.Api, добавьте их сюда, например:
-COPY ["src/Perry.Domain/Perry.Domain.csproj", "src/Perry.Domain/"]
-COPY ["src/Perry.Infrastructure/Perry.Infrastructure.csproj", "src/Perry.Infrastructure/"]
+# # Если у вас мультипроектное решение (Solution), скопируйте файлы всех связанных .csproj
+# COPY ["src/Perry.Api/Perry.Api.csproj", "src/Perry.Api/"]
+# # Если есть другие библиотеки/проекты, от которых зависит Perry.Api, добавьте их сюда, например:
+# COPY ["src/Perry.Domain/Perry.Domain.csproj", "src/Perry.Domain/"]
+# COPY ["src/Perry.Infrastructure/Perry.Infrastructure.csproj", "src/Perry.Infrastructure/"]
+
+COPY src/ src/
 
 # 2. Быстро восстанавливаем пакеты. Этот слой закэшируется и не будет выполняться заново
 RUN dotnet restore "src/Perry.Api/Perry.Api.csproj" --disable-parallel 
