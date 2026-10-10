@@ -36,8 +36,9 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-    ports:
-      - "5272:8080"
+    network_mode: "service:tunnel"  # Routes all traffic through Gluetun
+    depends_on:
+      - tunnel
       
   tunnel:
     container_name: cloudflared-tunnel
@@ -46,8 +47,8 @@ services:
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    network_mode: "service:api"  # Routes all traffic through Gluetun
-    depends_on:
-      - api
+    ports:
+      - "5272:8080"
+      
 volumes:
   perry_pg_data:
