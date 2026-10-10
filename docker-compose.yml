@@ -36,7 +36,7 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-   ports:
+    ports:
       - "5272:8080"
       
   tunnel:
