@@ -43,7 +43,7 @@ services:
     container_name: cloudflared-tunnel
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
-    command: tunnel run
+    command: tunnel run --no-autoupdate --token ${TUNNEL_TOKEN}
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
 
