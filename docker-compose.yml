@@ -38,18 +38,7 @@ services:
       Smtp__EnableSsl: "true"
       
     network_mode: "${NETWORK_MODE:-host}"
-    depends_on:
-      - tunnel
-      
-  tunnel:
-    container_name: cloudflared-tunnel
-    image: cloudflare/cloudflared:latest
-    restart: unless-stopped
-    command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
-    network_mode: "${NETWORK_MODE:-host}"
-    environment:
-      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    
+ 
       
 volumes:
   perry_pg_data:
