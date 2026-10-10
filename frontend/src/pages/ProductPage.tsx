@@ -220,7 +220,10 @@ export function ProductPage() {
   if (!product) return <div className="empty-state">Loading…</div>;
 
   const images = product.images?.length ? product.images : [];
-  const main = images[active]?.url;
+  const mainItem = images[active];
+  const main = mainItem?.url;
+  const mainIsVideo = Boolean(mainItem?.isVideo);
+  const photoUrls = images.filter((img) => !img.isVideo).map((img) => img.url);
   const discount =
     product.discountPercent ??
     (product.oldPrice && product.oldPrice > product.price
@@ -395,20 +398,35 @@ export function ProductPage() {
               <img src="/icons/carousel-prev.svg" alt="" width={24} height={24} />
             </button>
             {main ? (
-              <button
-                type="button"
-                className="pdp-gallery__open"
-                aria-label="Open photo"
-                onClick={() =>
-                  setLightbox({
-                    images: images.map((img) => img.url),
-                    index: active,
-                    alt: product.name,
-                  })
-                }
-              >
-                <img src={main} alt={product.name} />
-              </button>
+              mainIsVideo ? (
+                <div className="pdp-gallery__video-wrap">
+                  <video
+                    key={main}
+                    className="pdp-gallery__video"
+                    src={main}
+                    controls
+                    playsInline
+                    preload="metadata"
+                    aria-label={`${product.name} video`}
+                  />
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="pdp-gallery__open"
+                  aria-label="Open photo"
+                  onClick={() => {
+                    const photoIndex = Math.max(0, photoUrls.indexOf(main));
+                    setLightbox({
+                      images: photoUrls,
+                      index: photoIndex,
+                      alt: product.name,
+                    });
+                  }}
+                >
+                  <img src={main} alt={product.name} />
+                </button>
+              )
             ) : (
               <div className="img-placeholder large" />
             )}
@@ -421,17 +439,27 @@ export function ProductPage() {
               <button
                 key={img.id}
                 type="button"
-                className={`thumb ${i === active ? "active" : ""}`}
+                className={`thumb ${i === active ? "active" : ""} ${img.isVideo ? "thumb--video" : ""}`}
                 onClick={() => setActive(i)}
-                onDoubleClick={() =>
+                onDoubleClick={() => {
+                  if (img.isVideo || photoUrls.length === 0) return;
+                  const photoIndex = Math.max(0, photoUrls.indexOf(img.url));
                   setLightbox({
-                    images: images.map((x) => x.url),
-                    index: i,
+                    images: photoUrls,
+                    index: photoIndex,
                     alt: product.name,
-                  })
-                }
+                  });
+                }}
               >
-                <img src={img.url} alt="" />
+                {img.isVideo ? (
+                  <span className="thumb__video" aria-label="Video">
+                    <span className="thumb__video-icon" aria-hidden>
+                      ▶
+                    </span>
+                  </span>
+                ) : (
+                  <img src={img.url} alt="" />
+                )}
               </button>
             ))}
           </div>
