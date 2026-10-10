@@ -36,7 +36,8 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-   
+   ports:
+      - "5272:8080"
       
   tunnel:
     container_name: cloudflared-tunnel
@@ -45,8 +46,7 @@ services:
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
-    ports:
-      - "5272:8080"
+    
       
 volumes:
   perry_pg_data:
