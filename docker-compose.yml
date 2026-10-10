@@ -44,6 +44,7 @@ services:
     image: cloudflare/cloudflared:latest
     restart: unless-stopped
     command: tunnel --no-autoupdate run --token ${TUNNEL_TOKEN}
+    network_mode: "${NETWORK_MODE:-host}"
     environment:
       - TUNNEL_TOKEN=${TUNNEL_TOKEN}
     
