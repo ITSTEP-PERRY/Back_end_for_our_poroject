@@ -21,6 +21,7 @@ jobs:
 
     env:
       SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+      JWT_KEY: test-only-jwt-signing-key-for-ci-12345678901234567890
 
     steps:
       - name: Checkout repository
