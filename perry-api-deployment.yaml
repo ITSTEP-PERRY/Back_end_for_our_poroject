@@ -1,0 +1,77 @@
+﻿
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perry-api
+  namespace: perry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: perry-api
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: perry-api
+    spec:
+      containers:
+        - name: api
+          image: back_end_for_our_poroject-api:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              export ConnectionStrings__DefaultConnection="Server=perry-sql;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+              exec dotnet Perry.Api.dll
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ASPNETCORE_URLS
+              value: http://+:8080
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: perry-secrets
+                  key: SA_PASSWORD
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: perry-jwt
+                  key: JWT_KEY
+            - name: Jwt__Issuer
+              value: Perry
+            - name: Jwt__Audience
+              value: Perry
+            - name: Smtp__UseStub
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            limits:
+              cpu: "1"
+              memory: 768Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi

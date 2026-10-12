@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using Perry.Api.Auth;
 using Perry.Infrastructure;
 using Perry.Infrastructure.Persistence;
@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1",
         Description =
             "REST for the Perry React storefront (:3000) and admin.\n\n" +
-            "**Auth:** `POST /api/auth/login` → JWT Bearer.\n\n" +
+            "**Auth:** `POST /api/auth/login` в†’ JWT Bearer.\n\n" +
             "**Main groups:** auth, categories, products, reviews, cart, orders, wishlist, users, admin/reviews, notify."
     });
     // Nested records like CartController.AddRequest / WishlistController.AddRequest collide on schemaId.
@@ -103,5 +103,7 @@ app.UseCors("Frontend");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 
 app.Run();
+
