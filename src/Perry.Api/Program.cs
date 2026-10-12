@@ -119,8 +119,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("Frontend", policy =>
         policy.WithOrigins(
                 "https://admin.perrydev.space",
-                  "https://agreeable-pebble-0bf15fd1e.5.azurestaticapps.net",
-                "https://perrydev.space",
+                 "https://perrydev.space",
+                 "https://agreeable-pebble-0bf15fd1e.5.azurestaticapps.net",
                 "http://localhost:3000",
                 "http://127.0.0.1:3000",
                 "http://localhost:3001",
@@ -128,7 +128,7 @@ builder.Services.AddCors(options =>
                 "http://localhost:8081",
                 "http://127.0.0.1:8081",
                 "http://10.1.0.17:3000",
-                "http://10.1.0.17:3001",)
+                "http://10.1.0.17:3001")
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
