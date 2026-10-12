@@ -156,7 +156,8 @@ export const reviewsApi = {
       p.set("FilterObjects[0].Value", "true");
     }
     if (opts?.q) {
-      p.set("SearchPropertyName", "Title");
+      // #216 — product name / author email (AuthorName) / title
+      p.set("SearchPropertyName", "ProductOrEmail");
       p.set("SearchTerm", opts.q);
     }
     const raw = await apiFetch<{

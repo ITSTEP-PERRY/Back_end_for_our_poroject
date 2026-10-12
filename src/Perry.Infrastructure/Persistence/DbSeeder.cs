@@ -4,6 +4,7 @@ using Perry.Domain.Entities;
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Perry.Infrastructure.Persistence;
@@ -29,6 +30,49 @@ public static class DbSeeder
 
     private static IReadOnlyList<DummyPack>? _dummyCatalog;
 
+    /// <summary>
+    /// Реальные UserId из Auth / User service (не dummy Guid).
+    /// Переопределение: Seed__KnownUserIds=guid1,guid2,… в .env / appsettings.
+    /// </summary>
+    private static readonly Guid[] DefaultKnownAuthUserIds =
+    {
+        Guid.Parse("d78e94a9-cf1d-43f3-9ecd-643149b9e95a"), // demo Admin (sanyamart13)
+        Guid.Parse("43465fbf-6e7a-4632-9c83-068851bb45f5"), // second known Auth user
+    };
+
+    private static Guid[] _knownAuthUserIds = DefaultKnownAuthUserIds;
+
+    private static Guid KnownUserId(int index) =>
+        _knownAuthUserIds[Math.Abs(index) % _knownAuthUserIds.Length];
+
+    private static void LoadKnownAuthUserIds(IConfiguration? config)
+    {
+        var raw = config?["Seed:KnownUserIds"] ?? config?["Seed__KnownUserIds"];
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            _knownAuthUserIds = DefaultKnownAuthUserIds;
+            return;
+        }
+
+        var parsed = raw
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(s => Guid.TryParse(s, out var g) ? g : Guid.Empty)
+            .Where(g => g != Guid.Empty)
+            .Distinct()
+            .ToArray();
+        _knownAuthUserIds = parsed.Length > 0 ? parsed : DefaultKnownAuthUserIds;
+    }
+
+    private static bool IsDummySeedUserId(Guid userId)
+    {
+        if (_knownAuthUserIds.Contains(userId))
+            return false;
+        var s = userId.ToString("D");
+        // Явные seed-маркеры из старого DbSeeder (не существуют в User service).
+        return s.StartsWith("11111111-", StringComparison.OrdinalIgnoreCase)
+               || s.StartsWith("22222222-", StringComparison.OrdinalIgnoreCase);
+    }
+
     /// <summary>Только применить EF-миграции (для API / Azure при старте).</summary>
     public static async Task MigrateAsync(IServiceProvider services)
     {
@@ -42,6 +86,8 @@ public static class DbSeeder
     {
         using var scope = services.CreateScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var config = scope.ServiceProvider.GetService<IConfiguration>();
+        LoadKnownAuthUserIds(config);
 
         await db.Database.MigrateAsync();
         await EnsureReviewGradeReportedColumnAsync(db);
@@ -62,6 +108,66 @@ public static class DbSeeder
         await EnsureDemoProductVideosAsync(db);
         await EnsureDemoOrdersAsync(db);
         await EnsureOrderNumbersAsync(db);
+        await EnsureSeedReviewUserIdsAsync(db);
+    }
+
+    /// <summary>
+    /// #220 — заменить dummy UserId (1111…/2222…) в отзывах на существующих Auth users.
+    /// Случайные Guid из старого RandomReview тоже перекидываем на KnownUserIds (по индексу),
+    /// а дубликаты (UserId, ProductId) после remap удаляем.
+    /// </summary>
+    private static async Task EnsureSeedReviewUserIdsAsync(AppDbContext db)
+    {
+        var reviews = await db.ProductReviews
+            .OrderBy(r => r.ProductId)
+            .ThenBy(r => r.CreatedAtUtc)
+            .ToListAsync();
+        if (reviews.Count == 0)
+            return;
+
+        var changed = false;
+        foreach (var group in reviews.GroupBy(r => r.ProductId))
+        {
+            var list = group.ToList();
+            var usedSlots = new HashSet<Guid>();
+
+            // Сначала фиксируем уже «хорошие» UserId из пула.
+            foreach (var r in list.Where(r => _knownAuthUserIds.Contains(r.UserId)))
+                usedSlots.Add(r.UserId);
+
+            var slot = 0;
+            foreach (var r in list)
+            {
+                if (_knownAuthUserIds.Contains(r.UserId))
+                    continue;
+
+                // Dummy маркеры 1111/2222 или любой не-known (старый Guid.NewGuid seed).
+                Guid? target = null;
+                for (var attempt = 0; attempt < _knownAuthUserIds.Length; attempt++)
+                {
+                    var candidate = KnownUserId(slot + attempt);
+                    if (usedSlots.Contains(candidate)) continue;
+                    target = candidate;
+                    slot += attempt + 1;
+                    break;
+                }
+
+                if (target is null)
+                {
+                    // Пул исчерпан для этого товара — убираем лишний seed-отзыв.
+                    db.ProductReviews.Remove(r);
+                    changed = true;
+                    continue;
+                }
+
+                r.UserId = target.Value;
+                usedSlots.Add(target.Value);
+                changed = true;
+            }
+        }
+
+        if (changed)
+            await db.SaveChangesAsync();
     }
 
     /// <summary>
@@ -570,13 +676,18 @@ public static class DbSeeder
                 changed = true;
             }
 
-            if (p.Reviews.Count < 4)
+            // #220 — не больше отзывов, чем KnownAuthUserIds (unique UserId+ProductId + реальные Auth users).
+            if (p.Reviews.Count < _knownAuthUserIds.Length)
             {
-                var need = 4 + (Math.Abs(p.Sku.GetHashCode()) % 5); // 4..8
+                var need = _knownAuthUserIds.Length;
                 var toAdd = need - p.Reviews.Count;
+                var used = p.Reviews.Select(r => r.UserId).ToHashSet();
                 for (var i = 0; i < toAdd; i++)
                 {
-                    var review = RandomReview(p.Id, theme, p.Reviews.Count + i, pack?.Thumbnail);
+                    var userId = KnownUserId(p.Reviews.Count + i);
+                    if (!used.Add(userId))
+                        continue;
+                    var review = RandomReview(p.Id, theme, p.Reviews.Count + i, userId, pack?.Thumbnail);
                     db.ProductReviews.Add(review);
                     p.Reviews.Add(review);
                     foreach (var tag in review.Tags)
@@ -752,7 +863,12 @@ public static class DbSeeder
         return chars.Length == 0 ? "perry" : new string(chars).ToLowerInvariant();
     }
 
-    private static ProductReview RandomReview(Guid productId, string theme, int index, string? photoUrl = null)
+    private static ProductReview RandomReview(
+        Guid productId,
+        string theme,
+        int index,
+        Guid userId,
+        string? photoUrl = null)
     {
         var authors = new[]
         {
@@ -792,8 +908,8 @@ public static class DbSeeder
         {
             Id = reviewId,
             ProductId = productId,
-            // Distinct seed UserId so unique (UserId, ProductId) holds across bulk reviews.
-            UserId = Guid.NewGuid(),
+            // #220 — только UserId из Auth / User service (пул KnownAuthUserIds).
+            UserId = userId,
             AuthorName = authors[seed % authors.Length],
             Rating = rating,
             Title = titles[(seed / 3) % titles.Length],
@@ -869,7 +985,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
-                UserId = Guid.Parse("11111111-1111-1111-1111-111111111101"),
+                UserId = KnownUserId(0),
                 AuthorName = "Louisa Hines",
                 Rating = 5,
                 Title = "It's true to size and has pockets",
@@ -881,7 +997,7 @@ public static class DbSeeder
             {
                 Id = Guid.NewGuid(),
                 ProductId = dress.Id,
-                UserId = Guid.Parse("11111111-1111-1111-1111-111111111102"),
+                UserId = KnownUserId(1),
                 AuthorName = "Sylvia Kennedy",
                 Rating = 5,
                 Title = "Elegant",
@@ -889,19 +1005,26 @@ public static class DbSeeder
                 IsApproved = true,
                 CreatedAtUtc = DateTime.UtcNow.AddDays(-70)
             };
-            var r3 = new ProductReview
+            // Третий отзыв только если в пуле ≥3 Auth users (иначе unique / 404 User service).
+            ProductReview? r3 = null;
+            if (_knownAuthUserIds.Length >= 3)
             {
-                Id = Guid.NewGuid(),
-                ProductId = dress.Id,
-                UserId = Guid.Parse("11111111-1111-1111-1111-111111111103"),
-                AuthorName = "Cecilia Small",
-                Rating = 3,
-                Title = "Shift dress",
-                Body = "I loved the look and color, but it was way too big. Size L felt like XL.",
-                IsApproved = true,
-                CreatedAtUtc = DateTime.UtcNow.AddDays(-90)
-            };
-            db.ProductReviews.AddRange(r1, r2, r3);
+                r3 = new ProductReview
+                {
+                    Id = Guid.NewGuid(),
+                    ProductId = dress.Id,
+                    UserId = KnownUserId(2),
+                    AuthorName = "Cecilia Small",
+                    Rating = 3,
+                    Title = "Shift dress",
+                    Body = "I loved the look and color, but it was way too big. Size L felt like XL.",
+                    IsApproved = true,
+                    CreatedAtUtc = DateTime.UtcNow.AddDays(-90)
+                };
+            }
+
+            if (r3 is null) db.ProductReviews.AddRange(r1, r2);
+            else db.ProductReviews.AddRange(r1, r2, r3);
             db.ProductReviewTags.AddRange(
                 new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r1.Id, Name = "High quality" },
                 new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = r1.Id, Name = "Actual price" },
@@ -914,8 +1037,8 @@ public static class DbSeeder
                 ReviewId = r2.Id,
                 Url = dressPhoto
             });
-            dress.AverageRating = 4m;
-            dress.ReviewCount = Math.Max(dress.ReviewCount, 3);
+            dress.AverageRating = r3 is null ? 5m : 4m;
+            dress.ReviewCount = Math.Max(dress.ReviewCount, r3 is null ? 2 : 3);
             changed = true;
         }
 
@@ -1132,7 +1255,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = roku.Id,
-            UserId = Guid.Parse("22222222-2222-2222-2222-222222222201"),
+            UserId = KnownUserId(0),
             AuthorName = "Alex M.",
             Rating = 5,
             Title = "Easy to use",
@@ -1144,7 +1267,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = roku.Id,
-            UserId = Guid.Parse("22222222-2222-2222-2222-222222222202"),
+            UserId = KnownUserId(1),
             AuthorName = "Jordan K.",
             Rating = 4,
             Title = "Great value",
@@ -1157,7 +1280,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
-            UserId = Guid.Parse("22222222-2222-2222-2222-222222222203"),
+            UserId = KnownUserId(0),
             AuthorName = "Louisa Hines",
             Rating = 5,
             Title = "It's true to size and has pockets",
@@ -1169,7 +1292,7 @@ public static class DbSeeder
         {
             Id = Guid.NewGuid(),
             ProductId = dress.Id,
-            UserId = Guid.Parse("22222222-2222-2222-2222-222222222204"),
+            UserId = KnownUserId(1),
             AuthorName = "Sylvia Kennedy",
             Rating = 5,
             Title = "Elegant",
@@ -1177,20 +1300,8 @@ public static class DbSeeder
             IsApproved = true,
             CreatedAtUtc = DateTime.UtcNow.AddDays(-70)
         };
-        var dressReview3 = new ProductReview
-        {
-            Id = Guid.NewGuid(),
-            ProductId = dress.Id,
-            UserId = Guid.Parse("22222222-2222-2222-2222-222222222205"),
-            AuthorName = "Cecilia Small",
-            Rating = 3,
-            Title = "Shift dress",
-            Body = "I loved the look and color of the dress, but it was way too big. I usually order a size L, but this dress felt like an XL.",
-            IsApproved = true,
-            CreatedAtUtc = DateTime.UtcNow.AddDays(-90)
-        };
 
-        db.ProductReviews.AddRange(review1, review2, dressReview1, dressReview2, dressReview3);
+        db.ProductReviews.AddRange(review1, review2, dressReview1, dressReview2);
         db.ProductReviewTags.AddRange(
             new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = review1.Id, Name = "easy to use" },
             new ProductReviewTag { Id = Guid.NewGuid(), ReviewId = review1.Id, Name = "remote control" },
@@ -1207,6 +1318,7 @@ public static class DbSeeder
             ReviewId = dressReview2.Id,
             Url = dressPhoto
         });
+        // dressReview3 removed (#220): only KnownAuthUserIds.Length distinct users per product
 
         // Align dress card numbers with Product Page mockup vibe.
         dress.Sku = "5498209487628";
