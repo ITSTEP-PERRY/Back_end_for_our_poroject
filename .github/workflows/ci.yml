@@ -21,6 +21,7 @@ jobs:
 
     env:
       SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
+      JWT_KEY: ${{ secrets.JWT_KEY }}
 
     steps:
       - name: Checkout repository
@@ -55,7 +56,7 @@ jobs:
       - name: Wait for API
         run: |
           for i in {1..30}; do
-            if curl -fsS http://localhost:5001/health > /dev/null; then
+            if curl -fsS "http://localhost:5272/api/products?page=1&pageSize=1" > /dev/null; then
               echo "API is available"
               exit 0
             fi
@@ -71,7 +72,7 @@ jobs:
       - name: Integration test API and database
         run: |
           for i in {1..30}; do
-            response=$(curl -fsS "http://localhost:5001/api/products?page=1&pageSize=1" 2>/dev/null) && {
+            response=$(curl -fsS "http://localhost:5272/api/products?page=1&pageSize=1" 2>/dev/null) && {
               echo "API successfully returned data from database"
               echo "$response"
 
