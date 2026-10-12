@@ -13,12 +13,10 @@ public class WishlistItemConfiguration : IEntityTypeConfiguration<WishlistItem>
 
         builder.HasIndex(x => new { x.UserId, x.ProductId }).IsUnique();
         builder.HasIndex(x => x.UserId);
+        builder.HasIndex(x => x.ProductId);
+        builder.HasIndex(x => x.CreatedAtUtc);
 
-        builder.HasOne(x => x.User)
-            .WithMany()
-            .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
+        // No FK to Users — Auth Service owns identities (#94)
         builder.HasOne(x => x.Product)
             .WithMany()
             .HasForeignKey(x => x.ProductId)

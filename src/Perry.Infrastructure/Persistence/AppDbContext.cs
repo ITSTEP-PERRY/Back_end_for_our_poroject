@@ -25,7 +25,7 @@ public class AppDbContext : DbContext
     public DbSet<ProductReview> ProductReviews => Set<ProductReview>();
     public DbSet<ProductReviewImage> ProductReviewImages => Set<ProductReviewImage>();
     public DbSet<ProductReviewTag> ProductReviewTags => Set<ProductReviewTag>();
-
+    public DbSet<ProductReviewGrade>  ProductReviewGrades => Set<ProductReviewGrade>();
     // --- Корзина ---
     public DbSet<Cart> Carts => Set<Cart>();
     public DbSet<CartItem> CartItems => Set<CartItem>();
@@ -40,10 +40,10 @@ public class AppDbContext : DbContext
     // --- Notify when available ---
     public DbSet<StockNotifyRequest> StockNotifyRequests => Set<StockNotifyRequest>();
 
-    // --- Пользователи / админка (из homework ASP-421) ---
-    public DbSet<User> Users => Set<User>();
-    public DbSet<UserAccess> UserAccesses => Set<UserAccess>();
-    public DbSet<UserRole> UserRoles => Set<UserRole>();
+    // --- Auth коды / токены (локальные OTP для Product API; users — в Auth Service) ---
+    public DbSet<AuthToken> AuthTokens => Set<AuthToken>();
+
+    // Users / UserAccesses / UserRoles удалены (#94) — источник пользователей: Perry Auth API.
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,5 +51,8 @@ public class AppDbContext : DbContext
         // (папка Persistence/Configurations).
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
         base.OnModelCreating(modelBuilder);
+        // modelBuilder.Ignore<User>();
+        // modelBuilder.Ignore<UserAccess>();
+        // modelBuilder.Ignore<UserRole>();
     }
 }

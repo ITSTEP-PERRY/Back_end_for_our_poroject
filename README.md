@@ -1,274 +1,450 @@
-# Perry
+﻿# Perry React storefront (`perry-front`)
 
-Дипломный маркетплейс **Perry** на **ASP.NET Core 8** — витрина + админка + REST API.
-Рабочее название совпадает с фронтом команды: [perry-front](https://github.com/ITSTEP-PERRY/perry-front.git).
-Проекты решения: `Perry.Domain`, `Perry.Infrastructure`, `Perry.Web`, `Perry.Api`.
+## Быстрый запуск — две иконки
 
-## Документация
+| Ярлык | Что запускает | URL |
+|-------|----------------|-----|
+| **Perry Desktop** | Desktop-витрина (Vite) | http://localhost:3000 |
+| **Perry Mobile** | Mobile (Expo Web) | http://localhost:8081 |
 
-**Единая хроника работы:** [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md)  
-Оглавление: [docs/README.md](./docs/README.md)
+После clone один раз:  
+`powershell -ExecutionPolicy Bypass -File .\Install-Perry-Shortcuts.ps1`  
+(иконки появятся в корне репо и на рабочем столе).
 
-| Файл | О чём |
-|------|--------|
-| [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) | Последовательность всей работы + запуск + бэклог |
-| [docs/TRELLO-TODO.md](./docs/TRELLO-TODO.md) | Карточки #1–#88 с доски Trello (как вели задачи) |
-| [docs/ACCOUNT-КАБИНЕТ.md](./docs/ACCOUNT-КАБИНЕТ.md) | Инструкция: Wishlist / Orders / Settings |
-| [docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md) | Инструкция: Forgot / Reset / Finishing |
-| [docs/SMTP-НАСТРОЙКА.md](./docs/SMTP-НАСТРОЙКА.md) | Stub → Gmail App Password |
-| [docs/РЕЧЬ-SMTP-ДЕМО.md](./docs/РЕЧЬ-SMTP-ДЕМО.md) | Речь на защиту (~1 мин) |
-| [docs/SMOKE-ЗАЩИТА.md](./docs/SMOKE-ЗАЩИТА.md) | Чеклист демо |
-| [docs/docker.md](./docs/docker.md) | docker compose + env |
-| [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) | Срез спринта 19.09 |
-| [docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md) | Срез каталог / PDP / React |
-| [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md) | Срез Account |
-| [docs/КАТЕГОРИИ.md](./docs/КАТЕГОРИИ.md) | Categories API / seed |
-| [docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md](./docs/КАТАЛОГ-ТОВАРОВ-АРХИТЕКТУРА.md) | Product + Variants |
-| [docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md](./docs/КАК-ВЫПОЛНЯТЬ-ЗАДАНИЕ.md) | Запуск и разбор кода |
+Либо двойной клик по `start-desktop.cmd` / `start-mobile.cmd` (алиасы: `Запуск-Desktop.cmd` / `Запуск-Mobile.cmd`).  
+Нужен **Perry.Api** на `:5272`. Подробнее: [docs/инструкции/КАК-ЗАПУСКАТЬ.md](./docs/инструкции/КАК-ЗАПУСКАТЬ.md).  
+Локальный admin: `Admin`/`Admin` через `/api/dev/admin-login` **только в Development**; в Production эндпоинта нет (#109).  
+Тесты: `dotnet test Perry.sln` (#85, xUnit + SQLite in-memory).
+
+**Отчёт 01.10.2026 (mobile Figma 1:1 + backend):** [docs/журнал/2026-10-01.md](./docs/журнал/2026-10-01.md)  
+**Отчёт 02.10.2026 (DummyJSON — фото витрин):** [docs/журнал/2026-10-02.md](./docs/журнал/2026-10-02.md)  
+**Отчёт 03.10.2026 (Auth · отзывы · цены · vibe-prompts):** [docs/журнал/2026-10-03.md](./docs/журнал/2026-10-03.md)  
+**Отчёт 04.10.2026 (Translate · фото отзывов · checkout):** [docs/журнал/2026-10-04.md](./docs/журнал/2026-10-04.md)  
+**Отчёт 04.10.2026 (вечер — аватар · имя в отзывах · админ · 401):** [docs/журнал/2026-10-04-account-avatar.md](./docs/журнал/2026-10-04-account-avatar.md)  
+**Отчёт 04.10.2026 (checkout · сессия · аватар админа):** [docs/журнал/2026-10-04-checkout-admin.md](./docs/журнал/2026-10-04-checkout-admin.md)  
+**Отчёт 05.10.2026 (Helpful · тесты · A14/A15 · готовность ~96%):** [docs/журнал/2026-10-05.md](./docs/журнал/2026-10-05.md)  
+**Vibe-prompts (собрать Perry с нуля через ИИ):** [vibe-prompts/README.md](./vibe-prompts/README.md) · сценарий [run-vibe-sequence.cmd](./vibe-prompts/run-vibe-sequence.cmd) · [порядок агентов](./vibe-prompts/AGENTS-AND-SEQUENCE.md) · [грабли](./vibe-prompts/PITFALLS.md)  
+**Как залить фото у себя:** [docs/инструкции/НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md](./docs/инструкции/НАПОЛНЕНИЕ-ФОТО-DUMMYJSON.md)
+
+**Готовность проекта (05.10.2026, ~96%):** [docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-04.md](./docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-04.md) · было ~87–88% вечером 04.10 · [02.10 (~85%)](./docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-02.md)  
+**Что ещё сделать и зачем:** [docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md](./docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md)
+
+---
+
+Vite + React 19 витрина маркетплейса **Perry**. Визуал по макету **Figma** (приоритет №1) и эталону Razor `site.css` / `auth.css`. Данные — из `Perry.Api` (proxy `/api` → `http://localhost:5272`).
+
+**Mobile (Expo):** папка [`mobile/`](./mobile/) · [README](./mobile/README.md) · план [docs/продукт/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md](./docs/продукт/МОБИЛЬНОЕ-ПРИЛОЖЕНИЕ-REACT.md) · решение [docs/продукт/РЕШЕНИЕ-MOBILE-С-КОДОМ.md](./docs/продукт/РЕШЕНИЕ-MOBILE-С-КОДОМ.md)
+
+Backend: [Back_end_for_our_poroject](https://github.com/ITSTEP-PERRY/Back_end_for_our_poroject)  
+**Figma-перепись 30.09 (~22 экрана):** [docs/журнал/2026-09-30-figma-rewrite.md](./docs/журнал/2026-09-30-figma-rewrite.md) · [чеклист](./docs/продукт/FIGMA-REWRITE-CHECKLIST.md)  
+**Хроника всей работы:** [docs/ХРОНИКА-РАБОТЫ.md](./docs/ХРОНИКА-РАБОТЫ.md) · оглавление [docs/README.md](./docs/README.md)  
+**Готовность проекта (срез 05.10, ~96%):** [docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-04.md](./docs/продукт/ГОТОВНОСТЬ-ПРОЕКТА-2026-10-04.md) · [docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md](./docs/продукт/ЧТО-ЕЩЁ-СДЕЛАТЬ.md)  
+**Trello (карточки):** [docs/инструкции/TRELLO-TODO.md](./docs/инструкции/TRELLO-TODO.md) · доска [ITSTEP-PERRY](https://trello.com/b/bwEYs3Kq/itstep-perry)  
+**Отчёт 28.09 (весь день):** [docs/журнал/2026-09-28.md](./docs/журнал/2026-09-28.md) · срезы: [#A03–#A07](./docs/журнал/2026-09-28-a03-a07.md) · [#95 Auth](./docs/журнал/2026-09-28-auth-95.md) · [отзывы #99–#104](./docs/продукт/ОТЗЫВЫ-ПОКУПАТЕЛЕЙ.md)  
+**Стыки микросервисов (для команды):** [docs/стыки/СТЫКИ-МИКРОСЕРВИСОВ.md](./docs/стыки/СТЫКИ-МИКРОСЕРВИСОВ.md) · **решение с кодом:** [docs/стыки/РЕШЕНИЕ-СТЫКОВ-С-КОДОМ.md](./docs/стыки/РЕШЕНИЕ-СТЫКОВ-С-КОДОМ.md) · **в Telegram:** [docs/стыки/СООБЩЕНИЕ-В-ЧАТ-СТЫКИ.md](./docs/стыки/СООБЩЕНИЕ-В-ЧАТ-СТЫКИ.md) · [docs/стыки/AUTH-INTEGRATION.md](./docs/стыки/AUTH-INTEGRATION.md)  
+**Админка:** [docs/продукт/НАША-АДМИНКА.md](./docs/продукт/НАША-АДМИНКА.md) · [docs/продукт/РЕШЕНИЕ-ФРОНТ-АДМИН.md](./docs/продукт/РЕШЕНИЕ-ФРОНТ-АДМИН.md)  
+**Срез 26.09 (#94 Auth / без Users):** [docs/журнал/2026-09-26.md](./docs/журнал/2026-09-26.md) · [docs/журнал/2026-09-26-срез.md](./docs/журнал/2026-09-26-срез.md) · [docs/стыки/AUTH-INTEGRATION.md](./docs/стыки/AUTH-INTEGRATION.md) · [docs/стыки/ВОПРОСЫ-КОМАНДЕ.md](./docs/стыки/ВОПРОСЫ-КОМАНДЕ.md) · [docs/продукт/ADMIN-КОМАНДА.md](./docs/продукт/ADMIN-КОМАНДА.md)  
+**Срез 25.09 (lightbox / auth tokens / orders stats):** [docs/журнал/2026-09-25.md](./docs/журнал/2026-09-25.md) · [docs/журнал/2026-09-25-orders-stats.md](./docs/журнал/2026-09-25-orders-stats.md)  
+**Спринт 19.09:** [docs/журнал/2026-09-19.md](./docs/журнал/2026-09-19.md)  
+Сводка (каталог/PDP/auth): [docs/журнал/2026-09-17.md](./docs/журнал/2026-09-17.md)  
+**Account:** [docs/продукт/ACCOUNT-КАБИНЕТ.md](./docs/продукт/ACCOUNT-КАБИНЕТ.md) · [docs/журнал/2026-09-17-account.md](./docs/журнал/2026-09-17-account.md)  
+**Скриншоты (04.10.2026, 43 шт.):** [docs/screenshots/README.md](./docs/screenshots/README.md) · [полный каталог с подписями](./docs/screenshots/2026-10-04/README.md)
+
+---
+
+## Срез 30.09.2026 — перепись ~22 экранов под Figma
+
+Закрыта перепись витрины и админки под канон **Figma Prototype**: Home, каталог, PDP, auth-flow, cart/checkout, legal, 404, account, admin (~22 уникальных экрана + состояния/модалки). Чеклист закрыт.
+
+| Документ | О чём |
+|----------|--------|
+| **[ОТЧЁТ-FIGMA-REWRITE-2026-09-30.md](./docs/журнал/2026-09-30-figma-rewrite.md)** | **Отчёт: что сделано по 22 экранам** |
+| [FIGMA-REWRITE-CHECKLIST.md](./docs/продукт/FIGMA-REWRITE-CHECKLIST.md) | Чеклист экранов (все 🟢) |
+| [FIGMA-PAGE-INVENTORY.md](./docs/продукт/FIGMA-PAGE-INVENTORY.md) | Инвентарь node-id макета |
+
+Ветка: `feature/figma-storefront-port`.
+
+---
+
+## Срез 28.09.2026 — итог дня (#A03–#A07 · #95 · #99–#104)
+
+Полный отчёт: [ОТЧЁТ-2026-09-28.md](./docs/журнал/2026-09-28.md).
+
+| Блок | Что |
+|------|-----|
+| **#A03–#A07** | Seed orders · ReviewController · checkout address/payment · `/api/health` · popular-by-user · CI green |
+| **#95** | JWT HS256 secret от Auth → Product валидирует подпись (`.env`, не в git) |
+| **#99–#104** | Create `POST /api/reviews` · AuthClaims UserId · unique · `GET /me` · Account «My reviews» · tags |
+| Auth next | **#96** iss/aud · **#97** credential · **#98** claims |
+
+Backend: `feature/categories-facets-figma-storefront` в [Back_end_for_our_poroject](https://github.com/ITSTEP-PERRY/Back_end_for_our_poroject). Front: `feature/figma-storefront-port`.
+
+---
+
+## Срез 26.09.2026 — Auth / без Users (#94)
+
+| # | Что |
+|---|-----|
+| **#94** | Product API: удалены `Users`/`UserAccesses`/`UserRoles`, FK; только `UserId` из JWT Auth Service |
+| **#95** | Карточка Владу: JWT claims / issuer / Internal API ([Trello](https://trello.com/c/T28F0b7e)) |
+| FE | `VITE_AUTH_API_URL` + `authApi`/`usersApi` → Auth Service; каталог/корзина — Product |
+
+Подробнее: [ОТЧЁТ-2026-09-26.md](./docs/журнал/2026-09-26-срез.md), [ИЗМЕНЕНИЯ-2026-09-26.md](./docs/журнал/2026-09-26.md), [AUTH-INTEGRATION.md](./docs/стыки/AUTH-INTEGRATION.md), [ВОПРОСЫ-КОМАНДЕ.md](./docs/стыки/ВОПРОСЫ-КОМАНДЕ.md), [СВЕСТИ-ДВЕ-ЛИНИИ.md](./docs/продукт/СВЕСТИ-ДВЕ-ЛИНИИ.md).
+
+---
+
+## Срез 25.09.2026 — что сделано
+
+Кратко по закрытым карточкам и коду (ветка `feature/figma-storefront-port`). Полные тексты: [ИЗМЕНЕНИЯ-2026-09-25.md](./docs/журнал/2026-09-25.md), [ИЗМЕНЕНИЯ-2026-09-25-orders-stats.md](./docs/журнал/2026-09-25-orders-stats.md).
+
+| # | Что |
+|---|-----|
+| **#41 / #43** | Общий `ImageLightbox` — fullscreen фото на PDP и в отзывах |
+| **#32** | Empty state каталога (поиск/фильтры без результатов) |
+| **#62** | SVG-иконки соцсетей в футере |
+| **#16** | Secure Forgot — единый ответ без раскрытия email |
+| **#73** | Cart API без `?userId=` (только JWT / sessionId) |
+| **#93** | **Admin Orders:** статусы Ordered / Received / Shipped / ReadyToPickup / Cancelled / Returned; фильтры status + даты + orderId; `statusCounts`, `totalAmount`, `totalOrderCompare` / `totalAmountCompare` |
+
+**Admin Orders (#93)** — экран `/admin/orders`: поиск по orderId, фильтр статуса, диапазон дат / «This month», чипы количества по статусам, % сравнения с предыдущим периодом.
+
+Backend-пара: [Back_end_for_our_poroject](https://github.com/ITSTEP-PERRY/Back_end_for_our_poroject) (`AuthTokens` #15, admin orders API #93).
+
+---
+
+## Скриншоты витрины (04.10.2026)
+
+Актуальные кадры (43 шт.): главная → каталог → товар → корзина/checkout → кабинет → auth → legal → админка.  
+Таблица и полный каталог: [docs/screenshots/README.md](./docs/screenshots/README.md) · [2026-10-04](./docs/screenshots/2026-10-04/README.md).
+
+### Главная
+
+#### 01 · Home — hero + Trending deals
+
+![Home hero](./docs/screenshots/2026-10-04/home/01-home-hero.png)
+
+Hero «Sale -50%», категории, Trending deals.
+
+#### 02 · Home — Welcome back
+
+![Home welcome](./docs/screenshots/2026-10-04/home/02-home-welcome-cta.png)
+
+Персональный CTA: Go to catalog / My orders.
+
+#### 03 · Home — Women's fashion: sale
+
+![Home sale](./docs/screenshots/2026-10-04/home/03-home-womens-fashion-sale.png)
+
+Карусель Sale + футер.
+
+#### 04 · Home — меню категорий
+
+![Home menu categories](./docs/screenshots/2026-10-04/home/04-home-menu-categories.png)
+
+Аватар + дерево категорий.
+
+#### 05 · Home — меню аккаунта
+
+![Home menu account](./docs/screenshots/2026-10-04/home/05-home-menu-account.png)
+
+Cart / Orders / Wishlist / Settings / Log out.
+
+### Каталог
+
+#### 06 · Fashion
+
+![Catalog Fashion](./docs/screenshots/2026-10-04/catalog/06-catalog-fashion.png)
+
+Сетка товаров, фильтры Brand / Fabric type.
+
+### Страница товара
+
+#### 07 · Product page
+
+![Product page](./docs/screenshots/2026-10-04/product/07-product-nike-pdp.png)
+
+Nike Air Jordan 1: галерея, Buy now / Add to cart.
+
+#### 08 · Lightbox фото
+
+![Product lightbox](./docs/screenshots/2026-10-04/product/08-product-image-lightbox.png)
+
+Полноэкранный просмотр (1/4).
+
+#### 09 · Specs + отзывы на PDP
+
+![Product specs reviews](./docs/screenshots/2026-10-04/product/09-product-specs-reviews.png)
+
+Характеристики и блок Customer reviews.
+
+#### 10 · Customer reviews
+
+![Product reviews](./docs/screenshots/2026-10-04/product/10-product-reviews.png)
+
+Рейтинг, теги, Create review, Helpful / Translate.
+
+### Корзина и Checkout
+
+#### 11 · Shopping cart
+
+![Cart](./docs/screenshots/2026-10-04/cart-checkout/11-cart.png)
+
+Позиции, Qty, Proceed to checkout.
+
+#### 12 · Checkout — Country
+
+![Checkout country](./docs/screenshots/2026-10-04/cart-checkout/12-checkout-country.png)
+
+Ukraine, Card, Place order.
+
+#### 13 · Checkout — State
+
+![Checkout state](./docs/screenshots/2026-10-04/cart-checkout/13-checkout-state-ua.png)
+
+Выбор области Украины.
+
+#### 14 · Checkout — City
+
+![Checkout city](./docs/screenshots/2026-10-04/cart-checkout/14-checkout-city.png)
+
+Города Odesa Oblast.
+
+#### 15 · Checkout — Card details
+
+![Checkout card details](./docs/screenshots/2026-10-04/cart-checkout/15-checkout-card-details.png)
+
+Номер карты, срок, CVV.
+
+### Личный кабинет
+
+#### 16 · Wishlist
+
+![Wishlist](./docs/screenshots/2026-10-04/account/16-account-wishlist.png)
+
+Избранное + аватар в сайдбаре.
+
+#### 17 · My reviews
+
+![My reviews](./docs/screenshots/2026-10-04/account/17-account-my-reviews.png)
+
+Отзывы пользователя.
+
+#### 18 · Edit photo
+
+![Edit photo](./docs/screenshots/2026-10-04/account/18-account-edit-photo.png)
+
+Обрезка аватара.
+
+#### 19 · Change name
+
+![Change name](./docs/screenshots/2026-10-04/account/19-account-change-name.png)
+
+Смена имени / фамилии.
+
+#### 20 · Change email
+
+![Change email](./docs/screenshots/2026-10-04/account/20-account-change-email.png)
+
+Новый email + код подтверждения.
+
+#### 21 · Change password
+
+![Change password](./docs/screenshots/2026-10-04/account/21-account-change-password.png)
+
+Смена пароля.
+
+### Auth
+
+#### 22 · Login
+
+![Login](./docs/screenshots/2026-10-04/auth/22-auth-login.png)
+
+#### 23 · Login — ошибки
+
+![Login errors](./docs/screenshots/2026-10-04/auth/23-auth-login-errors.png)
+
+#### 24 · Register
+
+![Register](./docs/screenshots/2026-10-04/auth/24-auth-register.png)
+
+#### 25 · Register — ошибки
+
+![Register errors](./docs/screenshots/2026-10-04/auth/25-auth-register-errors.png)
+
+#### 26–28 · Verify email
+
+![Verify empty](./docs/screenshots/2026-10-04/auth/26-auth-verify-empty.png)
+
+![Verify filled](./docs/screenshots/2026-10-04/auth/27-auth-verify-filled.png)
+
+![Verify error](./docs/screenshots/2026-10-04/auth/28-auth-verify-error.png)
+
+#### 29–30 · Forgot password
+
+![Forgot](./docs/screenshots/2026-10-04/auth/29-auth-forgot.png)
+
+![Forgot error](./docs/screenshots/2026-10-04/auth/30-auth-forgot-error.png)
+
+### Legal
+
+#### 31 · Terms
+
+![Terms](./docs/screenshots/2026-10-04/legal/31-terms.png)
+
+#### 32 · License
+
+![License](./docs/screenshots/2026-10-04/legal/32-license.png)
+
+#### 33 · Privacy
+
+![Privacy](./docs/screenshots/2026-10-04/legal/33-privacy.png)
+
+### Админка
+
+#### 34 · Dashboard
+
+![Admin dashboard](./docs/screenshots/2026-10-04/admin/34-admin-dashboard.png)
+
+#### 35 · Products
+
+![Admin Products](./docs/screenshots/2026-10-04/admin/35-admin-products.png)
+
+#### 36 · Create product
+
+![Admin Create product](./docs/screenshots/2026-10-04/admin/36-admin-create-product.png)
+
+#### 37 · Categories
+
+![Admin Categories](./docs/screenshots/2026-10-04/admin/37-admin-categories.png)
+
+#### 38 · Edit subcategory
+
+![Admin Edit subcategory](./docs/screenshots/2026-10-04/admin/38-admin-categories-edit.png)
+
+#### 39 · Reviews
+
+![Admin Reviews](./docs/screenshots/2026-10-04/admin/39-admin-reviews.png)
+
+#### 40 · Orders
+
+![Admin Orders](./docs/screenshots/2026-10-04/admin/40-admin-orders.png)
+
+#### 41 · Users
+
+![Admin Users](./docs/screenshots/2026-10-04/admin/41-admin-users.png)
+
+#### 42 · Users — Columns
+
+![Admin Users Columns](./docs/screenshots/2026-10-04/admin/42-admin-users-columns.png)
+
+#### 43 · Users — empty
+
+![Admin Users empty](./docs/screenshots/2026-10-04/admin/43-admin-users-empty.png)
+
+---
+
+## Account — маршруты
+
+| Маршрут | Экран |
+|---------|--------|
+| `/account/orders` | My orders + модалка Details |
+| `/account/wishlist` | Wishlist + Remove confirm |
+| `/account/reviews` | My reviews |
+| `/account/settings` | Settings + модалки photo/name/password/email/logout/delete |
+
+- Сайдбар: аватар, Customer/Admin, навигация Account
+- Wishlist через API (`WishlistContext`)
+- Смена email: пароль + 6-значный код
+
+---
+
+## Что изменено (сводка)
+
+### Витрина под Figma
+- Полный порт UI: Home, каталог, PDP, корзина, заказы, профиль, legal-страницы.
+- Стили перенесены из Razor: `src/styles/storefront.css`, `src/styles/auth.css`, `src/styles/admin.css`.
+- Ant Design ConfigProvider с витрины убран — разметка и классы как в макете/Razor.
+- Ассеты: `public/icons/*`, `public/images/home/*`, `SiginSignup.png`.
+
+### Home
+- Hero-слайдер, карусели категорий, **Trending deals**, **Sale**.
+- CTA-блок **Abundance of goods** (Sign up / Log in) — как в кадре 26 / Figma.
+
+### Каталог `/products` (Figma Product List V2)
+- Сайдбар: **Brand**, **Fabric type**, **Size**, **Color**, **Price**, **Customer reviews**.
+- Сортировка, grid/list, пагинация, breadcrumbs.
+- Fallback-списки брендов/тканей/цветов из макета, если API ещё без facets.
+- Адаптив: кнопка Filters на mobile.
+
+### Product page `/products/:id`
+- Галерея + бейдж скидки, About product, buy-box.
+- Buy-box: Status, **Delivery**, **Payment methods**, **Security**, **Returns**, qty, Buy now / Add to cart, wish list.
+- **Customer reviews**: сводка, bars, Frequent tags, Helpful / Translate, See more.
+- Карусели по Figma: **You may also like**, **Best sellers in {category}**.
+
+### Auth (экраны 12–25)
+| Маршрут | Экран |
+|---------|--------|
+| `/login` | Welcome back |
+| `/register` | Create account → `/finishing-touches` |
+| `/verify-code` | Send code (после 3 неудачных логинов) |
+| `/forgot-password` | Forgot password |
+| `/reset-password` | Reset password |
+| `/finishing-touches` | First / Last name |
+| `/auth/success` | Congratulations! |
+
+### Legal
+- `/terms`, `/privacy`, `/license` — полные тексты + навигация Legal notice.
+
+### Админка React `/admin/*` (обновлено 19.09)
+- Login, Dashboard, Products (список + create/edit), Categories (CRUD + inactive), **Reviews** (Hide/Approve/Delete), Orders, Users (Active/Deleted + restore).
+
+### API-клиент
+- `src/api/` — categories, products (facets/filters), auth JWT, cart session, orders.
+- Контексты: `AuthContext`, `CartContext`, `RequireAuth`.
+
+### Инфра Vite
+- Proxy `/api`, `/uploads` → `:5272`.
+- `server.watch.ignored` для `My_Amazon2` / backend — чтобы `dotnet build` не ронял Vite (`EBUSY`).
+- `.env.example` с `VITE_API_PROXY`.
+
+---
 
 ## Запуск
 
 ```bash
-dotnet run --project src/Perry.Web --launch-profile http
+# Terminal 1 — API (из backend-репо)
+cd My_Amazon2/src/Perry.Api   # или клон Back_end_for_our_poroject
+dotnet run --launch-profile http
+# Swagger: http://localhost:5272/swagger
+
+# Terminal 2 — React
+npm install
+npm run dev
+# App: http://localhost:3000
 ```
 
-Открывай **http://localhost:5122/** (не https — иначе браузер может показать «нет доступа»).
-
-- Админ: `/Admin/Login` — `Admin` / `Admin`  
-- API: `dotnet run --project src/Perry.Api` → `/swagger`
-
-БД: `(localdb)\mssqllocaldb` → `Perry`.
-
-## Спринт к защите (19.09.2026)
-
-Закрыты карточки To Do: React-админка (Categories / Products / Reviews / Users / Orders), PDP reviews + инфо-модалки, Notify when available, Docker compose, Swagger JWT, SMTP-гайд.
-
-Текстовая сводка: [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) · порядок: [docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md](./docs/ПОРЯДОК-ЗАДАЧ-СПРИНТ.md)
-
-### 01 · 404 Product not found
-
-![404 Product not found](./docs/screenshots/sprint-2026-09-19/01-404-product-not-found.png)
-
-Товар не найден — Browse catalog / Go to home.
-
-### 02 · Admin Products
-
-![Admin Products](./docs/screenshots/sprint-2026-09-19/02-admin-products.png)
-
-Список товаров + фильтр Category / Search.
-
-### 03 · Admin Categories
-
-![Admin Categories](./docs/screenshots/sprint-2026-09-19/03-admin-categories.png)
-
-Корневые категории, Active, создание «+».
-
-### 04 · Admin Reviews
-
-![Admin Reviews](./docs/screenshots/sprint-2026-09-19/04-admin-reviews.png)
-
-Модерация: All / Hidden / Visible.
-
-### 05 · Admin Orders
-
-![Admin Orders](./docs/screenshots/sprint-2026-09-19/05-admin-orders.png)
-
-Список заказов Date / Customer / Status / Total.
-
-### 07 · Admin Products — category dropdown
-
-![Admin Products category dropdown](./docs/screenshots/sprint-2026-09-19/07-admin-products-category-dropdown.png)
-
-Иерархия категорий в тулбаре.
-
-### 08 · Admin Products — фильтр Streaming
-
-![Admin Products filtered](./docs/screenshots/sprint-2026-09-19/08-admin-products-filter-streaming.png)
-
-Отфильтрованный список (Roku Express 4K+).
-
-### 09 · Admin Users — Active
-
-![Admin Users Active](./docs/screenshots/sprint-2026-09-19/09-admin-users-filters.png)
-
-Активные пользователи, ellipsis на длинных email.
-
-### 10 · Admin Orders — детали
-
-![Admin Order details](./docs/screenshots/sprint-2026-09-19/10-admin-orders-details.png)
-
-Состав заказа + смена Status.
-
-### 11 · Admin Reviews — Hide
-
-![Admin Review Hide](./docs/screenshots/sprint-2026-09-19/11-admin-reviews-moderate-hide.png)
-
-Скрыть отзыв с витрины (Hide / Delete).
-
-### 12 · Account — My orders
-
-![My orders](./docs/screenshots/sprint-2026-09-19/12-account-my-orders.png)
-
-Кабинет: заказы Ordered / Ready for pickup.
-
-### 13 · Admin Reviews — Approve
-
-![Admin Review Approve](./docs/screenshots/sprint-2026-09-19/13-admin-reviews-approve.png)
-
-Вернуть скрытый отзыв (Approve / Delete).
-
-### 14 · Account — Order details
-
-![Order details modal](./docs/screenshots/sprint-2026-09-19/14-account-order-details-modal.png)
-
-Модалка: позиции, Total, How to cancel.
-
-### 15 · Account — Order details #2
-
-![Order details modal 2](./docs/screenshots/sprint-2026-09-19/15-account-order-details-modal-2.png)
-
-Второй заказ (#918320), Total $178.
-
-### 16 · Account — Change email
-
-![Change email modal](./docs/screenshots/sprint-2026-09-19/17-account-change-email-modal.png)
-
-Смена email: пароль + 6-digit code + Send code.
-
----
-
-## Account (17.09.2026)
-
-Личный кабинет покупателя (Wishlist / My orders / Account settings) — FE+BE по макетным скринам.
-
-- Документ: [docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-Account-2026-09-17.md)
-- Скриншоты (14 шт.): [docs/screenshots/README.md](./docs/screenshots/README.md)
-- API: /api/wishlist, /api/auth/me, /api/auth/me/password, /api/auth/me/email, /api/orders
-
-![Account settings](./docs/screenshots/account/07-account-settings.png)
-| **Change password** | Модалка смены пароля | ![Change password](./docs/screenshots/account/09-change-password-modal.png) |
-| **Change email** | Email + OTP | ![Change email](./docs/screenshots/account/11-change-email-modal.png) |
-| **Delete account** | Подтверждение удаления | ![Delete](./docs/screenshots/account/14-delete-account-confirm.png) |
-
-![Wishlist](./docs/screenshots/account/01-wishlist.png)
-
-![My orders](./docs/screenshots/account/03-my-orders.png)
-
-Актуальная галерея: витрина/auth/legal + **14 Account** в `docs/screenshots/account/`.
-
----
-
-## Что сделано недавно
-
-**19.09:** [docs/ИЗМЕНЕНИЯ-2026-09-19.md](./docs/ИЗМЕНЕНИЯ-2026-09-19.md) — админка React (#65–#69), PDP (#34, #36–#40), notify (#29/#30), Docker (#5), Swagger (#76).
-
-Ранее **17.09:** **[docs/ИЗМЕНЕНИЯ-2026-09-17.md](./docs/ИЗМЕНЕНИЯ-2026-09-17.md)**. Кратко по блокам:
-
-### Категории (закрыт пробел Create/Update)
-- В entity и БД: `Description`, `ImageUrl`, `IconUrl`, `IsActive`.
-- Миграция `AddCategoryDescriptionAndIconUrl`.
-- `POST/PUT /api/categories` принимают `description`, `imageUrl`, `iconUrl`, `isActive` (+ name, slug, parent, sortOrder).
-- Дерево/список отдают эти поля в JSON.
-- Админка Razor: `Admin/Categories` + `_CategoryTreeItem`.
-
-### Каталог API (Figma Product List V2)
-- Фильтры: `brands`, `fabrics`, `sizes`, `colors`, `minPrice`/`maxPrice`, `minRating`.
-- Ответ списка: блок **`facets`** (опции для сайдбара).
-- Fabric / Size / Color — из атрибутов товара.
-
-### PDP API
-- `GET /api/products/{id}`: reviews, related, saleRelated, about, attributes, images, discount.
-
-### Auth / Orders / Users API
-- JWT (`JwtTokenService`), `AuthController` (login / register / forgot).
-- `OrdersController`, `UsersController`, JwtBearer + CORS в `Program.cs`.
-
-### Razor-витрина (эталон под Figma)
-- Home (hero, категории, Trending, Sale, CTA Abundance of goods).
-- Product List с фильтрами Brand / Fabric / Size / Color / Price / reviews.
-- Product Page: галерея, buy-box (Delivery / Payment / Security / Returns), reviews, «You may also like», «Best sellers in …».
-- Legal: `/Terms`, `/License`, `/Privacy` + `_LegalNav`.
-- `site.css`, иконки, home images, `catalog.js` / `home.js` / `pdp.js`, расширенный DbSeeder.
-
-### React-порт
-- Витрина в [perry-front](https://github.com/ITSTEP-PERRY/perry-front) ветка `feature/figma-storefront-port` — те же экраны и стили.
-
-### Ранее в проекте
-- Ребрендинг **DuSoleil → Perry**.
-- Auth UX: Welcome back, Create account, VerifyCode, Forgot/Reset, Finishing touches, Congratulations.
-- Ребрендинг **DuSoleil → Perry** (solution, проекты, namespaces, БД, UI).
-- UI входа и регистрации по макету команды ([perry-front](https://github.com/ITSTEP-PERRY/perry-front.git)): Welcome back + Create account, валидация полей.
-- **VerifyCode:** после 3 неудачных попыток входа — 6-значный код (stub SMTP), экран `/Account/VerifyCode`.
-- **Forgot / Reset password:** `/Account/ForgotPassword` → `/Account/ResetPassword` → Congratulations.
-- **Finishing touches** после Register + экран **Congratulations!**
-- **Витрина по макету:** главная (hero-слайдер, категории, Trending deals, CTA), Product List с фильтрами, Product Page (галерея, About, buy-box, reviews, related).
-- **Legal pages:** `/Terms`, `/License`, `/Privacy` + sidebar Legal notice.
-- Документы: категории, архитектура каталога, восстановление пароля, советы к защите.
-
----
-
-## Скриншоты
-
-Подробные описания: **[docs/screenshots/README.md](./docs/screenshots/README.md)**  
-Сценарии Forgot/Reset/Finishing: **[docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md](./docs/ВОССТАНОВЛЕНИЕ-ПАРОЛЯ.md)**
-
-| Экран | Описание | Превью |
-|-------|----------|--------|
-| **Главная (витрина)** | Hero Sale, категории, Trending deals | ![Home storefront](./docs/screenshots/26-home-storefront.png) |
-| **Product Page** | Галерея, About, buy-box, Product details | ![Product Page](./docs/screenshots/27-product-page.png) |
-| **Каталог + фильтры** | Material / Size / Color, grid | ![Catalog filters](./docs/screenshots/28-catalog-filters.png) |
-| **Customer reviews** | Сводка, tags, Helpful / Translate | ![Reviews](./docs/screenshots/29-product-reviews.png) |
-| **Related + footer** | Fashion: sale и подвал | ![Related footer](./docs/screenshots/32-product-related-footer.png) |
-| **Terms** | Terms and conditions | ![Terms](./docs/screenshots/33-terms.png) |
-| **License** | License agreement | ![License](./docs/screenshots/30-license.png) |
-| **Privacy** | Privacy policy | ![Privacy](./docs/screenshots/31-privacy.png) |
-| Sign in (старый кадр) | Ранний кадр входа | ![Login](./docs/screenshots/03-login.png) |
-| **Welcome back** | Вход покупателя (Email / Password) | ![Welcome back](./docs/screenshots/12-auth-login.png) |
-| Welcome back — ошибки | Пустые поля: сообщения валидации | ![Login errors](./docs/screenshots/13-auth-login-errors.png) |
-| **Create account** | Регистрация Email + Password + Confirm | ![Create account](./docs/screenshots/14-auth-register.png) |
-| Create account — ошибки | Неверный email / слабый пароль / mismatch | ![Register errors](./docs/screenshots/15-auth-register-errors.png) |
-| **Send code** (пусто) | 6 полей кода после 3 fails Login | ![Send code](./docs/screenshots/16-auth-verify-empty.png) |
-| Send code — ввод + таймер | Код введён, Resend 0:59 | ![Send code filled](./docs/screenshots/17-auth-verify-filled.png) |
-| Send code — ошибка | Incorrect code, try again | ![Send code error](./docs/screenshots/18-auth-verify-error.png) |
-| **Forgot password** | Ввод email для сброса пароля | ![Forgot password](./docs/screenshots/19-auth-forgot.png) |
-| Forgot password — ошибка | Wrong or invalid email address | ![Forgot error](./docs/screenshots/20-auth-forgot-error.png) |
-| **Reset password** | New password + Repeat password | ![Reset password](./docs/screenshots/21-auth-reset.png) |
-| Reset password — ошибки | Necessary to continue / Passwords must match | ![Reset error](./docs/screenshots/22-auth-reset-error.png) |
-| **Finishing touches** | First name + Last name после Register | ![Finishing](./docs/screenshots/23-auth-finishing.png) |
-| Finishing touches — ошибки | First/Last name is required | ![Finishing error](./docs/screenshots/24-auth-finishing-error.png) |
-| **Congratulations!** | Успех регистрации или сброса пароля | ![Success](./docs/screenshots/25-auth-success.png) |
-
-
-## Скриншоты Account (14 новых)
-
-Полные описания и превью: **[docs/screenshots/README.md](./docs/screenshots/README.md)** (секция Account).
-
-| # | Экран | Файл |
-|---|--------|------|
-| A01 | Wishlist | [01-wishlist.png](./docs/screenshots/account/01-wishlist.png) |
-| A02 | Wishlist — Remove confirm | [02-wishlist-remove-modal.png](./docs/screenshots/account/02-wishlist-remove-modal.png) |
-| A03 | My orders | [03-my-orders.png](./docs/screenshots/account/03-my-orders.png) |
-| A04 | Account settings — photo tip | [04-account-settings-photo-tip.png](./docs/screenshots/account/04-account-settings-photo-tip.png) |
-| A05 | Order details (Ordered) | [05-order-details-modal.png](./docs/screenshots/account/05-order-details-modal.png) |
-| A06 | Order details (Received) | [06-order-details-received.png](./docs/screenshots/account/06-order-details-received.png) |
-| A07 | Account settings | [07-account-settings.png](./docs/screenshots/account/07-account-settings.png) |
-| A08 | Change name | [08-change-name-modal.png](./docs/screenshots/account/08-change-name-modal.png) |
-| A09 | Change password | [09-change-password-modal.png](./docs/screenshots/account/09-change-password-modal.png) |
-| A10 | Change password — validation | [10-change-password-validation.png](./docs/screenshots/account/10-change-password-validation.png) |
-| A11 | Change email | [11-change-email-modal.png](./docs/screenshots/account/11-change-email-modal.png) |
-| A12 | Change email — validation | [12-change-email-validation.png](./docs/screenshots/account/12-change-email-validation.png) |
-| A13 | Log out? | [13-logout-confirm.png](./docs/screenshots/account/13-logout-confirm.png) |
-| A14 | Delete account? | [14-delete-account-confirm.png](./docs/screenshots/account/14-delete-account-confirm.png) |
-
-![Wishlist](./docs/screenshots/account/01-wishlist.png)
-
-![My orders](./docs/screenshots/account/03-my-orders.png)
-
-![Account settings](./docs/screenshots/account/07-account-settings.png)
-
-![Change password](./docs/screenshots/account/09-change-password-modal.png)
-
-![Change email](./docs/screenshots/account/11-change-email-modal.png)
-
-![Delete account](./docs/screenshots/account/14-delete-account-confirm.png)
-
+### Демо
+- Админ: `Admin` / `Admin` → `/admin/login`
+- Покупатель: `/register`
+
+### Маршруты
+
+| Path | Описание |
+|------|----------|
+| `/` | Home |
+| `/products` | Каталог + фильтры |
+| `/products/:id` | PDP |
+| `/cart` | Корзина |
+| `/account/orders` | My orders (JWT) |
+| `/account/wishlist` | Wishlist (JWT) |
+| `/account/settings` | Account settings (JWT) |
+| `/orders`, `/profile` | Редирект → `/account/*` |
+| `/login` … `/auth/success` | Auth-поток |
+| `/terms`, `/privacy`, `/license` | Legal |
+| `/admin/*` | Админка |
+
+### Notes
+- Cart guest: `localStorage.perry_cart_session`
+- JWT: `localStorage.perry_token`
+- Приоритет дизайна: **Figma** → скриншоты backend README 26–33 → Razor CSS

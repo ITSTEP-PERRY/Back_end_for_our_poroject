@@ -1,11 +1,23 @@
 namespace Perry.Domain.Enums;
 
-/// <summary>Статусы заказа (Admin Order + история покупателя).</summary>
+/// <summary>
+/// Статусы заказа (Admin Orders + кабинет покупателя).
+/// Числовые значения совместимы с прежними Pending/Paid/… (0–4); Returned = 5.
+/// </summary>
 public enum OrderStatus
 {
-    Pending = 0,
-    Paid = 1,
+    /// <summary>Бывший Pending.</summary>
+    Ordered = 0,
+
+    /// <summary>Бывший Paid.</summary>
+    Received = 1,
+
     Shipped = 2,
-    Completed = 3,
-    Cancelled = 4
+
+    /// <summary>Бывший Completed.</summary>
+    ReadyToPickup = 3,
+
+    Cancelled = 4,
+
+    Returned = 5
 }

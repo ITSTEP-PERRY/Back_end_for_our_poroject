@@ -1,0 +1,28 @@
+# Gitleaks — allowlist for Perry diploma CI
+# Extends default rules; ignores known placeholders / docs / legacy commits.
+
+title = "Perry gitleaks"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Example env templates, docs, CI placeholders, legacy .env commits (removed from tree)"
+paths = [
+  '''(^|/)(\.env\.example)$''',
+  '''(^|/)docs/.*$''',
+  '''(^|/)\.gitleaks\.toml$''',
+  '''(^|/)\.github/workflows/.*$''',
+]
+regexes = [
+  '''PASTE_AUTH_.*''',
+  '''changeme''',
+  '''YOUR_.*''',
+  '''Perry_Dev_Passw0rd!''',
+]
+commits = [
+  # Historical .env that was later removed from the tree
+  "7a0d3e7202453c5507dd51b16dbf16a7b19c0e11",
+  "c02a1bf54da319c896959f878397e39194721309",
+  "75563ab368dd7108cc361a2b2912ee107c3dada9",
+]

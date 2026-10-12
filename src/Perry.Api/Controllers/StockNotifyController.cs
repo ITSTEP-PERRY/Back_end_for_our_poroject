@@ -1,8 +1,8 @@
-using System.Security.Claims;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Auth;
 using Perry.Domain.Entities;
 using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
@@ -42,17 +42,11 @@ public class StockNotifyController : ControllerBase
         if (product is null)
             return NotFound(new { error = "Product not found." });
 
-        var userId = GetUserId();
+        var userId = AuthClaims.GetUserId(User);
         string? email = body?.Email?.Trim();
 
-        if (userId is not null)
-        {
-            var user = await _db.Users.AsNoTracking()
-                .FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAtUtc == null, ct);
-            if (user is null) return Unauthorized();
-            if (string.IsNullOrWhiteSpace(email))
-                email = user.Email;
-        }
+        if (userId is not null && string.IsNullOrWhiteSpace(email))
+            email = AuthClaims.GetEmail(User);
 
         if (string.IsNullOrWhiteSpace(email) || !EmailRx.IsMatch(email))
             return BadRequest(new { error = "Valid email is required." });
@@ -82,11 +76,5 @@ public class StockNotifyController : ControllerBase
             ct);
 
         return Ok(new { status = "Ok", email, alreadySubscribed = existing is not null });
-    }
-
-    private Guid? GetUserId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(raw, out var id) ? id : null;
     }
 }

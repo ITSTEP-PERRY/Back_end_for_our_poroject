@@ -3,15 +3,19 @@ using Perry.Domain.Enums;
 namespace Perry.Domain.Entities;
 
 /// <summary>
-/// Заказ покупателя (из homework Order + под Figma Admin Order).
+/// Заказ покупателя. UserId — из Auth Service (JWT), без локальной таблицы Users (#94).
 /// </summary>
 public class Order
 {
     public Guid Id { get; set; }
 
-    public Guid UserId { get; set; }
+    /// <summary>
+    /// #A12 — короткий номер для UI (пример <c>#AT456BB</c>). PK остаётся <see cref="Id"/>.
+    /// </summary>
+    public string OrderNumber { get; set; } = string.Empty;
 
-    public User User { get; set; } = null!;
+    /// <summary>Id пользователя из Perry Auth JWT.</summary>
+    public Guid UserId { get; set; }
 
     public DateTime OrderDateUtc { get; set; } = DateTime.UtcNow;
 
@@ -19,21 +23,22 @@ public class Order
 
     public int ItemsCount { get; set; }
 
-    public OrderStatus Status { get; set; } = OrderStatus.Completed;
+    public OrderStatus Status { get; set; } = OrderStatus.ReadyToPickup;
 
-    /// <summary>Имя получателя (Account → Order details).</summary>
+    /// <summary>Имя получателя (из JWT claims или клиента).</summary>
     public string? RecipientName { get; set; }
 
-    /// <summary>Адрес доставки.</summary>
     public string? ShippingAddress { get; set; }
 
-    /// <summary>Способ оплаты (Cash, Card, …).</summary>
     public string? PaymentType { get; set; }
 
     public DateTime? CompletedAtUtc { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 
+    /// <summary>
+    /// #A10 — last order update (primarily last status change). Set on create and on status updates.
+    /// </summary>
     public DateTime? UpdatedAtUtc { get; set; }
 
     public ICollection<OrderItem> Items { get; set; } = new List<OrderItem>();

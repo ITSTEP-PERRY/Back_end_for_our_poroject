@@ -1,13 +1,11 @@
 namespace Perry.Domain.Entities;
 
-/// <summary>Товар в избранном пользователя (Wishlist).</summary>
+/// <summary>Товар в избранном. UserId — из Auth Service (#94).</summary>
 public class WishlistItem
 {
     public Guid Id { get; set; }
 
     public Guid UserId { get; set; }
-
-    public User User { get; set; } = null!;
 
     public Guid ProductId { get; set; }
 

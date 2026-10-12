@@ -1,0 +1,8 @@
+/* Legacy ant overrides — keep minimal; storefront.css owns layout */
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: #b8ea48 !important;
+  border-color: #0e2042 !important;
+}
+.ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: #0e2042 !important;
+}

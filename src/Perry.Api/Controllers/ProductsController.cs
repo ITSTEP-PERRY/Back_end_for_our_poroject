@@ -1,8 +1,12 @@
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Perry.Api.Auth;
+using Perry.Api.Utils;
+using Perry.Domain.Utils;
 
 namespace Perry.Api.Controllers;
 
@@ -18,9 +22,17 @@ public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _db;
 
-    public ProductsController(AppDbContext db)
+    private readonly IProductStatisticsService _stats;
+    private readonly IViewedProductsService _viewed;
+
+    public ProductsController(
+        AppDbContext db,
+        IProductStatisticsService stats,
+        IViewedProductsService viewed)
     {
         _db = db;
+        _stats = stats;
+        _viewed = viewed;
     }
 
     /// <summary>
@@ -96,7 +108,7 @@ public class ProductsController : ControllerBase
         };
 
         var total = await query.CountAsync(cancellationToken);
-
+        
         var items = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -117,9 +129,11 @@ public class ProductsController : ControllerBase
                 p.Status,
                 ImageUrl = p.Images
                     .Where(i => i.IsPrimary)
-                    .Select(i => i.Url)
+                    .Select(i => ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url))
                     .FirstOrDefault()
-                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => 
+                        ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url))
+                        .FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -167,8 +181,81 @@ public class ProductsController : ControllerBase
             .ToListAsync(ct);
 
     /// <summary>
+    /// product details for update:
+    /// GET /api/products/update/{id}
+    /// </summary>
+    [HttpGet("update/{id:guid}")]
+    public async Task<IActionResult> GetForUpdateById(Guid id, CancellationToken cancellationToken)
+    {
+        var product = await _db.Products
+            .AsNoTracking()
+            .Where(p => p.Id == id)
+            .Select(p => new
+            {
+                p.Id,
+                p.Name,
+                p.Description,
+                p.Sku,
+                p.Brand,
+                p.Price,
+                p.OldPrice,
+                DiscountPercent = p.OldPrice != null && p.OldPrice > p.Price
+                    ? (int?)Math.Round((p.OldPrice.Value - p.Price) / p.OldPrice.Value * 100)
+                    : null,
+                p.StockQuantity,
+                p.Status,
+                p.AverageRating,
+                p.ReviewCount,
+                p.IsBestSeller,
+                p.CategoryId,
+                Images = p.Images
+                    .OrderBy(i => i.SortOrder)
+                    .Select(i => new
+                    {
+                        i.Id, 
+                        i.Url, 
+                        i.IsPrimary, 
+                        i.IsVideo, 
+                        i.AltText
+                    }),
+                Attributes = p.Attributes
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => new { a.Name, a.Value }),
+                AboutItems = p.AboutItems
+                    .OrderBy(a => a.SortOrder)
+                    .Select(a => new { a.Title, a.Description }),
+               
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (product is null) return NotFound();
+        return Ok(product);
+    }
+    
+    /// <summary>
+    /// Часто просматриваемые товары (по ViewCount, затем OrderCount).
+    /// Seller — только свои товары; Admin — все (#A16).
+    /// GET /api/products/popular?take=10
+    /// </summary>
+    [Authorize(Roles = "Admin,Seller")]
+    [HttpGet("popular")]
+    public async Task<IActionResult> GetPopular([FromQuery] int take = 10, CancellationToken cancellationToken = default)
+    {
+        Guid? sellerId = null;
+        if (!User.IsInRole("Admin"))
+        {
+            sellerId = AuthClaims.GetUserId(User);
+            if (sellerId is null)
+                return Unauthorized(new { error = "SellerId (JWT sub) required." });
+        }
+
+        var items = await _stats.GetMostViewedAsync(take, sellerId, cancellationToken);
+        return Ok(new { take = items.Count, items });
+    }
+
+    /// <summary>
     /// Полная карточка товара для Product Page:
-    /// галерея, specs, about, категория.
+    /// галерея, specs, about, категория + учёт просмотра.
     /// GET /api/products/{id}
     /// </summary>
     [HttpGet("{id:guid}")]
@@ -194,10 +281,19 @@ public class ProductsController : ControllerBase
                 p.AverageRating,
                 p.ReviewCount,
                 p.IsBestSeller,
+                p.ViewCount,
+                p.OrderCount,
                 Category = new { p.Category.Id, p.Category.Name, p.Category.Slug },
                 Images = p.Images
                     .OrderBy(i => i.SortOrder)
-                    .Select(i => new { i.Id, i.Url, i.IsPrimary, i.IsVideo, i.AltText }),
+                    .Select(i => new
+                    {
+                        i.Id, 
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                        i.IsPrimary, 
+                        i.IsVideo, 
+                        i.AltText
+                    }),
                 Attributes = p.Attributes
                     .OrderBy(a => a.SortOrder)
                     .Select(a => new { a.Name, a.Value }),
@@ -209,11 +305,15 @@ public class ProductsController : ControllerBase
                     .OrderByDescending(r => r.CreatedAtUtc)
                     .Select(r => new
                     {
+                        r.Id,
+                        r.UserId,
                         r.AuthorName,
+                        r.AuthorAvatarUrl,
                         r.Rating,
                         r.Title,
                         r.Body,
                         r.CreatedAtUtc,
+                        TotalHelpful = r.Grades.Count(g => g.IsHelpful),
                         Tags = r.Tags.Select(t => t.Name).ToList(),
                         Images = r.Images.Select(i => i.Url).ToList()
                     })
@@ -221,6 +321,18 @@ public class ProductsController : ControllerBase
             .FirstOrDefaultAsync(cancellationToken);
 
         if (product is null) return NotFound();
+
+        var viewCounted = await _stats.TryRecordViewAsync(id, clientKey: null, cancellationToken);
+        _viewed.AddViewedProduct(id);
+
+        var stats = await _stats.GetStatsAsync(id, cancellationToken);
+        var viewCount = stats?.ViewCount ?? product.ViewCount;
+        var orderCount = stats?.OrderCount ?? product.OrderCount;
+        var wishlistUserCount = await _db.WishlistItems.AsNoTracking()
+            .Where(w => w.ProductId == id)
+            .Select(w => w.UserId)
+            .Distinct()
+            .CountAsync(cancellationToken);
 
         var related = await _db.Products
             .AsNoTracking()
@@ -244,9 +356,17 @@ public class ProductsController : ControllerBase
                 p.AverageRating,
                 p.ReviewCount,
                 p.IsBestSeller,
+                p.ViewCount,
+                p.OrderCount,
                 p.Status,
-                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.Url).FirstOrDefault()
-                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => new 
+                {
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                }).FirstOrDefault()
+                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => new 
+                    {
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                    }).FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -269,9 +389,17 @@ public class ProductsController : ControllerBase
                 p.AverageRating,
                 p.ReviewCount,
                 p.IsBestSeller,
+                p.ViewCount,
+                p.OrderCount,
                 p.Status,
-                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => i.Url).FirstOrDefault()
-                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => i.Url).FirstOrDefault()
+                ImageUrl = p.Images.Where(i => i.IsPrimary).Select(i => new
+                {
+                    Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url),
+                }).FirstOrDefault()
+                    ?? p.Images.OrderBy(i => i.SortOrder).Select(i => new
+                    {
+                        Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url),
+                    }).FirstOrDefault()
             })
             .ToListAsync(cancellationToken);
 
@@ -290,6 +418,16 @@ public class ProductsController : ControllerBase
             product.AverageRating,
             product.ReviewCount,
             product.IsBestSeller,
+            viewCount,
+            orderCount,
+            wishlistUserCount,
+            stats = new
+            {
+                viewCount,
+                orderCount,
+                wishlistUserCount,
+                viewCounted
+            },
             product.Category,
             product.Images,
             product.Attributes,
@@ -297,6 +435,31 @@ public class ProductsController : ControllerBase
             product.Reviews,
             related,
             saleRelated
+        });
+    }
+
+    /// <summary>
+    /// Статистика товара по Id (просмотры + заказы).
+    /// GET /api/products/{id}/stats
+    /// </summary>
+    [HttpGet("{id:guid}/stats")]
+    public async Task<IActionResult> GetStats(Guid id, CancellationToken cancellationToken)
+    {
+        var stats = await _stats.GetStatsAsync(id, cancellationToken);
+        if (stats is null) return NotFound();
+
+        var wishlistUserCount = await _db.WishlistItems.AsNoTracking()
+            .Where(w => w.ProductId == id)
+            .Select(w => w.UserId)
+            .Distinct()
+            .CountAsync(cancellationToken);
+
+        return Ok(new
+        {
+            productId = id,
+            viewCount = stats.Value.ViewCount,
+            orderCount = stats.Value.OrderCount,
+            wishlistUserCount
         });
     }
 
@@ -326,7 +489,44 @@ public class ProductsController : ControllerBase
 
         return product is null ? NotFound() : Ok(product);
     }
-
+    
+    
+    [HttpGet("partial/{id}")]
+    public async Task<IActionResult> GetPartialById(Guid id, CancellationToken cancellationToken)
+        {
+            var product = await _db.Products
+                .AsNoTracking()
+                .Where(p => p.Id == id)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.Name,
+                    p.Slug,
+                    p.Description,
+                    p.Sku,
+                    p.Brand,
+                    p.Price,
+                    p.OldPrice,
+                    p.StockQuantity,
+                    p.Status,
+                    p.AverageRating,
+                    p.ReviewCount,
+                    Images =  p.Images
+                        .Select(i => new
+                        {
+                            i.Id, 
+                            Url = ApiHelpers.GetImageUrl(Request,Url.Action("GetProductImage", "Products", new{i.Id}), i.Url), 
+                            i.IsPrimary, 
+                            i.IsVideo, 
+                            i.AltText
+                        }),
+                    p.CategoryId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+    
+            return product is null ? NotFound() : Ok(product);
+        }
+    
     /// <summary>Фото/видео товара — URL в JSON вместе с продуктом (без multipart).</summary>
     public record ProductImageInput(
         string Url,
@@ -353,12 +553,17 @@ public class ProductsController : ControllerBase
         IReadOnlyList<AboutInput>? AboutItems = null,
         IReadOnlyList<AttrInput>? Attributes = null);
 
+    [Authorize(Roles = "Admin,Seller")]
     [HttpPost]
     public async Task<IActionResult> Create(
         [FromBody] CreateProductRequest body,
         [FromServices] IProductService products,
         CancellationToken ct)
     {
+        var sellerId = AuthClaims.GetUserId(User);
+        if (sellerId is null)
+            return Unauthorized(new { error = "SellerId (JWT sub) required." });
+
         if (string.IsNullOrWhiteSpace(body.Name) || body.CategoryId == Guid.Empty)
             return BadRequest(new { error = "Name и CategoryId обязательны." });
 
@@ -377,6 +582,8 @@ public class ProductsController : ControllerBase
             Sku = sku,
             Brand = body.Brand?.Trim() ?? "Perry",
             CategoryId = body.CategoryId,
+            // #A11 — seller from JWT claims
+            SellerId = sellerId.Value,
             Price = body.Price,
             OldPrice = body.OldPrice,
             StockQuantity = body.StockQuantity,
@@ -394,9 +601,10 @@ public class ProductsController : ControllerBase
         ApplyAboutAndAttrs(entity.Id, body.AboutItems, body.Attributes);
 
         await _db.SaveChangesAsync(ct);
-        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, new { entity.Id, entity.Slug });
+        return CreatedAtAction(nameof(GetById), new { id = entity.Id }, new { entity.Id, entity.Slug, sellerId = entity.SellerId });
     }
 
+    [Authorize(Roles = "Admin,Seller")]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] CreateProductRequest body, CancellationToken ct)
     {
@@ -438,6 +646,7 @@ public class ProductsController : ControllerBase
         IReadOnlyList<ProductImageInput>? images,
         IReadOnlyList<string>? imageUrls)
     {
+        
         foreach (var img in NormalizeProductImages(images, imageUrls))
         {
             _db.ProductImages.Add(new Domain.Entities.ProductImage
@@ -506,7 +715,9 @@ public class ProductsController : ControllerBase
                     continue;
                 var sort = img.SortOrder ?? order;
                 var primary = anyPrimary ? img.IsPrimary : result.Count == 0;
-                result.Add((img.Url.Trim(), primary, img.IsVideo, img.AltText?.Trim(), sort));
+                var url = img.Url.Trim();
+                var isVideo = img.IsVideo || LooksLikeVideoUrl(url);
+                result.Add((url, primary, isVideo, img.AltText?.Trim(), sort));
                 order++;
             }
             return result;
@@ -519,7 +730,9 @@ public class ProductsController : ControllerBase
             {
                 if (string.IsNullOrWhiteSpace(url))
                     continue;
-                result.Add((url.Trim(), order == 0, false, null, order));
+                var trimmed = url.Trim();
+                // #42 — plain imageUrls: treat .mp4 (and similar) as gallery video
+                result.Add((trimmed, order == 0, LooksLikeVideoUrl(trimmed), null, order));
                 order++;
             }
         }
@@ -527,10 +740,45 @@ public class ProductsController : ControllerBase
         return result;
     }
 
+    private static bool LooksLikeVideoUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url)) return false;
+        var path = url.Split('?', 2)[0];
+        return path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)
+               || path.EndsWith(".webm", StringComparison.OrdinalIgnoreCase)
+               || path.EndsWith(".mov", StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Authorize(Roles = "Admin,Seller")]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> SoftDelete(Guid id, [FromServices] IProductService products, CancellationToken ct)
     {
         await products.SoftArchiveAsync(id, ct);
         return NoContent();
+    }
+    
+    
+    [HttpGet("image/{id}")]
+    public async Task<IActionResult> GetProductImage(Guid id, CancellationToken ct)
+    {
+        var image = await _db.ProductImages.FirstOrDefaultAsync(r => r.Id == id, ct);
+        
+        if (image != null)
+        {
+            var (mime, data) = Helpers.GetImageTypeFromBase64(image.Url);
+            if (mime != null && data != null)
+            {
+                if (data.Contains(","))
+                {
+                    data = data.Split(',')[1];
+                }
+
+                // 3. Конвертируем Base64 строку в массив байт
+                byte[] imageBytes = Convert.FromBase64String(data);
+
+                return File(imageBytes, mime,  enableRangeProcessing: false);
+            }
+        }
+        return NotFound("No image found");
     }
 }

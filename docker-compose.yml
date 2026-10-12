@@ -1,35 +1,34 @@
-# Perry — локальный стек для команды
-# SQL Server + Perry.Api
+﻿# Perry — custom server (#D01)
+# Только API; PostgreSQL внешний (ConnectionString в .env).
+# Локально с встроенным Postgres: docker compose -f docker-compose.dev.yml up --build
 #
-# cp .env.example .env   # задайте SA_PASSWORD
-# docker compose up --build
+# cp .env.example .env
+# задайте ConnectionString и JWT_KEY
+# docker compose up --build -d
+#
+# При NETWORK_MODE=host API слушает ASPNETCORE_URLS (по умолчанию :8080).
 
 services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: perry-sql
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${SA_PASSWORD:?SA_PASSWORD is required}
-    ports:
-      - "1433:1433"
-    volumes:
-      - perry_sql_data:/var/opt/mssql
-
   api:
     build:
       context: .
       dockerfile: src/Perry.Api/Dockerfile
     container_name: perry-api
-    depends_on:
-      - sqlserver
+    restart: unless-stopped
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
-      Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
-      Jwt__Issuer: Perry
-      Jwt__Audience: Perry
+      ConnectionStrings__DefaultConnection: "${ConnectionString}"
+      Jwt__Key: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
+      Jwt__SigningSecret: ${JWT_KEY:-changeme-dev-jwt-signing-key-32chars}
+      Jwt__Issuer: ${JWT_ISSUER:-Perry.AuthService}
+      Jwt__Audience: ${JWT_AUDIENCE:-Perry.Client}
+      Jwt__SkipSignatureValidation: ${JWT_SKIP_SIGNATURE:-false}
+      Jwt__MapInboundClaims: "false"
+      Jwt__RoleClaimType: role
+      Jwt__NameClaimType: sub
+      AuthService__BaseUrl: ${AUTH_SERVICE_BASE_URL:-https://perry-auth-service.orangeplant-910928aa.swedencentral.azurecontainerapps.io}
+      AuthService__ServiceName: ${AUTH_SERVICE_NAME:-local-service}
       Smtp__UseStub: ${SMTP_USE_STUB:-true}
       Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
       Smtp__Port: ${SMTP_PORT:-587}
@@ -37,30 +36,4 @@ services:
       Smtp__Username: ${SMTP_USERNAME:-}
       Smtp__Password: ${SMTP_PASSWORD:-}
       Smtp__EnableSsl: "true"
-    ports:
-      - "5272:8080"
-
-  web:
-    build:
-      context: .
-      dockerfile: src/Perry.Web/Dockerfile
-    container_name: perry-web
-    depends_on:
-      - api
-      - sqlserver
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__DefaultConnection: "Server=sqlserver;Database=Perry;User Id=sa;Password=${SA_PASSWORD:?SA_PASSWORD is required};TrustServerCertificate=True"
-      Smtp__UseStub: ${SMTP_USE_STUB:-true}
-      Smtp__Host: ${SMTP_HOST:-smtp.gmail.com}
-      Smtp__Port: ${SMTP_PORT:-587}
-      Smtp__From: ${SMTP_FROM:-}
-      Smtp__Username: ${SMTP_USERNAME:-}
-      Smtp__Password: ${SMTP_PASSWORD:-}
-      Smtp__EnableSsl: "true"
-    ports:
-      - "5000:8080"
-
-volumes:
-  perry_sql_data:
+    network_mode: "${NETWORK_MODE:-host}"

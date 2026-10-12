@@ -32,6 +32,11 @@ public class Product
     /// <summary>Навигационное свойство: категория, к которой относится товар.</summary>
     public Category Category { get; set; } = null!;
 
+    /// <summary>
+    /// #A11 — продавец: UserId из JWT Auth (без FK; пользователи в Auth Service).
+    /// </summary>
+    public Guid? SellerId { get; set; }
+
     /// <summary>Текущая цена продажи.</summary>
     public decimal Price { get; set; }
 
@@ -52,6 +57,12 @@ public class Product
 
     /// <summary>Флаг «Best seller» (бейдж на карточке в макете).</summary>
     public bool IsBestSeller { get; set; }
+
+    /// <summary>Счётчик просмотров карточки (GET product by id), с антиспамом на API.</summary>
+    public int ViewCount { get; set; }
+
+    /// <summary>Сколько единиц товара продано (сумма Quantity в заказах).</summary>
+    public int OrderCount { get; set; }
 
     public DateTime CreatedAtUtc { get; set; } = DateTime.UtcNow;
 

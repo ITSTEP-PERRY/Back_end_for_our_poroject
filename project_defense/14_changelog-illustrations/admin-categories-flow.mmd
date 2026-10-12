@@ -1,0 +1,7 @@
+flowchart TD
+  P[AdminCategoriesPage] --> T[AdminCategoryTree]
+  P --> M[Form Modal]
+  P --> C[Confirm Modal]
+  T --> API["categoriesApi"]
+  M --> API
+  API --> BE["/api/categories"]

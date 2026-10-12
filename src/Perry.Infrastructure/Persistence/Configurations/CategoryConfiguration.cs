@@ -18,8 +18,8 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(x => x.Name).HasMaxLength(200).IsRequired();
         builder.Property(x => x.Slug).HasMaxLength(220).IsRequired();
         builder.Property(x => x.Description).HasMaxLength(4000);
-        builder.Property(x => x.ImageUrl).HasMaxLength(1000);
-        builder.Property(x => x.IconUrl).HasMaxLength(1000);
+        builder.Property(x => x.ImageUrl);
+        builder.Property(x => x.IconUrl);
 
         // Slug уникален — удобно для URL вида /catalog/{slug}
         builder.HasIndex(x => x.Slug).IsUnique();

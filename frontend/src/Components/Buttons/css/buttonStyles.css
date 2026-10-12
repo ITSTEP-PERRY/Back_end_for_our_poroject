@@ -1,0 +1,89 @@
+.ant-btn.my-primary {
+    background-color: #B8EA48;
+}
+
+.primary-icon {
+    color: #0E2042;
+}
+
+.ant-btn.my-primary:not(:disabled):not(.ant-btn-disabled):hover {
+    background-color: #CDFA6A;
+    border: 2.5px solid #B8EA48;
+}
+
+.ant-btn.my-primary:not(:disabled):not(.ant-btn-disabled):active {
+    background-color: #8DD334;
+    border: none
+}
+
+.ant-btn.my-primary:disabled {
+    background: #B8EA48;
+    border: none;
+    border-image-source: linear-gradient(135deg, #9ACC2A 0%, #D6FF66 100%);
+}
+
+/* ============== secondary ============== */
+
+.ant-btn.secondary {
+    /* Main color - Secondary */
+    border: 2.5px solid #4A7BD9;
+}
+.secondary-icon {
+    color: #4A7BD9 !important;
+}
+
+.ant-btn.secondary:not(:disabled):not(.ant-btn-disabled):hover {
+    border: 2.5px solid #4A7BD9;
+    box-shadow: 0px 1px 7px -5px #2050AD73;
+}
+
+.ant-btn.secondary:not(:disabled):not(.ant-btn-disabled):active {
+    border: 2.5px solid #4A7BD9;
+    background: #CCDDFF;
+}
+
+.ant-btn.secondary:disabled {
+    border: 2.5px solid rgb(74 123 217 / 0.5)
+}
+
+
+/* ============== tertiary ============== */
+.ant-btn.tertiary {
+}
+
+.tertiary-icon {
+    color: #4A7BD9;
+}
+
+.ant-btn.tertiary:not(:disabled):not(.ant-btn-disabled):hover {
+    background-color:  #E0EBFF;
+}
+
+.ant-btn.tertiary:not(:disabled):not(.ant-btn-disabled):active {
+    background: #CCDDFF;
+}
+
+
+
+/* ============== destructive ============== */
+.ant-btn.destructive {
+    border: 2.5px solid #EA4848
+}
+
+.destructive-icon {
+    color: #EA4848;
+}
+
+.ant-btn.destructive:not(:disabled):not(.ant-btn-disabled):hover {
+    border: 2.5px solid #EA4848;
+    box-shadow: 0px 1px 7px -5px #C2202080;
+}
+
+.ant-btn.destructive:not(:disabled):not(.ant-btn-disabled):active {
+    background: #FFCCCC;
+    border: 2.5px solid #EA4848
+}
+
+.ant-btn.destructive:disabled {
+    border: 2.5px solid rgb(234 72 72 / 0.5)
+}

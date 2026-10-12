@@ -1,0 +1,28 @@
+flowchart TB
+  subgraph S["1. Витрина"]
+    direction LR
+    S1["/"]
+    S2["/products"]
+    S3["/cart"]
+    S4["/account/*"]
+  end
+
+  subgraph A["2. Auth"]
+    direction LR
+    A1["/login"]
+    A2["/register"]
+    A3["/forgot-password"]
+  end
+
+  subgraph M["3. Admin"]
+    direction LR
+    M1["/admin/login"]
+    M2["products · categories · reviews · orders · users"]
+  end
+
+  classDef s fill:#2d4a3e,stroke:#7dcea0,color:#fff
+  classDef a fill:#3d4a1e,stroke:#c9d56a,color:#fff
+  classDef m fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  class S1,S2,S3,S4 s
+  class A1,A2,A3 a
+  class M1,M2 m

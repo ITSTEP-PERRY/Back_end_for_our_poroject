@@ -1,0 +1,17 @@
+flowchart TB
+  F["Форма /login"]
+  Q{"DEV и Admin/Admin?"}
+  F --> Q
+
+  Q -->|"нет"| AUTH["POST /auth-api/.../login"]
+  Q -->|"да"| DEV["POST /api/dev/admin-login"]
+
+  AUTH --> TOK["localStorage: perry_token"]
+  DEV --> TOK
+  TOK --> CTX["AuthContext<br/>user + isAdmin"]
+  CTX --> ME["проверка me при старте"]
+
+  classDef a fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef e fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  class F,Q,TOK,CTX,ME,DEV a
+  class AUTH e

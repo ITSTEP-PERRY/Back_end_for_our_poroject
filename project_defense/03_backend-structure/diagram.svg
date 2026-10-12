@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="540" viewBox="0 0 960 540">
+<rect width="960" height="540" fill="#0f1419"/>
+<text x="48" y="48" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="22" font-weight="700">Perry — Backend Structure</text>
+<rect x="80" y="120" width="180" height="80" rx="10" fill="#1e3a5f" stroke="#5b9fd4" stroke-width="2"/>
+<text x="170" y="166" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Perry.Api</text>
+<rect x="320" y="120" width="180" height="80" rx="10" fill="#2d4a3e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="410" y="166" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Infrastructure</text>
+<rect x="560" y="120" width="180" height="80" rx="10" fill="#3d4a1e" stroke="#5b9fd4" stroke-width="2"/>
+<text x="650" y="166" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Domain</text>
+<rect x="320" y="280" width="180" height="80" rx="10" fill="#4a3d2d" stroke="#5b9fd4" stroke-width="2"/>
+<text x="410" y="326" fill="#e8eef5" font-family="Segoe UI,Arial" font-size="14" text-anchor="middle">Perry.Web legacy</text>
+</svg>

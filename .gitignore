@@ -6,6 +6,16 @@ obj/
 .vs/
 *.swp
 
+## Node / Expo (frontend + mobile)
+node_modules/
+dist/
+.expo/
+frontend/dist/
+mobile/dist/
+mobile/.tmp/
+*.log
+npm-debug.log*
+
 ## IDE
 .idea/
 .vscode/
@@ -25,8 +35,16 @@ _ref/
 Thumbs.db
 Desktop.ini
 
+## Windows shortcuts (created by Install-Perry-Shortcuts.ps1)
+*.lnk
+
 ## Temp
 .figma-tmp/
+.tmp/
+
+## Vibe-prompts local progress
+vibe-prompts/.vibe-sequence-state.json
 
 
-.env
+
+**.env

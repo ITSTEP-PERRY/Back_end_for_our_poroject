@@ -1,0 +1,19 @@
+flowchart TB
+  AUTH["AuthContext<br/>кто я, роль Admin?"]
+  CART["CartContext<br/>корзина + sessionId"]
+  WISH["WishlistContext<br/>избранное"]
+  LS["localStorage<br/>token · cart_session · local_admin"]
+  UI["Страницы и виджеты"]
+
+  AUTH --> UI
+  CART --> UI
+  WISH --> UI
+  AUTH --- LS
+  CART --- LS
+
+  classDef a fill:#4a2d3e,stroke:#d48ab0,color:#fff
+  classDef c fill:#1e3a5f,stroke:#5b9fd4,color:#fff
+  classDef w fill:#2d4a3e,stroke:#7dcea0,color:#fff
+  class AUTH a
+  class CART c
+  class WISH,UI,LS w

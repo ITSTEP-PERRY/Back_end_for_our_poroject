@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using Perry.Api.Auth;
 using Perry.Domain.Entities;
 using Perry.Domain.Enums;
 using Perry.Infrastructure.Persistence;
@@ -143,9 +143,5 @@ public class WishlistController : ControllerBase
         return NoContent();
     }
 
-    private Guid? GetUserId()
-    {
-        var raw = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirstValue("sub");
-        return Guid.TryParse(raw, out var id) ? id : null;
-    }
+    private Guid? GetUserId() => AuthClaims.GetUserId(User);
 }
