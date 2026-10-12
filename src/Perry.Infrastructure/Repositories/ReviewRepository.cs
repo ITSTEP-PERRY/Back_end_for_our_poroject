@@ -29,12 +29,15 @@ public class ReviewRepository : IReviewRepository
 
     public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, Guid? id, CancellationToken cancellationToken)
     {
-        IQueryable<ProductReview> query = ProjectReviews(_dbContext.ProductReviews);
+        // #216 — поиск по имени товара / email (AuthorName) до ProjectReviews (там нет Product nav).
+        IQueryable<ProductReview> source = ApplyProductOrEmailSearch(_dbContext.ProductReviews, options);
 
-        if (id != null) query = query.Where(r => r.ProductId == id || r.UserId == id);
+        if (id != null) source = source.Where(r => r.ProductId == id || r.UserId == id);
+
+        IQueryable<ProductReview> query = ProjectReviews(source);
 
         var pageList = await PagedList<ProductReview>.CreateAsync(query, options, cancellationToken);
-        var statQuery = _dbContext.ProductReviews.AsQueryable();
+        var statQuery = ApplyProductOrEmailSearch(_dbContext.ProductReviews.AsQueryable(), options);
         if (id != null) statQuery = statQuery.Where(r => r.ProductId == id || r.UserId == id);
 
         var stats = await GetReviewStatistic(statQuery, options, cancellationToken);
@@ -43,6 +46,39 @@ public class ReviewRepository : IReviewRepository
             PagedList = pageList,
             Statistic = stats
         };
+    }
+
+    /// <summary>
+    /// #216 — SearchTerm по Product.Name, AuthorName (часто email/display) и Title.
+    /// Срабатывает для SearchPropertyName: ProductName | Email | ProductOrEmail | Title | (пусто).
+    /// </summary>
+    private IQueryable<ProductReview> ApplyProductOrEmailSearch(
+        IQueryable<ProductReview> source,
+        QueryOptions options)
+    {
+        if (string.IsNullOrWhiteSpace(options.SearchTerm))
+            return source;
+
+        var prop = options.SearchPropertyName?.Trim() ?? string.Empty;
+        var useWideSearch = string.IsNullOrEmpty(prop)
+            || prop.Equals("ProductName", StringComparison.OrdinalIgnoreCase)
+            || prop.Equals("Email", StringComparison.OrdinalIgnoreCase)
+            || prop.Equals("ProductOrEmail", StringComparison.OrdinalIgnoreCase)
+            || prop.Equals("Title", StringComparison.OrdinalIgnoreCase);
+        if (!useWideSearch)
+            return source;
+
+        var term = options.SearchTerm.Trim();
+        // Не даём PagedList.Search повторно фильтровать по одному Title.
+        options.SearchPropertyName = null;
+        options.SearchTerm = null;
+
+        var pattern = term.ToLowerInvariant();
+        return source.Where(r =>
+            (r.AuthorName != null && r.AuthorName.ToLower().Contains(pattern))
+            || (r.Title != null && r.Title.ToLower().Contains(pattern))
+            || _dbContext.Products.Any(p =>
+                p.Id == r.ProductId && p.Name.ToLower().Contains(pattern)));
     }
 
     public async Task<Result<ProductReviewDto>> GetReviewsByUserOrProductId(Guid id, QueryOptions options, CancellationToken cancellationToken)

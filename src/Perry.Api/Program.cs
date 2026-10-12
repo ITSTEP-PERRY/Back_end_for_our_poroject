@@ -114,19 +114,40 @@ if (IsMissingJwtSecret(jwt.SigningSecret))
 
 builder.Services.AddJwtAuthentication(jwt);
 
+// #217 — CORS origins from config / env (Cors__AllowedOrigins), not hard-coded only.
+static string[] ResolveCorsOrigins(IConfiguration configuration)
+{
+    var fromConfig = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                     ?? Array.Empty<string>();
+    var fromEnv = configuration["Cors:AllowedOrigins"]
+                  ?? configuration["Cors__AllowedOrigins"]
+                  ?? string.Empty;
+    var parsedEnv = fromEnv
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    var defaults = new[]
+    {
+        "https://admin.perrydev.space",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+    };
+    return fromConfig
+        .Concat(parsedEnv)
+        .Concat(defaults)
+        .Where(o => !string.IsNullOrWhiteSpace(o))
+        .Select(o => o.Trim().TrimEnd('/'))
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToArray();
+}
+
+var corsOrigins = ResolveCorsOrigins(builder.Configuration);
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(
-                "https://admin.perrydev.space",
-                "http://localhost:3000",
-                "http://127.0.0.1:3000",
-                "http://localhost:3001",
-                "http://127.0.0.1:3001",
-                "http://localhost:8081",
-                "http://127.0.0.1:8081",
-                "http://10.1.0.17:3000",
-                "http://10.1.0.17:3001")
+        policy.WithOrigins(corsOrigins)
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
