@@ -1,0 +1,73 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perry-web
+  namespace: perry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: perry-web
+  template:
+    metadata:
+      labels:
+        app: perry-web
+    spec:
+      containers:
+        - name: web
+          image: back_end_for_our_poroject-web:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              export ConnectionStrings__DefaultConnection="Server=perry-sql;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+              exec dotnet Perry.Web.dll
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+            - name: ASPNETCORE_URLS
+              value: http://+:8080
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: perry-secrets
+                  key: SA_PASSWORD
+            - name: Smtp__UseStub
+              value: "true"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: perry-web
+  namespace: perry
+spec:
+  type: ClusterIP
+  selector:
+    app: perry-web
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

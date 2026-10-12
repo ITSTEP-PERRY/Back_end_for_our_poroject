@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: perry-config
+  namespace: perry
+data:
+  ASPNETCORE_ENVIRONMENT: "Production"
+  ASPNETCORE_URLS: "http://+:8080"
+  Jwt__Issuer: "Perry"
+  Jwt__Audience: "Perry"
+  Smtp__UseStub: "true"
+  Smtp__Host: "smtp.gmail.com"
+  Smtp__Port: "587"
+  Smtp__EnableSsl: "true"

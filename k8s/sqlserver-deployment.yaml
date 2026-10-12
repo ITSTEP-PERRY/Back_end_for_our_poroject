@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perry-sql
+  namespace: perry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: perry-sql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: perry-sql
+    spec:
+      containers:
+        - name: sqlserver
+          image: mcr.microsoft.com/mssql/server:2022-latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: sql
+              containerPort: 1433
+          env:
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: MSSQL_SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: perry-secrets
+                  key: SA_PASSWORD
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+            limits:
+              cpu: "2"
+              memory: "4Gi"
+          volumeMounts:
+            - name: sql-data
+              mountPath: /var/opt/mssql
+      volumes:
+        - name: sql-data
+          persistentVolumeClaim:
+            claimName: perry-sql-pvc
