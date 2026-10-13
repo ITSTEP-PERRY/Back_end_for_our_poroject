@@ -24,7 +24,6 @@ jobs:
       POSTGRES_DB: perry
       POSTGRES_USER: perry
       POSTGRES_PASSWORD: changeme
-      JWT_KEY: changeme-dev-jwt-signing-key-32chars
       SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
       JWT_KEY: test-only-jwt-signing-key-for-ci-12345678901234567890
 
