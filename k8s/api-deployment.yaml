@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perry-api
+  namespace: perry
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: perry-api
+  template:
+    metadata:
+      labels:
+        app: perry-api
+    spec:
+      containers:
+        - name: api
+          image: back_end_for_our_poroject-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+            - name: SA_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: perry-secrets
+                  key: SA_PASSWORD
+            - name: ConnectionStrings__DefaultConnection
+              value: "Server=perry-sql;Database=Perry;User Id=sa;Password=$(SA_PASSWORD);TrustServerCertificate=True"
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: perry-jwt
+                  key: JWT_KEY
+            - name: Jwt__Issuer
+              value: "Perry"
+            - name: Jwt__Audience
+              value: "Perry"
+            - name: Smtp__UseStub
+              value: "true"
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "768Mi"

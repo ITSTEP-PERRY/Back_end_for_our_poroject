@@ -197,6 +197,7 @@ app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 
 // #A06 — healthcheck (API + SQL)
 app.MapGet("/api/health", async (AppDbContext db, CancellationToken ct) =>
@@ -215,3 +216,4 @@ app.MapGet("/api/health", async (AppDbContext db, CancellationToken ct) =>
 }).AllowAnonymous();
 
 app.Run();
+
