@@ -1,16 +1,15 @@
-﻿
-apiVersion: apps/v1
+﻿apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: perry-api
   namespace: perry
 spec:
-  replicas: 1
+  replicas: 3
+  strategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: perry-api
-  strategy:
-    type: RollingUpdate
   template:
     metadata:
       labels:
@@ -27,11 +26,14 @@ spec:
             - |
               export ConnectionStrings__DefaultConnection="Server=perry-sql;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
               exec dotnet Perry.Api.dll
+          ports:
+            - name: http
+              containerPort: 8080
           env:
             - name: ASPNETCORE_ENVIRONMENT
-              value: Production
+              value: "Production"
             - name: ASPNETCORE_URLS
-              value: http://+:8080
+              value: "http://+:8080"
             - name: SA_PASSWORD
               valueFrom:
                 secretKeyRef:
@@ -43,15 +45,18 @@ spec:
                   name: perry-jwt
                   key: JWT_KEY
             - name: Jwt__Issuer
-              value: Perry
+              value: "Perry"
             - name: Jwt__Audience
-              value: Perry
+              value: "Perry"
             - name: Smtp__UseStub
               value: "true"
-          ports:
-            - name: http
-              containerPort: 8080
-              protocol: TCP
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "768Mi"
           livenessProbe:
             httpGet:
               path: /health
@@ -68,10 +73,3 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 2
             failureThreshold: 3
-          resources:
-            limits:
-              cpu: "1"
-              memory: 768Mi
-            requests:
-              cpu: 100m
-              memory: 256Mi
