@@ -4,7 +4,9 @@ metadata:
   name: perry-api
   namespace: perry
 spec:
-  replicas: 1
+  replicas: 3
+  strategy:
+    type: RollingUpdate
   selector:
     matchLabels:
       app: perry-api
@@ -17,6 +19,13 @@ spec:
         - name: api
           image: back_end_for_our_poroject-api:latest
           imagePullPolicy: IfNotPresent
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - |
+              export ConnectionStrings__DefaultConnection="Server=perry-sql;Database=Perry;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True"
+              exec dotnet Perry.Api.dll
           ports:
             - name: http
               containerPort: 8080
@@ -30,8 +39,6 @@ spec:
                 secretKeyRef:
                   name: perry-secrets
                   key: SA_PASSWORD
-            - name: ConnectionStrings__DefaultConnection
-              value: "Server=perry-sql;Database=Perry;User Id=sa;Password=$(SA_PASSWORD);TrustServerCertificate=True"
             - name: Jwt__Key
               valueFrom:
                 secretKeyRef:
@@ -50,3 +57,19 @@ spec:
             limits:
               cpu: "1"
               memory: "768Mi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
