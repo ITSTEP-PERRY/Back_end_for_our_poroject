@@ -2,12 +2,13 @@ name: Publish
 
 on:
   workflow_dispatch:
+  
   push:
     branches:
-      - main
+      - deploy
 
 env:
-  AZURE_WEBAPP_NAME: perry-product-back
+  AZURE_WEBAPP_NAME: perry-product-api
   AZURE_WEBAPP_PACKAGE_PATH: "./publish"
 
 jobs:
@@ -23,7 +24,7 @@ jobs:
           dotnet-version: '8.0.x'
 
       - name: Restore
-        run: dotnet restore ./Perry.sln
+        run: dotnet restore ./src/Perry.Api/Perry.Api.csproj
 
       - name: Build
         run: dotnet build ./src/Perry.Api/Perry.Api.csproj --configuration Debug --no-restore
