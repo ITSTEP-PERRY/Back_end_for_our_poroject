@@ -1,107 +1,20 @@
 name: Perry CI
 
 on:
+  workflow_call: 
   push:
     branches:
-      - main
-      - "feature/**"
+      - deploy
     tags:
       - "v*"
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
   packages: write
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
-
-    env:
-      # Compose defaults for CI (override locally via .env)
-      POSTGRES_DB: perry
-      POSTGRES_USER: perry
-      POSTGRES_PASSWORD: changeme
-      JWT_KEY: changeme-dev-jwt-signing-key-32chars
-      SA_PASSWORD: ${{ secrets.SA_PASSWORD }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 8
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: "8.0.x"
-
-      - name: Restore dependencies
-        run: dotnet restore Perry.sln
-
-      - name: Build solution
-        run: dotnet build Perry.sln --configuration Release --no-restore
-
-      - name: Run tests
-        run: dotnet test Perry.sln --configuration Release --no-build --verbosity normal
-
-      - name: Validate Docker Compose
-        run: docker compose config > /dev/null
-
-      - name: Build Docker images
-        run: docker compose build
-
-      - name: Start Docker environment
-        run: docker compose up -d
-
-      - name: Check running containers
-        run: docker compose ps
-
-      - name: Wait for API
-        run: |
-          for i in {1..30}; do
-            if curl -fsS "http://localhost:5272/api/products?page=1&pageSize=1" > /dev/null; then
-              echo "API is available"
-              exit 0
-            fi
-
-            echo "Waiting for API..."
-            sleep 5
-          done
-
-          echo "API did not become available"
-          docker compose logs
-          exit 1
-
-      - name: Integration test API and database
-        run: |
-          for i in {1..30}; do
-            response=$(curl -fsS "http://localhost:5272/api/products?page=1&pageSize=1" 2>/dev/null) && {
-              echo "API successfully returned data from database"
-              echo "$response"
-
-              echo "$response" | jq -e '.items != null and .total != null' > /dev/null && {
-                echo "Integration test passed"
-                exit 0
-              }
-            }
-
-            echo "Waiting for API and database..."
-            sleep 5
-          done
-
-          echo "Integration test failed"
-          docker compose logs
-          exit 1
-
-      - name: Stop Docker environment
-        if: always()
-        run: docker compose down
-
   publish-images:
     name: Publish Docker images to GHCR
-    needs: build-and-test
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
 
     permissions:
