@@ -114,18 +114,45 @@ if (IsMissingJwtSecret(jwt.SigningSecret))
 
 builder.Services.AddJwtAuthentication(jwt);
 
-// #217 — CORS origins from config / env (Cors__AllowedOrigins), not hard-coded only.
+// #217 / #A19 — CORS origins from config / env (Cors__AllowedOrigins), not hard-coded only.
+// Azure/env often sets a comma-separated *string*, which replaces the JSON array — parse both.
 static string[] ResolveCorsOrigins(IConfiguration configuration)
 {
-    var fromConfig = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-                     ?? Array.Empty<string>();
-    var fromEnv = configuration["Cors:AllowedOrigins"]
-                  ?? configuration["Cors__AllowedOrigins"]
-                  ?? string.Empty;
-    var parsedEnv = fromEnv
-        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+    static IEnumerable<string> SplitOrigins(string? raw) =>
+        (raw ?? string.Empty)
+            .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(o => o.Trim().Trim('"', '\'').TrimEnd('/'))
+            .Where(o => !string.IsNullOrWhiteSpace(o) && !o.Contains('*'));
+
+    var collected = new List<string>();
+
+    // 1) Indexed / array section (appsettings + Cors__AllowedOrigins__0)
+    var section = configuration.GetSection("Cors:AllowedOrigins");
+    if (section.Exists())
+    {
+        foreach (var child in section.GetChildren())
+        {
+            if (!string.IsNullOrWhiteSpace(child.Value))
+                collected.AddRange(SplitOrigins(child.Value));
+        }
+
+        var asArray = section.Get<string[]>();
+        if (asArray is { Length: > 0 })
+            collected.AddRange(asArray.SelectMany(SplitOrigins));
+    }
+
+    // 2) Scalar string (Cors__AllowedOrigins=https://a,https://b) — process env + config
+    foreach (var key in new[] { "Cors:AllowedOrigins", "Cors__AllowedOrigins" })
+    {
+        collected.AddRange(SplitOrigins(configuration[key]));
+        collected.AddRange(SplitOrigins(Environment.GetEnvironmentVariable(key)));
+    }
+
+    // 3) Defaults — include storefront (perrydev.space), not only admin
     var defaults = new[]
     {
+        "https://perrydev.space",
+        "https://www.perrydev.space",
         "https://admin.perrydev.space",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -134,20 +161,26 @@ static string[] ResolveCorsOrigins(IConfiguration configuration)
         "http://localhost:8081",
         "http://127.0.0.1:8081",
     };
-    return fromConfig
-        .Concat(parsedEnv)
-        .Concat(defaults)
-        .Where(o => !string.IsNullOrWhiteSpace(o))
-        .Select(o => o.Trim().TrimEnd('/'))
+    collected.AddRange(defaults);
+
+    return collected
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
 }
 
 var corsOrigins = ResolveCorsOrigins(builder.Configuration);
+var corsOriginSet = new HashSet<string>(corsOrigins, StringComparer.OrdinalIgnoreCase);
+Console.WriteLine($"[CORS] Allowed origins ({corsOriginSet.Count}): {string.Join(", ", corsOriginSet.OrderBy(x => x))}");
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(corsOrigins)
+        policy.SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin)) return false;
+                var normalized = origin.Trim().TrimEnd('/');
+                return corsOriginSet.Contains(normalized);
+            })
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
