@@ -1,4 +1,4 @@
-name: Perry CI
+name: Perry Product API CI
 
 on:
   workflow_call: 
@@ -8,18 +8,10 @@ on:
     tags:
       - "v*"
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   publish-images:
     name: Publish Docker images to GHCR
     runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout repository
@@ -30,7 +22,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_LOGIN }}
 
       - name: Set Docker image version tag
         id: version
@@ -42,11 +34,10 @@ jobs:
           fi
 
       - name: Build and push API image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./src/Perry.Api/Dockerfile
-          platforms: linux/amd64,linux/arm64,
           push: true
           tags: |
             ghcr.io/itstep-perry/perry-api:latest
