@@ -93,9 +93,20 @@ public class ReviewController : ControllerBase
         };
     }
 
+    /// <summary>Список отзывов (пагинация, поиск, #A23 — фильтр по дате).</summary>
+    /// <param name="options">Пагинация / поиск / фильтры.</param>
+    /// <param name="id">ProductId или UserId.</param>
+    /// <param name="from">#A23: CreatedAtUtc ≥ from (UTC, включительно).</param>
+    /// <param name="to">#A23: CreatedAtUtc ≤ to (UTC, включительно; дата без времени = до конца дня).</param>
+    /// <param name="ct">Cancellation.</param>
     [HttpGet]
-    public async Task<IActionResult> GetAllReviews([FromQuery] QueryOptions options, Guid? id, CancellationToken ct)
+    public async Task<IActionResult> GetAllReviews([FromQuery] QueryOptions options, Guid? id,
+        [FromQuery] DateTime? from, [FromQuery] DateTime? to, CancellationToken ct)
     {
+        if (from is not null && to is not null && from > to)
+            return Problem(statusCode: StatusCodes.Status400BadRequest,
+                title: "Invalid date range", detail: "'from' must be less than or equal to 'to'.");
+
         var user = HttpContext.User;
         if (!(await _authorizationService.AuthorizeAsync(user, AuthorizationPolicies.AdminAccess)).Succeeded)
         {
@@ -104,7 +115,7 @@ public class ReviewController : ControllerBase
                 { PropertyName = nameof(ProductReview.IsApproved), Value = "true" });
         }
 
-        var result = await _reviewRepository.GetAllReviews(options, id, ct);
+        var result = await _reviewRepository.GetAllReviews(options, id, ct, from, to);
         if (result.Value != null)
         {
             var review = result.Value;
