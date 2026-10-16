@@ -35,7 +35,7 @@ jobs:
 
       - name: Build and push API image
         run: |
-          docker build . --file ./src/Perry.Api/Dockerfile --tag ghcr.io/itstep-perry/product-api:latest
+          docker build . --file ./src/Perry.Api/Dockerfile --tag ghcr.io/itstep-perry/perry-api:latest
           docker push ghcr.io/itset-perry/product-api:latest
 
   security-check:
