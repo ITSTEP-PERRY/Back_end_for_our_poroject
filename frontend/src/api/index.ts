@@ -447,10 +447,11 @@ export const authApi = {
       const me = await authApi.me();
       return { ...me, ...body } as AuthUser;
     }),
-  changePassword: (currentPassword: string, newPassword: string) =>
-    apiFetch<{ status: string }>("/auth/reset-password", {
+  /** Auth Service: POST /api/account/password/change (ChangePasswordRequest). */
+  changePassword: (currentPassword: string, newPassword: string, confirmPassword: string) =>
+    apiFetch<{ status: string }>("/account/password/change", {
       method: "POST",
-      body: JSON.stringify({ currentPassword, newPassword }),
+      body: JSON.stringify({ currentPassword, newPassword, confirmPassword }),
       base: "auth",
     }),
   sendEmailChangeCode: (newEmail: string, password: string) =>

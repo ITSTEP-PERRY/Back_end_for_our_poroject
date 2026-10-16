@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { authApi } from "../api";
-import { getToken, setToken } from "../api/client";
+import { AUTH_EXPIRED_EVENT, getToken, setToken } from "../api/client";
 import type { AuthUser } from "../api/types";
 
 type AuthState = {
@@ -79,6 +79,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("perry_local_admin");
     authApi.clearAvatarCache();
   }, []);
+
+  // Auth Service ответил 401 (токен истёк) → client.ts уже сбросил токен; чистим user,
+  // RequireAuth уведёт на /login.
+  useEffect(() => {
+    const onExpired = () => logout();
+    window.addEventListener(AUTH_EXPIRED_EVENT, onExpired);
+    return () => window.removeEventListener(AUTH_EXPIRED_EVENT, onExpired);
+  }, [logout]);
 
   const refreshUser = useCallback(async () => {
     const token = getToken();
