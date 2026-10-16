@@ -34,15 +34,9 @@ jobs:
           fi
 
       - name: Build and push API image
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: ./src/Perry.Api/Dockerfile
-          push: true
-          tags: |
-            ghcr.io/itstep-perry/perry-api:latest
-            ghcr.io/itstep-perry/perry-api:${{ github.sha }}
-            ${{ steps.version.outputs.tag != '' && format('ghcr.io/itstep-perry/perry-api:{0}', steps.version.outputs.tag) || '' }}
+        run: |
+          docker build /src/Perry.Api/ --tag ghcr.io/itset-perry/product-api:latest
+          docker push ghcr.io/itset-perry/product-api:latest
 
   security-check:
     name: Security Check
