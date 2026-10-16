@@ -1,15 +1,12 @@
 name: Perry CI
 
 on:
+  workflow_dispatch:
   push:
     branches:
-      - main
-      - "feature/**"
+      - deploy
     tags:
       - "v*"
-  pull_request:
-    branches:
-      - main
 
 permissions:
   contents: read
