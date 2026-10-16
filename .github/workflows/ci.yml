@@ -116,13 +116,21 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        
+       # 1. Install QEMU for ARM64 emulation
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
+      # 2. Initialize Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
       - name: Log in to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_LOGIN }}
 
       - name: Set Docker image version tag
         id: version
@@ -139,6 +147,7 @@ jobs:
           context: .
           file: ./src/Perry.Api/Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ghcr.io/itstep-perry/perry-api:latest
             ghcr.io/itstep-perry/perry-api:${{ github.sha }}
