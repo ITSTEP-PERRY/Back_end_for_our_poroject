@@ -30,7 +30,7 @@ public class SellerAnalyticsServiceTests
     }
 
     [Fact]
-    public async Task Customers_unique_excludes_cancelled_and_foreign_products()
+    public async Task Customers_unique_includes_cancelled_excludes_foreign_products()
     {
         using var fx = new TestDb();
         var seller = Guid.NewGuid();
@@ -48,12 +48,28 @@ public class SellerAnalyticsServiceTests
         var svc = new SellerAnalyticsService(fx.Db);
         var page = await svc.GetCustomersAsync(seller, 1, 20, null);
 
-        var a = Assert.Single(page.Items);
+        Assert.Equal(2, page.TotalCount);
+        var a = page.Items[0];
         Assert.Equal(buyerA, a.UserId);
         Assert.Equal(2, a.OrdersCount);
         Assert.Equal(30m, a.TotalAmount);
         Assert.Equal("Anna K", a.Name);
-        Assert.Equal(1, page.TotalCount);
+        var b = page.Items[1];
+        Assert.Equal(buyerB, b.UserId);
+        Assert.Equal(50m, b.TotalAmount);
+        Assert.DoesNotContain(page.Items, x => x.UserId == buyerC);
+    }
+
+    [Fact]
+    public async Task Customers_include_returned()
+    {
+        using var fx = new TestDb();
+        var seller = Guid.NewGuid();
+        var mine = fx.SeedProduct(price: 10m, sellerId: seller);
+        AddOrder(fx, Guid.NewGuid(), Now.AddDays(-1), OrderStatus.Returned, "Ret", (mine, 1));
+
+        var page = await new SellerAnalyticsService(fx.Db).GetCustomersAsync(seller, 1, 20, null);
+        Assert.Equal("Ret", Assert.Single(page.Items).Name);
     }
 
     [Fact]
@@ -100,6 +116,14 @@ public class SellerAnalyticsServiceTests
         Assert.Equal(40m, last.Amount);
         Assert.Equal(3, last.OrdersCount);
         Assert.Equal(2, last.BuyersCount);
+        Assert.Equal(2, last.Statuses["Received"]);
+        Assert.Equal(1, last.Statuses["Ordered"]);
+        Assert.Equal(1, last.Statuses["Cancelled"]);
+        Assert.Equal(0, last.Statuses["Returned"]);
+        Assert.Equal(6, last.Statuses.Count);
+        Assert.Equal("2026-10-16", last.Day);
+        Assert.Null(last.Month);
+        Assert.Equal(2026, last.Year);
         Assert.Equal(0m, chart.Points[10].Amount);
     }
 
@@ -116,10 +140,56 @@ public class SellerAnalyticsServiceTests
         Assert.Equal(12, month.Points.Count);
         Assert.Equal("2025-11", month.Points[0].Label);
         Assert.Equal(10m, month.Points[0].Amount);
+        Assert.Equal(10, month.Points[0].Month);
+        Assert.Equal(2025, month.Points[0].Year);
+        Assert.Null(month.Points[0].Day);
         Assert.Equal("2026-10", month.Points[^1].Label);
+        Assert.Equal(9, month.Points[^1].Month);
 
         var year = await svc.GetChartAsync(null, ChartPeriod.Year, Now);
         Assert.Equal(new[] { "2024", "2025", "2026" }, year.Points.Select(x => x.Label));
+        Assert.Equal(new[] { 2024, 2025, 2026 }, year.Points.Select(x => x.Year));
+        Assert.All(year.Points, x => Assert.Null(x.Month));
         Assert.Equal(new[] { 5m, 10m, 0m }, year.Points.Select(x => x.Amount));
+    }
+
+    [Fact]
+    public async Task Chart_status_filter_counts_only_that_status()
+    {
+        using var fx = new TestDb();
+        var seller = Guid.NewGuid();
+        var p = fx.SeedProduct(price: 10m, sellerId: seller);
+        AddOrder(fx, Guid.NewGuid(), Now.AddHours(-1), OrderStatus.Received, null, (p, 1));
+        AddOrder(fx, Guid.NewGuid(), Now.AddHours(-2), OrderStatus.Shipped, null, (p, 3));
+
+        var chart = await new SellerAnalyticsService(fx.Db)
+            .GetChartAsync(seller, ChartPeriod.Day, Now, status: OrderStatus.Shipped);
+        var last = chart.Points[^1];
+        Assert.Equal(1, last.OrdersCount);
+        Assert.Equal(30m, last.Amount);
+        Assert.Equal(1, last.Statuses["Shipped"]);
+        Assert.Equal(0, last.Statuses["Received"]);
+
+        var cancelled = await new SellerAnalyticsService(fx.Db)
+            .GetChartAsync(seller, ChartPeriod.Day, Now, status: OrderStatus.Cancelled);
+        Assert.Equal(0, cancelled.Points[^1].OrdersCount);
+    }
+
+    [Fact]
+    public async Task Chart_admin_amount_uses_whole_order_total()
+    {
+        using var fx = new TestDb();
+        var seller = Guid.NewGuid();
+        var mine = fx.SeedProduct(price: 10m, sellerId: seller);
+        var foreign = fx.SeedProduct(price: 100m, sellerId: Guid.NewGuid());
+        AddOrder(fx, Guid.NewGuid(), Now.AddHours(-1), OrderStatus.Received, null, (mine, 1), (foreign, 1));
+
+        var svc = new SellerAnalyticsService(fx.Db);
+        var admin = await svc.GetChartAsync(null, ChartPeriod.Day, Now, wholeOrderAmount: true);
+        Assert.Equal(110m, admin.Points[^1].Amount);
+        Assert.Equal(1, admin.Points[^1].OrdersCount);
+
+        var sellerChart = await svc.GetChartAsync(seller, ChartPeriod.Day, Now, wholeOrderAmount: false);
+        Assert.Equal(10m, sellerChart.Points[^1].Amount);
     }
 }
