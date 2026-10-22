@@ -7,7 +7,8 @@ namespace Perry.Infrastructure.Interfaces;
 
 public interface IReviewRepository
 {
-    Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, Guid? id, CancellationToken cancellationToken);
+    Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, Guid? id, CancellationToken cancellationToken,
+        DateTime? fromUtc = null, DateTime? toUtc = null);
     Task<Result<ProductReviewDto>> GetReviewsByUserOrProductId(Guid id, QueryOptions options, CancellationToken cancellationToken);
     Task<Result<ProductReviewDto>> GetReviewsByUserId(Guid userId, QueryOptions options, bool includeHidden, CancellationToken cancellationToken);
     Task<Result<ProductReview>> GetReviewById(Guid id, CancellationToken cancellationToken);

@@ -27,18 +27,21 @@ public class ReviewRepository : IReviewRepository
         _storage = storage;
     }
 
-    public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, Guid? id, CancellationToken cancellationToken)
+    public async Task<Result<ProductReviewDto>> GetAllReviews(QueryOptions options, Guid? id, CancellationToken cancellationToken,
+        DateTime? fromUtc = null, DateTime? toUtc = null)
     {
         // #216 — поиск по имени товара / email (AuthorName) до ProjectReviews (там нет Product nav).
         IQueryable<ProductReview> source = ApplyProductOrEmailSearch(_dbContext.ProductReviews, options);
 
         if (id != null) source = source.Where(r => r.ProductId == id || r.UserId == id);
+        source = ApplyDateRange(source, fromUtc, toUtc); // #A23
 
         IQueryable<ProductReview> query = ProjectReviews(source);
 
         var pageList = await PagedList<ProductReview>.CreateAsync(query, options, cancellationToken);
         var statQuery = ApplyProductOrEmailSearch(_dbContext.ProductReviews.AsQueryable(), options);
         if (id != null) statQuery = statQuery.Where(r => r.ProductId == id || r.UserId == id);
+        statQuery = ApplyDateRange(statQuery, fromUtc, toUtc);
 
         var stats = await GetReviewStatistic(statQuery, options, cancellationToken);
         return new ProductReviewDto
@@ -46,6 +49,27 @@ public class ReviewRepository : IReviewRepository
             PagedList = pageList,
             Statistic = stats
         };
+    }
+
+    /// <summary>
+    /// #A23 — фильтр по CreatedAtUtc, обе границы включительно.
+    /// <paramref name="toUtc"/> без времени (00:00:00) трактуется как конец дня.
+    /// </summary>
+    public static IQueryable<ProductReview> ApplyDateRange(
+        IQueryable<ProductReview> source, DateTime? fromUtc, DateTime? toUtc)
+    {
+        if (fromUtc is { } from)
+        {
+            var f = DateTime.SpecifyKind(from, DateTimeKind.Utc);
+            source = source.Where(r => r.CreatedAtUtc >= f);
+        }
+        if (toUtc is { } to)
+        {
+            var t = to.TimeOfDay == TimeSpan.Zero ? to.Date.AddDays(1) : to.AddTicks(1);
+            t = DateTime.SpecifyKind(t, DateTimeKind.Utc);
+            source = source.Where(r => r.CreatedAtUtc < t);
+        }
+        return source;
     }
 
     /// <summary>

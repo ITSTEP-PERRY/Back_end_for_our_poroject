@@ -126,6 +126,8 @@ function friendlyStatusMessage(status: number, base: "product" | "auth" | "users
   return `Request failed (HTTP ${status})`;
 }
 
+export const AUTH_EXPIRED_EVENT = "perry:auth-expired";
+
 export async function apiFetch<T = unknown>(
   path: string,
   init: FetchOpts = {},
@@ -168,7 +170,18 @@ export async function apiFetch<T = unknown>(
 
   const data = await parseJson(res);
   if (!res.ok) {
-    // Не сбрасываем сессию автоматически — выход только по кнопке Logout.
+    // 401 от Auth Service = токен истёк/не принят: сбрасываем сессию и уводим на логин.
+    // DEV-админ (perry_local_admin) не трогаем — его токен выдаёт Perry.Api, а не Auth.
+    if (
+      res.status === 401 &&
+      base === "auth" &&
+      token &&
+      !path.startsWith("/auth/login") &&
+      localStorage.getItem("perry_local_admin") !== "1"
+    ) {
+      setToken(null);
+      window.dispatchEvent(new CustomEvent(AUTH_EXPIRED_EVENT));
+    }
     const msg =
       formatApiErrorMessage(data) ||
       friendlyStatusMessage(res.status, base) ||
