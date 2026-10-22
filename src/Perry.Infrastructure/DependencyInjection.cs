@@ -40,7 +40,6 @@ public static class DependencyInjection
         services.AddScoped<IViewedProductsService, ViewedProductsService>();
         services.AddScoped<IProductService, ProductService>();
         services.AddScoped<IProductStatisticsService, ProductStatisticsService>();
-        services.AddScoped<ISellerAnalyticsService, SellerAnalyticsService>();
         services.AddScoped<ICategoryService, CategoryService>();
         // IUserService удалён (#94) — пользователи в Auth Service
         services.AddMemoryCache();
