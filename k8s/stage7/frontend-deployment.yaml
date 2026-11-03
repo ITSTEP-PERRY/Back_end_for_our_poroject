@@ -1,0 +1,84 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perry-frontend
+  namespace: perry-stage7
+  labels:
+    app: perry-frontend
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: perry-frontend
+
+  template:
+    metadata:
+      labels:
+        app: perry-frontend
+
+    spec:
+      automountServiceAccountToken: false
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: frontend
+          image: perry-frontend:security-v3
+          imagePullPolicy: Never
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          startupProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            failureThreshold: 24
+
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+
+          resources:
+            requests:
+              cpu: 25m
+              memory: 32Mi
+            limits:
+              cpu: 250m
+              memory: 128Mi
+
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: perry-frontend-nginx
