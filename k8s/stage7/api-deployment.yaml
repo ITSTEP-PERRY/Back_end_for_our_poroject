@@ -1,0 +1,113 @@
+﻿apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: perry-api
+  namespace: perry-stage7
+  labels:
+    app: perry-api
+spec:
+  replicas: 1
+
+  strategy:
+    type: Recreate
+
+  selector:
+    matchLabels:
+      app: perry-api
+
+  template:
+    metadata:
+      labels:
+        app: perry-api
+
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 30
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        fsGroup: 1654
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: perry-api
+          image: back_end_for_our_poroject-api:security-v3
+          imagePullPolicy: Never
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          ports:
+            - name: http
+              containerPort: 8080
+
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: Production
+
+            - name: ASPNETCORE_URLS
+              value: "http://+:8080"
+
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: perry-api-db-credentials
+                  key: ConnectionStrings__DefaultConnection
+
+            - name: Jwt__SigningSecret
+              valueFrom:
+                secretKeyRef:
+                  name: perry-api-jwt
+                  key: Jwt__SigningSecret
+
+            - name: Jwt__SkipSignatureValidation
+              value: "false"
+
+            - name: Smtp__UseStub
+              value: "true"
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 60
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/wwwroot/uploads
+
+      volumes:
+        - name: uploads
+          emptyDir: {}
