@@ -1,0 +1,47 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: perry-api-uploads-permissions
+  namespace: perry-stage7
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    metadata:
+      labels:
+        app: perry-api-uploads-maintenance
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fix-permissions
+          image: back_end_for_our_poroject-api:security-v3
+          imagePullPolicy: Never
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              chown -R 1654:1654 /mnt/uploads
+              chmod 0750 /mnt/uploads
+              ls -ld /mnt/uploads
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - FOWNER
+          volumeMounts:
+            - name: uploads
+              mountPath: /mnt/uploads
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: perry-api-uploads
