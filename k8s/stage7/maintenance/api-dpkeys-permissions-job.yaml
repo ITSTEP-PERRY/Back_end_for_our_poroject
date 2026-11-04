@@ -1,0 +1,44 @@
+﻿apiVersion: batch/v1
+kind: Job
+metadata:
+  name: perry-api-dpkeys-permissions
+  namespace: perry-stage7
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: 180
+  template:
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: fix-permissions
+          image: back_end_for_our_poroject-api:security-v3
+          imagePullPolicy: Never
+          command:
+            - /bin/sh
+            - -ec
+            - |
+              chown 1654:1654 /mnt/keys
+              chmod 0700 /mnt/keys
+              ls -ld /mnt/keys
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+              add:
+                - CHOWN
+                - FOWNER
+          volumeMounts:
+            - name: dpkeys
+              mountPath: /mnt/keys
+      volumes:
+        - name: dpkeys
+          persistentVolumeClaim:
+            claimName: perry-api-dpkeys
