@@ -206,26 +206,39 @@ if (IsMissingJwtSecret(jwt.SigningSecret))
 
 builder.Services.AddJwtAuthentication(jwt);
 
-// #217 — CORS origins from config / env (Cors__AllowedOrigins),
-// not hard-coded only.
+// #217 / #A19 - CORS origins from configuration and environment.
 static string[] ResolveCorsOrigins(IConfiguration configuration)
 {
-    var fromConfig =
-        configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-        ?? Array.Empty<string>();
+    static IEnumerable<string> SplitOrigins(string? raw) =>
+        (raw ?? string.Empty)
+            .Split(
+                new[] { ',', ';', '\n', '\r' },
+                StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries)
+            .Select(o => o.Trim().Trim('"', '\'').TrimEnd('/'))
+            .Where(o => !string.IsNullOrWhiteSpace(o) && !o.Contains('*'));
 
-    var fromEnv =
-        configuration["Cors:AllowedOrigins"]
-        ?? configuration["Cors__AllowedOrigins"]
-        ?? string.Empty;
+    var collected = new List<string>();
 
-    var parsedEnv = fromEnv.Split(
-        ',',
-        StringSplitOptions.RemoveEmptyEntries |
-        StringSplitOptions.TrimEntries);
+    // Handle indexed configuration entries and JSON arrays.
+    var section = configuration.GetSection("Cors:AllowedOrigins");
 
+    foreach (var child in section.GetChildren())
+    {
+        collected.AddRange(SplitOrigins(child.Value));
+    }
+
+    // Handle comma-separated scalar values.
+    collected.AddRange(SplitOrigins(configuration["Cors:AllowedOrigins"]));
+    collected.AddRange(SplitOrigins(configuration["Cors__AllowedOrigins"]));
+    collected.AddRange(SplitOrigins(
+        Environment.GetEnvironmentVariable("Cors__AllowedOrigins")));
+
+    // Preserve the storefront and development origins.
     var defaults = new[]
     {
+        "https://perrydev.space",
+        "https://www.perrydev.space",
         "https://admin.perrydev.space",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -235,21 +248,33 @@ static string[] ResolveCorsOrigins(IConfiguration configuration)
         "http://127.0.0.1:8081",
     };
 
-    return fromConfig
-        .Concat(parsedEnv)
-        .Concat(defaults)
-        .Where(o => !string.IsNullOrWhiteSpace(o))
-        .Select(o => o.Trim().TrimEnd('/'))
+    collected.AddRange(defaults);
+
+    return collected
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToArray();
 }
 
 var corsOrigins = ResolveCorsOrigins(builder.Configuration);
+var corsOriginSet = new HashSet<string>(
+    corsOrigins,
+    StringComparer.OrdinalIgnoreCase);
+
+Console.WriteLine(
+    $"[CORS] Allowed origins ({corsOriginSet.Count}): " +
+    string.Join(", ", corsOriginSet.OrderBy(x => x)));
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(corsOrigins)
+        policy.SetIsOriginAllowed(origin =>
+            {
+                if (string.IsNullOrWhiteSpace(origin))
+                    return false;
+
+                var normalized = origin.Trim().TrimEnd('/');
+                return corsOriginSet.Contains(normalized);
+            })
             .AllowCredentials()
             .AllowAnyHeader()
             .AllowAnyMethod());
