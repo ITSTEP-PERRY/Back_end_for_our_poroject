@@ -48,3 +48,6 @@ vibe-prompts/.vibe-sequence-state.json
 
 
 **.env
+
+# Local database backup
+/Perry.bak

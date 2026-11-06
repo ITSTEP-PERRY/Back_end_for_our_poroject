@@ -1,0 +1,39 @@
+# Git and IDE metadata
+.git
+**/.git
+.github
+.vs
+**/.vs
+.vscode
+**/.vscode
+.idea
+**/.idea
+
+# Generated build artifacts
+**/bin
+**/obj
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/TestResults
+**/__pycache__
+
+# Local secrets and configuration
+.env
+.env.*
+**/.env
+**/.env.*
+**/*.pfx
+**/*.p12
+**/*.pem
+**/*.key
+**/key-*.xml
+**/*.kdbx
+
+# Backups, archives, logs
+**/*.bak
+**/*.tar
+**/*.zip
+**/*.7z
+**/*.log
