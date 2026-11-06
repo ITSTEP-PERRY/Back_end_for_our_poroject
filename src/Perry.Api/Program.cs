@@ -135,7 +135,7 @@ if (!string.IsNullOrWhiteSpace(dpKeysPath))
             $"Data Protection key directory does not exist: {dpKeysPath}");
     }
 
-    var certificate = new X509Certificate2(
+    var certificate = X509CertificateLoader.LoadPkcs12FromFile(
         certificatePath,
         certificatePassword,
         X509KeyStorageFlags.EphemeralKeySet);
