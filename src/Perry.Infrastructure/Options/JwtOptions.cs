@@ -13,4 +13,13 @@ public sealed class JwtOptions
     /// DEV ONLY: принимать JWT Auth без общей подписи (#95). Не включать в prod.
     /// </summary>
     public bool SkipSignatureValidation { get; set; }
+
+    public void ValidateProductionSettings(bool isDevelopment)
+    {
+        if (SkipSignatureValidation && !isDevelopment)
+        {
+            throw new InvalidOperationException(
+                "Jwt:SkipSignatureValidation is permitted only in Development.");
+        }
+    }
 }
