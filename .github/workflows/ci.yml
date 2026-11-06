@@ -13,7 +13,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 jobs:
   build-and-test:
@@ -70,7 +69,7 @@ jobs:
               exit 0
             fi
 
-            echo "Waiting for API..."
+            echo "Waiting for API... attempt $i/30"
             sleep 5
           done
 
@@ -91,7 +90,7 @@ jobs:
               }
             }
 
-            echo "Waiting for API and database..."
+            echo "Waiting for API and database... attempt $i/30"
             sleep 5
           done
 
@@ -105,7 +104,7 @@ jobs:
 
   publish-images:
     name: Publish Docker images to GHCR
-    needs: build-and-test
+    needs: [build-and-test, security-check]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
     runs-on: ubuntu-latest
 
@@ -152,8 +151,37 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
+      - name: Setup .NET 8 for security audit
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Block High and Critical NuGet vulnerabilities
+        run: |
+          dotnet restore src/Perry.Api/Perry.Api.csproj \
+            -p:NuGetAudit=true \
+            -p:NuGetAuditMode=all \
+            -p:NuGetAuditLevel=high \
+            -warnaserror:NU1903,NU1904
+
+      - name: Build API image for vulnerability report
+        run: |
+          docker build \
+            -f ./src/Perry.Api/Dockerfile \
+            -t perry-api:ci-security-scan \
+            .
+
+      - name: Report container vulnerabilities (Trivy)
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          image-ref: 'perry-api:ci-security-scan'
+          format: 'table'
+          exit-code: '0'
+          ignore-unfixed: false
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
       - name: Scan repository for secrets
         run: |
           # Scan working tree (not full git history): legacy .env was removed from tree
