@@ -184,6 +184,11 @@ static bool IsMissingJwtSecret(string? s) =>
     || s.Contains("PASTE_", StringComparison.OrdinalIgnoreCase)
     || s.Contains("YOUR_", StringComparison.OrdinalIgnoreCase);
 
+if (jwt.SkipSignatureValidation && !builder.Environment.IsDevelopment())
+{
+    throw new InvalidOperationException(
+        "Jwt:SkipSignatureValidation is permitted only in Development.");
+}
 if (IsMissingJwtSecret(jwt.SigningSecret))
 {
     const string localDevSecret = "changeme-dev-jwt-signing-key-32chars";
