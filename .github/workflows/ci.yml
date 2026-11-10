@@ -223,10 +223,17 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
       - name: Scan repository for secrets
+        shell: bash
         run: |
-          # Scan working tree (not full git history): legacy .env was removed from tree
-          # but still exists in old commits and would fail a historical scan forever.
+          set -euo pipefail
+
+          # Scan committed source files, excluding runner artifacts.
+          scan_dir="$(mktemp -d)"
+          trap 'rm -rf "$scan_dir"' EXIT
+
+          git archive HEAD | tar -xf - -C "$scan_dir"
+
           docker run --rm \
-            -v "${{ github.workspace }}:/repo" \
+            --mount "type=bind,source=$scan_dir,target=/repo,readonly" \
             ghcr.io/gitleaks/gitleaks:latest \
             dir /repo --redact --config /repo/.gitleaks.toml
