@@ -1,11 +1,14 @@
+
 using System.Text.Json.Serialization;
+using System.Security.Cryptography.X509Certificates;
 using DotNetEnv;
-using Perry.Api.Auth;
-using Perry.Infrastructure;
-using Perry.Infrastructure.Persistence;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.OpenApi.Models;
+using Perry.Api.Auth;
 using Perry.Api.Extensions;
 using Perry.Api.Filters;
+using Perry.Infrastructure;
+using Perry.Infrastructure.Persistence;
 using Perry.Infrastructure.Options;
 
 // Local secrets: `.env` next to csproj or solution root (gitignored). See .env.example.
@@ -33,11 +36,14 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
 });
+
 builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(o =>
 {
     o.MultipartBodyLengthLimit = 40 * 1024 * 1024;
 });
+
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -49,15 +55,21 @@ builder.Services.AddSwaggerGen(c =>
             "**Auth:** JWT from Perry Auth Service.\n\n" +
             "**Main groups:** categories, products, reviews, cart, orders, wishlist, admin/*."
     });
+
     c.CustomSchemaIds(t => t.FullName?.Replace("+", ".") ?? t.Name);
+
     c.TagActionsBy(api =>
     {
         var controller = api.ActionDescriptor.RouteValues.TryGetValue("controller", out var name)
             ? name
             : "Other";
+
         return new[] { controller ?? "Other" };
     });
-    c.OrderActionsBy(api => $"{api.ActionDescriptor.RouteValues["controller"]}_{api.HttpMethod}_{api.RelativePath}");
+
+    c.OrderActionsBy(api =>
+        $"{api.ActionDescriptor.RouteValues["controller"]}_{api.HttpMethod}_{api.RelativePath}");
+
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "Paste access JWT from Perry Auth Service (Swagger adds Bearer prefix).",
@@ -67,12 +79,17 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT"
     });
+
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
             },
             Array.Empty<string>()
         }
@@ -80,7 +97,66 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddInfrastructure(builder.Configuration);
+
+// ============================================================
+// STAGE 7: ASP.NET CORE DATA PROTECTION SECURITY HARDENING
+// ============================================================
+//
+// In Kubernetes:
+// - Persist encryption keys on a dedicated PVC.
+// - Encrypt newly created keys using an X.509 certificate.
+// - Load certificate settings from environment variables.
+// - Do not store private keys or passwords in source control.
+//
+// Local development without DataProtection:KeysPath continues
+// using ASP.NET Core's default Data Protection configuration.
+// ============================================================
+
+var dpKeysPath = builder.Configuration["DataProtection:KeysPath"];
+
+if (!string.IsNullOrWhiteSpace(dpKeysPath))
+{
+    var certificatePath =
+        builder.Configuration["DataProtection:CertificatePath"];
+
+    var certificatePassword =
+        builder.Configuration["DataProtection:CertificatePassword"];
+
+    if (string.IsNullOrWhiteSpace(certificatePath) ||
+        string.IsNullOrWhiteSpace(certificatePassword))
+    {
+        throw new InvalidOperationException(
+            "Data Protection certificate path and password must be configured.");
+    }
+
+    if (!Directory.Exists(dpKeysPath))
+    {
+        throw new DirectoryNotFoundException(
+            $"Data Protection key directory does not exist: {dpKeysPath}");
+    }
+
+    var certificate = X509CertificateLoader.LoadPkcs12FromFile(
+        certificatePath,
+        certificatePassword,
+        X509KeyStorageFlags.EphemeralKeySet);
+
+    if (!certificate.HasPrivateKey)
+    {
+        throw new InvalidOperationException(
+            "Data Protection certificate must contain a private key.");
+    }
+
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo(dpKeysPath))
+        .ProtectKeysWithCertificate(certificate);
+}
+
+// ============================================================
+// DISTRIBUTED CACHE AND SESSION
+// ============================================================
+
 builder.Services.AddDistributedMemoryCache();
+
 builder.Services.AddSession(o =>
 {
     o.IdleTimeout = TimeSpan.FromHours(12);
@@ -88,67 +164,77 @@ builder.Services.AddSession(o =>
     o.Cookie.IsEssential = true;
 });
 
-// JWT — shared HS256 secret with Perry Auth Service (#95). Prefer env / .env over appsettings placeholders.
-var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+// JWT — shared HS256 secret with Perry Auth Service (#95).
+// Prefer env / .env over appsettings placeholders.
+var jwt = builder.Configuration.GetSection("Jwt").Get<JwtOptions>()
+          ?? new JwtOptions();
+
 if (string.IsNullOrWhiteSpace(jwt.SigningSecret))
     jwt.SigningSecret = builder.Configuration["Jwt:Key"] ?? string.Empty;
+
 if (string.IsNullOrWhiteSpace(jwt.Issuer))
     jwt.Issuer = builder.Configuration["Jwt:Issuer"] ?? "Perry.AuthService";
+
 if (string.IsNullOrWhiteSpace(jwt.Audience))
     jwt.Audience = builder.Configuration["Jwt:Audience"] ?? "Perry.Client";
-// Treat unfilled .env.example placeholders as missing
+
+// Treat unfilled .env.example placeholders as missing.
 static bool IsMissingJwtSecret(string? s) =>
     string.IsNullOrWhiteSpace(s)
     || s.Contains("PASTE_", StringComparison.OrdinalIgnoreCase)
     || s.Contains("YOUR_", StringComparison.OrdinalIgnoreCase);
+
+jwt.ValidateProductionSettings(builder.Environment.IsDevelopment());
 if (IsMissingJwtSecret(jwt.SigningSecret))
 {
     const string localDevSecret = "changeme-dev-jwt-signing-key-32chars";
+
     if (builder.Environment.IsDevelopment())
+    {
         jwt.SigningSecret = localDevSecret;
+    }
     else if (!jwt.SkipSignatureValidation)
-        throw new InvalidOperationException("JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key / .env).");
+    {
+        throw new InvalidOperationException(
+            "JWT signing secret is not configured (Jwt:SigningSecret or Jwt:Key / .env).");
+    }
     else
+    {
         jwt.SigningSecret = "dev-placeholder-not-used-when-skip-signature";
+    }
 }
 
 builder.Services.AddJwtAuthentication(jwt);
 
-// #217 / #A19 — CORS origins from config / env (Cors__AllowedOrigins), not hard-coded only.
-// Azure/env often sets a comma-separated *string*, which replaces the JSON array — parse both.
+// #217 / #A19 - CORS origins from configuration and environment.
 static string[] ResolveCorsOrigins(IConfiguration configuration)
 {
     static IEnumerable<string> SplitOrigins(string? raw) =>
         (raw ?? string.Empty)
-            .Split(new[] { ',', ';', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Split(
+                new[] { ',', ';', '\n', '\r' },
+                StringSplitOptions.RemoveEmptyEntries |
+                StringSplitOptions.TrimEntries)
             .Select(o => o.Trim().Trim('"', '\'').TrimEnd('/'))
             .Where(o => !string.IsNullOrWhiteSpace(o) && !o.Contains('*'));
 
     var collected = new List<string>();
 
-    // 1) Indexed / array section (appsettings + Cors__AllowedOrigins__0)
+    // Handle indexed configuration entries and JSON arrays.
     var section = configuration.GetSection("Cors:AllowedOrigins");
-    if (section.Exists())
-    {
-        foreach (var child in section.GetChildren())
-        {
-            if (!string.IsNullOrWhiteSpace(child.Value))
-                collected.AddRange(SplitOrigins(child.Value));
-        }
 
-        var asArray = section.Get<string[]>();
-        if (asArray is { Length: > 0 })
-            collected.AddRange(asArray.SelectMany(SplitOrigins));
+    foreach (var child in section.GetChildren())
+    {
+        collected.AddRange(SplitOrigins(child.Value));
     }
 
-    // 2) Scalar string (Cors__AllowedOrigins=https://a,https://b) — process env + config
-    foreach (var key in new[] { "Cors:AllowedOrigins", "Cors__AllowedOrigins" })
-    {
-        collected.AddRange(SplitOrigins(configuration[key]));
-        collected.AddRange(SplitOrigins(Environment.GetEnvironmentVariable(key)));
-    }
+    // Handle comma-separated scalar values.
+    collected.AddRange(SplitOrigins(configuration["Cors:AllowedOrigins"]));
+    collected.AddRange(SplitOrigins(configuration["Cors__AllowedOrigins"]));
+    collected.AddRange(SplitOrigins(
+        Environment.GetEnvironmentVariable("Cors__AllowedOrigins")));
 
-    // 3) Defaults — include storefront (perrydev.space), not only admin
+    // Preserve the storefront and development origins.
     var defaults = new[]
     {
         "https://perrydev.space",
@@ -161,6 +247,7 @@ static string[] ResolveCorsOrigins(IConfiguration configuration)
         "http://localhost:8081",
         "http://127.0.0.1:8081",
     };
+
     collected.AddRange(defaults);
 
     return collected
@@ -169,15 +256,22 @@ static string[] ResolveCorsOrigins(IConfiguration configuration)
 }
 
 var corsOrigins = ResolveCorsOrigins(builder.Configuration);
-var corsOriginSet = new HashSet<string>(corsOrigins, StringComparer.OrdinalIgnoreCase);
-Console.WriteLine($"[CORS] Allowed origins ({corsOriginSet.Count}): {string.Join(", ", corsOriginSet.OrderBy(x => x))}");
+var corsOriginSet = new HashSet<string>(
+    corsOrigins,
+    StringComparer.OrdinalIgnoreCase);
+
+Console.WriteLine(
+    $"[CORS] Allowed origins ({corsOriginSet.Count}): " +
+    string.Join(", ", corsOriginSet.OrderBy(x => x)));
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("Frontend", policy =>
         policy.SetIsOriginAllowed(origin =>
             {
-                if (string.IsNullOrWhiteSpace(origin)) return false;
+                if (string.IsNullOrWhiteSpace(origin))
+                    return false;
+
                 var normalized = origin.Trim().TrimEnd('/');
                 return corsOriginSet.Contains(normalized);
             })
@@ -188,23 +282,40 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy(AuthorizationPolicies.AdminAccess, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("Admin"));
-    options.AddPolicy(AuthorizationPolicies.SellerAccess, policy =>
-        policy.RequireAuthenticatedUser().RequireRole("Seller"));
+    options.AddPolicy(
+        AuthorizationPolicies.AdminAccess,
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole("Admin"));
+
+    options.AddPolicy(
+        AuthorizationPolicies.SellerAccess,
+        policy => policy
+            .RequireAuthenticatedUser()
+            .RequireRole("Seller"));
 });
 
 builder.Services.AddScoped<ModelValidateActionFilter>();
 
 var app = builder.Build();
 
+// ============================================================
+// DATABASE MIGRATIONS
+// ============================================================
+
 await DbSeeder.MigrateAsync(app.Services);
+
 if (app.Environment.IsDevelopment())
 {
     await DbSeeder.SeedAsync(app.Services);
 }
 
+// ============================================================
+// SWAGGER
+// ============================================================
+
 app.UseSwagger();
+
 app.UseSwaggerUI(o =>
 {
     o.DocumentTitle = "Perry API";
@@ -214,39 +325,79 @@ app.UseSwaggerUI(o =>
 
 app.UseCors("Frontend");
 
+// ============================================================
+// STATIC FILES / UPLOADS
+// ============================================================
+
 // Review photos: DiskStorageService writes to ContentRoot/wwwroot/uploads.
-// Map /uploads/* explicitly — default UseStaticFiles alone was 404 in this host layout.
-var uploadsDir = Path.Combine(app.Environment.ContentRootPath, "wwwroot", "uploads");
+// Map /uploads/* explicitly — default UseStaticFiles alone was 404
+// in this host layout.
+var uploadsDir = Path.Combine(
+    app.Environment.ContentRootPath,
+    "wwwroot",
+    "uploads");
+
 Directory.CreateDirectory(uploadsDir);
+
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsDir),
+    FileProvider =
+        new Microsoft.Extensions.FileProviders.PhysicalFileProvider(uploadsDir),
+
     RequestPath = "/uploads",
     ServeUnknownFileTypes = true,
 });
+
 app.UseStaticFiles();
+
+// ============================================================
+// AUTHENTICATION AND AUTHORIZATION
+// ============================================================
 
 app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+
+// ============================================================
+// HEALTH CHECKS
+// ============================================================
+
+app.MapGet("/health", () =>
+    Results.Ok(new { status = "Healthy" }));
 
 // #A06 — healthcheck (API + SQL)
-app.MapGet("/api/health", async (AppDbContext db, CancellationToken ct) =>
+app.MapGet("/api/health", async (
+    AppDbContext db,
+    CancellationToken ct) =>
 {
     try
     {
         var ok = await db.Database.CanConnectAsync(ct);
+
         return ok
-            ? Results.Ok(new { status = "Healthy", database = "up", utc = DateTime.UtcNow })
-            : Results.Json(new { status = "Unhealthy", database = "down" }, statusCode: 503);
+            ? Results.Ok(new
+            {
+                status = "Healthy",
+                database = "up",
+                utc = DateTime.UtcNow
+            })
+            : Results.Json(new
+            {
+                status = "Unhealthy",
+                database = "down"
+            }, statusCode: 503);
     }
     catch (Exception ex)
     {
-        return Results.Json(new { status = "Unhealthy", database = "error", error = ex.Message }, statusCode: 503);
+        return Results.Json(new
+        {
+            status = "Unhealthy",
+            database = "error",
+            error = ex.Message
+        }, statusCode: 503);
     }
 }).AllowAnonymous();
 
 app.Run();
-

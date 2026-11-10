@@ -1,0 +1,12 @@
+﻿apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: perry-api-uploads
+  namespace: perry-stage7
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 2Gi

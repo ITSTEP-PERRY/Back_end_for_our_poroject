@@ -1,0 +1,140 @@
+﻿apiVersion: v1
+kind: Service
+metadata:
+  name: perry-postgres
+  namespace: perry-stage7
+spec:
+  clusterIP: None
+  selector:
+    app: perry-postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: perry-postgres
+  namespace: perry-stage7
+spec:
+  serviceName: perry-postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: perry-postgres
+  template:
+    metadata:
+      labels:
+        app: perry-postgres
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 60
+
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 70
+        runAsGroup: 70
+        fsGroup: 70
+        seccompProfile:
+          type: RuntimeDefault
+
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+
+          ports:
+            - name: postgres
+              containerPort: 5432
+
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+
+            - name: POSTGRES_INITDB_ARGS
+              value: "--auth-local=scram-sha-256 --auth-host=scram-sha-256"
+
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: perry-postgres-credentials
+                  key: POSTGRES_DB
+
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: perry-postgres-credentials
+                  key: POSTGRES_USER
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: perry-postgres-credentials
+                  key: POSTGRES_PASSWORD
+
+          startupProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - 127.0.0.1
+                - -U
+                - perry_stage
+                - -d
+                - perry_stage7
+            periodSeconds: 5
+            failureThreshold: 30
+
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - 127.0.0.1
+                - -U
+                - perry_stage
+                - -d
+                - perry_stage7
+            periodSeconds: 5
+
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -h
+                - 127.0.0.1
+                - -U
+                - perry_stage
+                - -d
+                - perry_stage7
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data
+
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: standard
+        resources:
+          requests:
+            storage: 5Gi

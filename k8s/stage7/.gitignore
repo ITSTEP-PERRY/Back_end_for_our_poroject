@@ -1,0 +1,7 @@
+﻿# Sensitive local files
+*.dump
+*.bak
+*.env
+*secret*.json
+*secret*.yaml
+*.key

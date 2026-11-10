@@ -118,10 +118,13 @@ export function ProductPage() {
       const nextCounts: Record<string, number> = {};
       await Promise.all(
         reviews.map(async (r) => {
-          const key = String(r.id);
+          const reviewId = r.id;
+          if (!reviewId) return;
+
+          const key = reviewId;
           nextCounts[key] = r.totalHelpful ?? 0;
           try {
-            const mine = await reviewsApi.myGrade(r.id);
+            const mine = await reviewsApi.myGrade(reviewId);
             nextMine[key] = !!(mine.isHelpful ?? mine.IsHelpful);
           } catch {
             nextMine[key] = false;
