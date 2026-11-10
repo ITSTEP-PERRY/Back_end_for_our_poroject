@@ -372,7 +372,7 @@ function ChangePasswordModal({
 
     setBusy(true);
     try {
-      await authApi.changePassword(current, next);
+      await authApi.changePassword(current, next, repeat);
       onSaved();
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Failed to change password");
