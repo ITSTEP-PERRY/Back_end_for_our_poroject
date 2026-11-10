@@ -35,3 +35,48 @@ Prometheus API повернув CPU (`rate(container_cpu_usage_seconds_total[5m]
 ## Перевірка сценарію моніторингу для демонстрації
 
 Підготувати безпечний контрольований тест: симулювати збій у тестовому namespace, перевірити метрики, лог, alert state та доставку повідомлення. Не порушувати основний Perry API. Зафіксувати скриншоти dashboard і час спрацювання.
+
+<!-- stage7-grafana-helm-rev4-20261110 -->
+### Grafana Helm remediation — 2026-11-10
+
+The Grafana container experienced intermittent readiness failures and restarts.
+
+Observed before remediation:
+- Memory limit: 384Mi.
+- Memory working set peak over 24 hours: approximately 382.3Mi.
+- Readiness probe timeout: 1 second.
+- Ten Grafana container restarts were observed.
+- The application sometimes returned Ready=False.
+
+Remediation:
+- Kubernetes context: docker-desktop.
+- Namespace: monitoring.
+- Helm release: kube-prometheus-stack-1792153688.
+- Chart version: kube-prometheus-stack 92.10.1 (unchanged).
+- Helm revision: 3 -> 4.
+- Grafana memory limit: 384Mi -> 768Mi.
+- Grafana readiness timeout: 1 -> 5 seconds.
+- Existing Helm values reused; hooks disabled.
+- Rollback-on-failure enabled during upgrade.
+
+Safety validation:
+- Server-side dry-run succeeded.
+- All 116 rendered resources were compared.
+- Only the Grafana Deployment manifest changed.
+- Grafana Secret and administrator password were preserved.
+
+Post-upgrade verification:
+- Helm status: deployed, revision 4.
+- Grafana: 3/3 containers Ready, 0 restarts.
+- Five additional readiness samples: 5/5 successful.
+- Grafana /api/health: database ok.
+- Prometheus query: success, 18 returned metric series.
+- Alertmanager readiness: passed.
+- Perry API health: database up.
+- Final audit: 7 checks passed, 0 warnings.
+
+This confirms successful initial validation, not 24-hour stability.
+Continue observing readiness, restarts, and resource usage.
+
+Rollback reference: the previous successful Helm revision is 3.
+Before rollback, confirm current release state and operational impact.

@@ -38,3 +38,22 @@
 ## 5. Матеріали
 
 `architecture.md`, `security-audit.md`, `optimization.md`, `backup-restore.md`, `rollback.md`, `monitoring.md`. При фіналізації звіту додати дату, авторство, GitHub PR/Actions URLs і докази; не додавати приватні backup або секрети.
+
+<!-- stage7-grafana-helm-rev4-20261110 -->
+### Monitoring remediation verification — 2026-11-10
+
+Grafana Helm remediation completed successfully.
+
+- Chart: kube-prometheus-stack 92.10.1.
+- Helm revision: 3 -> 4, status deployed.
+- Grafana memory limit increased to 768Mi.
+- Readiness timeout increased to 5 seconds.
+- Server-side manifest comparison confirmed only the Grafana Deployment changed.
+- Grafana Secret and administrator password remained unchanged.
+- Post-upgrade monitoring audit: 7 passed, 0 warnings.
+- Grafana: 3/3 Ready with zero restarts in the new Pod.
+- Prometheus, Alertmanager and Perry API checks passed.
+
+Long-term Grafana stability remains subject to observation.
+Remote GitHub Actions execution and full business E2E remain
+separate final verification tasks.
